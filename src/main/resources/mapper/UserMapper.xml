@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.planit.planit.model.dao.UserMapper">
+
+    <!-- 전체 조회 -->
+    <select id="findAll" resultType="com.planit.planit.model.dto.UserDTO">
+        SELECT * FROM users
+    </select>
+
+    <!-- 단일 조회 -->
+    <select id="findById" parameterType="long" resultType="com.planit.planit.model.dto.UserDTO">
+        SELECT * FROM users WHERE id = #{id}
+    </select>
+
+    <!-- 추가 -->
+    <insert id="insert" parameterType="com.planit.planit.model.dto.UserDTO" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO users (name, email)
+        VALUES (#{name}, #{email})
+    </insert>
+
+    <!-- 수정 -->
+    <update id="update" parameterType="com.planit.planit.model.dto.UserDTO">
+        UPDATE users
+        SET name = #{name},
+            email = #{email}
+        WHERE id = #{id}
+    </update>
+
+    <!-- 삭제 -->
+    <delete id="delete" parameterType="long">
+        DELETE FROM users WHERE id = #{id}
+    </delete>
+
+</mapper>
