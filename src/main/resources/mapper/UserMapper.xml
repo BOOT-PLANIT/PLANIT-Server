@@ -7,23 +7,23 @@
 
     <!-- 전체 조회 -->
     <select id="findAll" resultType="com.planit.planit.model.dto.UserDTO">
-        SELECT * FROM users
+        SELECT * FROM test_users
     </select>
 
     <!-- 단일 조회 -->
     <select id="findById" parameterType="long" resultType="com.planit.planit.model.dto.UserDTO">
-        SELECT * FROM users WHERE id = #{id}
+        SELECT * FROM test_users WHERE id = #{id}
     </select>
 
     <!-- 추가 -->
     <insert id="insert" parameterType="com.planit.planit.model.dto.UserDTO" useGeneratedKeys="true" keyProperty="id">
-        INSERT INTO users (name, email)
+        INSERT INTO test_users (name, email)
         VALUES (#{name}, #{email})
     </insert>
 
     <!-- 수정 -->
     <update id="update" parameterType="com.planit.planit.model.dto.UserDTO">
-        UPDATE users
+        UPDATE test_users
         SET name = #{name},
             email = #{email}
         WHERE id = #{id}
@@ -31,7 +31,7 @@
 
     <!-- 삭제 -->
     <delete id="delete" parameterType="long">
-        DELETE FROM users WHERE id = #{id}
+        DELETE FROM test_users WHERE id = #{id}
     </delete>
 
 </mapper>
