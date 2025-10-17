@@ -63,6 +63,21 @@
 			<scope>test</scope>
 		</dependency>
 		
+		<!-- TODO 1 .swagger를 위한 의존성 추가. springdoc로 검색 : SpringDoc OpenAPI Starter WebMVC UI -->
+		<!-- https://mvnrepository.com/artifact/org.springdoc/springdoc-openapi-starter-webmvc-ui -->
+		<dependency>
+		    <groupId>org.springdoc</groupId>
+		    <artifactId>springdoc-openapi-starter-webmvc-ui</artifactId>
+		    <version>2.5.0</version>
+		</dependency>
+		
+		<!-- https://mvnrepository.com/artifact/org.projectlombok/lombok -->
+		<dependency>
+		    <groupId>org.projectlombok</groupId>
+		    <artifactId>lombok</artifactId>
+		    <version>1.18.42</version>
+		</dependency>
+		
 		
 	</dependencies>
 
