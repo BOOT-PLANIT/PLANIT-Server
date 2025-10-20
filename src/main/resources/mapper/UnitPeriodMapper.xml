@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.planit.planit.model.dao.UnitPeriodMapper">
+
+    <!-- 전체 조회 -->
+    <select id="findAll" resultType="com.planit.planit.model.dto.UnitPeriodDTO">
+        SELECT id, bootcamp_id as "bootcampId", unit_no as "unitNo", 
+               start_date as "startDate", end_date as "endDate", created_at as "createdAt"
+        FROM unit_periods
+        ORDER BY bootcamp_id, unit_no
+    </select>
+
+    <!-- 부트캠프별 조회 -->
+    <select id="findByBootcampId" parameterType="long" resultType="com.planit.planit.model.dto.UnitPeriodDTO">
+        SELECT id, bootcamp_id as "bootcampId", unit_no as "unitNo", 
+               start_date as "startDate", end_date as "endDate", created_at as "createdAt"
+        FROM unit_periods
+        WHERE bootcamp_id = #{bootcampId}
+        ORDER BY unit_no
+    </select>
+
+    <!-- 단일 조회 -->
+    <select id="findById" parameterType="long" resultType="com.planit.planit.model.dto.UnitPeriodDTO">
+        SELECT id, bootcamp_id as "bootcampId", unit_no as "unitNo", 
+               start_date as "startDate", end_date as "endDate", created_at as "createdAt"
+        FROM unit_periods
+        WHERE id = #{id}
+    </select>
+
+    <!-- 추가 -->
+    <insert id="insert" parameterType="com.planit.planit.model.dto.UnitPeriodDTO" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO unit_periods (bootcamp_id, unit_no, start_date, end_date, created_at)
+        VALUES (#{bootcampId}, #{unitNo}, #{startDate}, #{endDate}, NOW())
+    </insert>
+
+    <!-- 수정 -->
+    <update id="update" parameterType="com.planit.planit.model.dto.UnitPeriodDTO">
+        UPDATE unit_periods
+        SET bootcamp_id = #{bootcampId},
+            unit_no = #{unitNo},
+            start_date = #{startDate},
+            end_date = #{endDate}
+        WHERE id = #{id}
+    </update>
+
+    <!-- 단일 삭제 -->
+    <delete id="delete" parameterType="long">
+        DELETE FROM unit_periods WHERE id = #{id}
+    </delete>
+
+    <!-- 부트캠프별 삭제 -->
+    <delete id="deleteByBootcampId" parameterType="long">
+        DELETE FROM unit_periods WHERE bootcamp_id = #{bootcampId}
+    </delete>
+
+</mapper>
+
