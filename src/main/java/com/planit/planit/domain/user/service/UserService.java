@@ -1,11 +1,13 @@
-package com.planit.planit.model.service;
+package com.planit.planit.domain.user.service;
 
 import java.util.List;
 
 import org.springframework.stereotype.Service;
 
-import com.planit.planit.model.dao.UserMapper;
-import com.planit.planit.model.dto.UserDTO;
+import com.planit.planit.domain.user.dto.UserDTO;
+import com.planit.planit.domain.user.mapper.UserMapper;
+
+
 
 @Service
 public class UserService {

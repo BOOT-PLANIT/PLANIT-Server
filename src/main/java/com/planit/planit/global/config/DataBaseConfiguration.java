@@ -1,4 +1,4 @@
-package com.planit.planit.config;
+package com.planit.planit.global.config;
 
 import javax.sql.DataSource;
 

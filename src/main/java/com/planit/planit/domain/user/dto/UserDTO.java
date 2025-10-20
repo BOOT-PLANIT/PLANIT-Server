@@ -1,4 +1,4 @@
-package com.planit.planit.model.dto;
+package com.planit.planit.domain.user.dto;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;

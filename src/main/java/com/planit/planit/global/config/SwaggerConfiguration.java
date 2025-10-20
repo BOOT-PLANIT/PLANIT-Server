@@ -1,4 +1,4 @@
-package com.planit.planit.config;
+package com.planit.planit.global.config;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

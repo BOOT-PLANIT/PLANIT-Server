@@ -1,10 +1,12 @@
-package com.planit.planit.model.dao;
+package com.planit.planit.domain.user.mapper;
 
 import java.util.List;
 
 import org.apache.ibatis.annotations.Mapper;
 
-import com.planit.planit.model.dto.UserDTO;
+import com.planit.planit.domain.user.dto.UserDTO;
+
+
 
 @Mapper
 public interface UserMapper {

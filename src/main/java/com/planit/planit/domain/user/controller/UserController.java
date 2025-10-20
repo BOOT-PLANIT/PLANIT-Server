@@ -1,4 +1,4 @@
-package com.planit.planit.controller;
+package com.planit.planit.domain.user.controller;
 
 import java.util.List;
 
@@ -11,8 +11,8 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.planit.planit.model.dto.UserDTO;
-import com.planit.planit.model.service.UserService;
+import com.planit.planit.domain.user.dto.UserDTO;
+import com.planit.planit.domain.user.service.UserService;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
