@@ -1,90 +1,74 @@
 # ---------------------------------------------------------------- #
-# CodeRabbit 기본 설정 (언어 및 페르소나)
+# CodeRabbit Global Config
 # ---------------------------------------------------------------- #
-# 기본 언어
-language: "ko-KR"
-# 페르소나와 응답 톤앤매너 지시 (최대 200자)
-tone_instructions: >
-  당신은 Planit 프로젝트의 코치입니다. 피드백은 명확·구체하고 문제 원인과 개선책을 함께 제시하세요. 리뷰는 교육적이며 공식 문서를 권장합니다. 개선 제안을 우선하고, 칭찬은 간결하고 위트 있게 남기세요.
+version: 1.1.0  # 설정 파일 버전, 버전 관리 용도로 사용합니다.
+language: "ko-KR"  # 기본 언어 설정. 코드 리뷰와 커뮤니케이션의 언어를 설정합니다.
 
 # ---------------------------------------------------------------- #
-# 코드 리뷰 기능 세부 설정
+# 페르소나 및 톤
+# ---------------------------------------------------------------- #
+persona:
+  role: "Planit 백엔드 코치"  # 이 설정은 리뷰어의 역할을 정의합니다. 실제 코칭 역할을 맡을 팀원에 맞게 변경 가능.
+  tone: >
+    리뷰는 구체적·논리적·교육적이어야 하며, 문제 원인과 개선책을 함께 제시합니다. 공식 문서 기반 피드백을 권장합니다. 
+
+# ---------------------------------------------------------------- #
+# 리뷰 설정
 # ---------------------------------------------------------------- #
 reviews:
-  # 리뷰의 전반적인 스타일 - chill: 덜 엄격, 부드러운 톤
-  profile: "chill"
-  # CodeRabbit의 코멘트를 모두 `resolve`할 경우, 자동 Approve
-  request_changes_workflow: false
-  # PR의 전체적인 변경 사항에 대한 요약 생성
-  high_level_summary: true
-  # 변경된 각 파일에 대한 요약 생성
-  changed_files_summary: false
-  # 코드의 실행 흐름을 보여주는 시퀀스 다이어그램 생성
-  sequence_diagrams: false
-  # 리뷰 요약에 재미 요소 (시) 포함
-  poem: false
-  # PR에 연결된 Issue를 분석 후 리뷰 컨텍스트에 활용
-  assess_linked_issues: true
-  # 연관된 다른 Issue를 찾아서 링크
-  related_issues: false
-  # 연관된 다른 PR을 찾아서 링크
-  related_prs: false
-  # PR에 적절한 레이블(e.g., 'bug', 'enhancement')을 제안
-  suggested_labels: false
-  # 제안된 레이블을 자동으로 PR에 적용
-  auto_apply_labels: false
-  # 이 PR을 리뷰할 만한 적절한 동료 리뷰어 추천
-  suggested_reviewers: false
-  # 추천된 리뷰어 자동 할당 여부
-  auto_assign_reviewers: false
+  profile: "chill"  # 리뷰 스타일. 'chill'은 덜 엄격하고 부드러운 피드백을 제공합니다.
+  request_changes_workflow: false  # 코드에 변경 요청이 있을 때 워크플로우 설정을 위한 옵션. 기본값: 변경 요청 후 승인 대기.
+  high_level_summary: true  # PR 변경 사항에 대해 전반적인 요약을 생성합니다.
+  changed_files_summary: false  # 변경된 파일에 대한 요약을 별도로 생성하지 않도록 설정합니다.
+  sequence_diagrams: false  # 코드 흐름에 대한 시퀀스 다이어그램을 생성하지 않도록 설정합니다.
+  poem: false  # 리뷰 요약에 시적 요소를 포함하지 않도록 설정합니다.
+  assess_linked_issues: true  # 연결된 이슈를 분석하여 리뷰에 활용합니다.
+
+  # 리뷰가 자동으로 진행되도록 설정
   auto_review:
-    # PR이 생성됐을 때
-    # `@coderabbitai review`를 코멘트에 입력하면 리뷰를 시작
-    enabled: true
-    # 이미 리뷰가 진행된 PR에 새로운 커밋이 추가될 때,
-    # 변경된 부분에 대해서만 자동으로 리뷰를 진행
-    auto_incremental_review: true
+    enabled: true  # PR이 생성될 때 자동으로 리뷰를 시작합니다.
+    auto_incremental_review: true  # 이미 리뷰된 PR에 새로운 커밋이 추가되면 변경된 부분만 리뷰합니다.
+
+    # 경로별 코드 리뷰 지침을 설정
     path_instructions:
-      # Java 소스 코드에 대한 리뷰 지침
-      - path: "src/main/java/**"
-        # 최대 2,000자
+      # ────────────────────────────────
+      # Java/Spring Boot 관련 경로 설정
+      # ────────────────────────────────
+      - path: "src/main/java/**"  # Java/Spring Boot 소스 파일에 대한 리뷰 지침
         instructions: |
-          1. Java/Spring Boot 팀 코드 컨벤션(docs/code-convention.md) 및 공식 스타일 가이드(Java, Spring 공식 문서)를 우선적으로 반영하여, 가독성·안정성(예: Null-safety, 예외 처리)·테스트/유지보수 용이성·성능(예: JPA N+1 문제, 불필요한 객체 생성) 등을 검토해주세요.
-          2. 최신 Java/Spring 트렌드, Javadoc, 팀 스타일 통일성, 그리고 보안(예: SQL Injection, CSRF) 이슈도 함께 확인해 주세요.
-          3. 각 리뷰 포인트별로 문제점과 대안, 장단점을 논리적으로 제시하고, 필요한 경우 예시 코드도 추가해 주세요.
-          4. 리뷰는 꼭 필요한 부분에 집중해주고, 나머지는 캡션으로 설명해주세요.
-          5. 리뷰 남겨주는 부분은 해당 라인 범위의 코멘트에 작성해주세요.
+          1. **코드 컨벤션**: docs/code-convention.md 및 Spring 공식 문서 준수.  
+          2. **품질 검토**: 가독성, Null-safety, 예외 처리, 테스트 가능성, 유지보수성. 
+          3. **성능 검토**: JPA N+1, 불필요한 객체 생성, 컬렉션/스트림 최적화. 
+          4. **보안 검토**: SQL Injection, CSRF, XSS 등 주요 취약점.  
+          5. **추가 고려**: 최신 Java/Spring 트렌드, Javadoc, 로깅 규약. 
+          6. 리뷰는 핵심만, 나머지는 캡션 처리.  
+
   tools:
     gitleaks:
-      # 코드에 비밀 정보(Secrets)가 유출됐는지 검사
-      enabled: true
+      enabled: true  # Git 리포지토리에서 비밀 정보(Secrets) 유출을 검사하는 툴 활성화.
+      severity: "high"  # 유출된 정보의 심각도 수준을 'high'로 설정 (더 민감한 정보에 대해 경고)
 
 # ---------------------------------------------------------------- #
-# 채팅 기능 세부 설정
+# 채팅 기능
 # ---------------------------------------------------------------- #
 chat:
-  # 사용자가 @coderabbitai 태그를 지정하지 않아도 GitHub Issue나 PR에서 자동으로 답글을 달 수 있도록 설정
-  auto_reply: true
-
+  auto_reply: true  # GitHub에서 자동으로 답변을 달 수 있도록 설정. (PR 또는 이슈에서 자동 답변 활성화)
+  prompt_style: "coach"  # 응답 스타일을 '코치'로 설정하여 교육적인 피드백을 제공합니다.
+  feedback_mode: "constructive"  # 피드백 모드를 '구성적'으로 설정하여 긍정적인 변화를 유도하는 피드백을 제공합니다.
 
 # ---------------------------------------------------------------- #
-# Knowledge Base 세부 설정
+# Knowledge Base
 # ---------------------------------------------------------------- #
 knowledge_base:
-  # 웹 검색을 통해 최신 정보나 문서를 참조할 수 있도록 허용
   web_search:
-    enabled: true
-  # 레포지토리 내의 특정 파일을 AI의 코드 스타일 가이드라인으로 사용하도록 설정
+    enabled: true  # 웹 검색을 통해 최신 정보나 문서를 참조할 수 있도록 설정.
   code_guidelines:
-    enabled: true
+    enabled: true  # 코드 컨벤션 문서나 팀 스타일 가이드가 있을 경우 이를 기반으로 피드백.
     filePatterns:
-      - "docs/code-convention.md"
-  # CodeRabbit이 대화나 리뷰를 통해 학습한 내용을 어디에 저장하고 참조할지 범위 설정 'local'은 현재 레포지토리에 한정됨을 의미
+      - "docs/code-convention.md"  # 코드 컨벤션 문서의 위치 설정.
   learnings:
-    scope: "local"
-  # 이슈 정보를 참조할 범위 설정
+    scope: "local"  # 학습한 내용은 로컬 프로젝트에 한정되어 저장됩니다.
   issues:
-    scope: "local"
-  # PR 정보를 참조할 범위 설정
+    scope: "local"  # 이슈 정보는 로컬 프로젝트에 한정되어 참조됩니다.
   pull_requests:
-    scope: "local"
+    scope: "local"  # PR 정보는 로컬 프로젝트에 한정되어 참조됩니다.
