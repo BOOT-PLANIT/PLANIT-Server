@@ -7,18 +7,19 @@
 <!-- 일일 출결 조회 -->
 <select id="getDaily" resultType="com.planit.planit.domain.attendance.dto.AttendanceDailyResponseDto">
     SELECT 
-        a.id AS attendanceId,
-        a.user_id AS userId,
-        u.username AS username,
-        a.status AS status,
-        s.period_id AS periodId,
-        s.class_date AS classDate,
-        b.id AS bootcampId,
-        b.name AS bootcampName
+        a.id            AS attendanceId,
+        a.status        AS status,
+        b.id            AS bootcampId,
+        b.name          AS bootcampName,
+        s.id            AS sessionId,
+        s.class_date    AS classDate,
+        p.unit_no       AS unitNo,
+        p.start_date    AS startDate,
+        p.end_date      AS endDate
     FROM attendance a
-    JOIN sessions s ON a.session_id = s.id
-    JOIN users u ON a.user_id = u.id
-    JOIN bootcamps b ON s.bootcamp_id = b.id
+    JOIN sessions s       ON a.session_id = s.id
+    JOIN bootcamps b      ON s.bootcamp_id = b.id
+    JOIN unit_periods p   ON s.period_id = p.id
     WHERE a.user_id = #{userId}
       AND s.bootcamp_id = #{bootcampId}
       AND s.class_date = #{date}
