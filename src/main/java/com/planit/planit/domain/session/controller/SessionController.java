@@ -15,6 +15,7 @@ import com.planit.planit.domain.session.service.SessionService;
 import com.planit.planit.global.common.response.ApiResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 
 @RestController
 @RequestMapping("/api/v1/sessions")
@@ -73,7 +74,7 @@ public class SessionController {
           @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "500",
               description = "서버 에러")})
   @PostMapping
-  public ApiResponse<SessionDTO> add(@RequestBody SessionDTO session) {
+  public ApiResponse<SessionDTO> add(@Valid @RequestBody SessionDTO session) {
     sessionService.addSession(session);
     return ApiResponse.response(HttpStatus.CREATED, "세션 등록 성공", session);
   }
@@ -87,7 +88,8 @@ public class SessionController {
           @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "500",
               description = "서버 에러")})
   @PutMapping("/{id}")
-  public ApiResponse<SessionDTO> update(@PathVariable Long id, @RequestBody SessionDTO session) {
+  public ApiResponse<SessionDTO> update(@PathVariable Long id,
+      @Valid @RequestBody SessionDTO session) {
     session.setId(id);
     sessionService.updateSession(session);
     return ApiResponse.response(HttpStatus.OK, "세션 수정 성공", session);
