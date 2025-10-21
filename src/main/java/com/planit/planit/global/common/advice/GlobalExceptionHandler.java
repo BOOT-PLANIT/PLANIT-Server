@@ -11,7 +11,6 @@ import jakarta.validation.ConstraintViolationException;
 import lombok.extern.slf4j.Slf4j;
 
 import org.springframework.beans.TypeMismatchException;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
 
@@ -31,6 +30,10 @@ import org.springframework.web.method.annotation.MethodArgumentTypeMismatchExcep
 
 import org.springframework.web.servlet.resource.NoResourceFoundException;
 
+import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.dao.DuplicateKeyException;
+
+
 import java.util.List;
 
 import static com.planit.planit.global.common.exception.ErrorCode.*;
@@ -39,14 +42,14 @@ import static com.planit.planit.global.common.exception.ErrorCode.*;
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
-    private static final String LOG_FORMAT = "Class : {}, Code : {}, Message : {}";
+    private static final String DEFAULT_SERVER_MESSAGE = "서버 오류가 발생했습니다.";
 
     /** 도메인 정의 예외 */
     @ExceptionHandler(BaseException.class)
     public ResponseEntity<ApiErrorResponse<ErrorDetail>> handleBaseException(BaseException e) {
         ErrorCode error = e.getErrorCode();
-        logWarn(e, error.getStatus().value());
-        String msg = (e.getMessage() != null) ? e.getMessage() : error.getMessage();
+        String msg = firstNonNull(e.getMessage(), error.getMessage(), DEFAULT_SERVER_MESSAGE);
+        logWarnOnce(e, error.getStatus().value(), msg);
         return ResponseEntity.status(error.getStatus())
             .body(ApiErrorResponse.of(error.getStatus(), msg));
     }
@@ -54,25 +57,28 @@ public class GlobalExceptionHandler {
     /** @RequestParam 누락 */
     @ExceptionHandler(MissingServletRequestParameterException.class)
     public ResponseEntity<ApiErrorResponse<ErrorDetail>> handleMissingServletRequestParameter(MissingServletRequestParameterException e) {
-        logWarn(e, PARAMETER_NOT_FOUND.getStatus().value());
+        String msg = PARAMETER_NOT_FOUND.getMessage();
+        logWarnOnce(e, PARAMETER_NOT_FOUND.getStatus().value(), msg);
         return ResponseEntity.status(PARAMETER_NOT_FOUND.getStatus())
-            .body(ApiErrorResponse.of(PARAMETER_NOT_FOUND.getStatus(), PARAMETER_NOT_FOUND.getMessage()));
+            .body(ApiErrorResponse.of(PARAMETER_NOT_FOUND.getStatus(), msg));
     }
 
-    /** @PathVariable 누락 */
+    /** @PathVariable 누락 -> 전용 코드 사용 */
     @ExceptionHandler(MissingPathVariableException.class)
     public ResponseEntity<ApiErrorResponse<ErrorDetail>> handleMissingPathVariable(MissingPathVariableException e) {
-        logWarn(e, PARAMETER_NOT_FOUND.getStatus().value());
-        return ResponseEntity.status(PARAMETER_NOT_FOUND.getStatus())
-            .body(ApiErrorResponse.of(PARAMETER_NOT_FOUND.getStatus(), PARAMETER_NOT_FOUND.getMessage()));
+        String msg = PATH_VARIABLE_NOT_FOUND.getMessage();
+        logWarnOnce(e, PATH_VARIABLE_NOT_FOUND.getStatus().value(), msg);
+        return ResponseEntity.status(PATH_VARIABLE_NOT_FOUND.getStatus())
+            .body(ApiErrorResponse.of(PATH_VARIABLE_NOT_FOUND.getStatus(), msg));
     }
 
-    /** JSON 파싱/역직렬화 실패 */
+    /** JSON 파싱/역직렬화 실패 -> ErrorCode 일관 사용 */
     @ExceptionHandler(HttpMessageNotReadableException.class)
     public ResponseEntity<ApiErrorResponse<ErrorDetail>> handleHttpMessageNotReadable(HttpMessageNotReadableException e) {
-        logWarn(e, HttpStatus.BAD_REQUEST.value());
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-            .body(ApiErrorResponse.of(HttpStatus.BAD_REQUEST, "요청 본문을 읽을 수 없습니다."));
+        String msg = INVALID_REQUEST_BODY.getMessage();
+        logWarnOnce(e, INVALID_REQUEST_BODY.getStatus().value(), msg);
+        return ResponseEntity.status(INVALID_REQUEST_BODY.getStatus())
+            .body(ApiErrorResponse.of(INVALID_REQUEST_BODY.getStatus(), msg));
     }
 
     /** @Valid @RequestBody 필드 단위 검증 실패 */
@@ -81,9 +87,10 @@ public class GlobalExceptionHandler {
         List<ErrorDetail> errors = e.getBindingResult().getFieldErrors().stream()
             .map(fe -> ErrorDetail.of(fe.getField(), fe.getDefaultMessage(), fe.getRejectedValue()))
             .toList();
-        logWarn(e, METHOD_ARGUMENT_NOT_VALID.getStatus().value());
+        String msg = METHOD_ARGUMENT_NOT_VALID.getMessage();
+        logWarnOnce(e, METHOD_ARGUMENT_NOT_VALID.getStatus().value(), msg);
         return ResponseEntity.status(METHOD_ARGUMENT_NOT_VALID.getStatus())
-            .body(ApiErrorResponse.of(METHOD_ARGUMENT_NOT_VALID.getStatus(), METHOD_ARGUMENT_NOT_VALID.getMessage(), errors));
+            .body(ApiErrorResponse.of(METHOD_ARGUMENT_NOT_VALID.getStatus(), msg, errors));
     }
 
     /** @Validated @ModelAttribute 바인딩/검증 실패 */
@@ -92,41 +99,40 @@ public class GlobalExceptionHandler {
         List<ErrorDetail> errors = e.getBindingResult().getFieldErrors().stream()
             .map(fe -> ErrorDetail.of(fe.getField(), fe.getDefaultMessage(), fe.getRejectedValue()))
             .toList();
-        logWarn(e, METHOD_ARGUMENT_NOT_VALID.getStatus().value());
+        String msg = METHOD_ARGUMENT_NOT_VALID.getMessage();
+        logWarnOnce(e, METHOD_ARGUMENT_NOT_VALID.getStatus().value(), msg);
         return ResponseEntity.status(METHOD_ARGUMENT_NOT_VALID.getStatus())
-            .body(ApiErrorResponse.of(METHOD_ARGUMENT_NOT_VALID.getStatus(), METHOD_ARGUMENT_NOT_VALID.getMessage(), errors));
+            .body(ApiErrorResponse.of(METHOD_ARGUMENT_NOT_VALID.getStatus(), msg, errors));
     }
 
     /** @RequestParam/@PathVariable 타입 불일치 */
     @ExceptionHandler(MethodArgumentTypeMismatchException.class)
     public ResponseEntity<ApiErrorResponse<ErrorDetail>> handleMethodArgumentTypeMismatch(MethodArgumentTypeMismatchException e) {
-
         ErrorDetail detail = ErrorDetail.of(
             e.getName(),
             "요청 파라미터 타입이 올바르지 않습니다."
                 + (e.getRequiredType() != null ? " (필요 타입: " + e.getRequiredType().getSimpleName() + ")" : ""),
             e.getValue()
         );
-
-        logWarn(e, TYPE_MISMATCH.getStatus().value());
+        String msg = TYPE_MISMATCH.getMessage();
+        logWarnOnce(e, TYPE_MISMATCH.getStatus().value(), msg);
         return ResponseEntity.status(TYPE_MISMATCH.getStatus())
-            .body(ApiErrorResponse.of(TYPE_MISMATCH.getStatus(), TYPE_MISMATCH.getMessage(), List.of(detail)));
+            .body(ApiErrorResponse.of(TYPE_MISMATCH.getStatus(), msg, List.of(detail)));
     }
 
     /** 바인딩 전반(TypeConverter)에서의 타입 불일치 */
     @ExceptionHandler(TypeMismatchException.class)
     public ResponseEntity<ApiErrorResponse<ErrorDetail>> handleSpringTypeMismatch(TypeMismatchException e) {
-
         ErrorDetail detail = ErrorDetail.of(
             e.getPropertyName(),
             "요청 값의 타입이 올바르지 않습니다."
                 + (e.getRequiredType() != null ? " (필요 타입: " + e.getRequiredType().getSimpleName() + ")" : ""),
             e.getValue()
         );
-
-        logWarn(e, TYPE_MISMATCH.getStatus().value());
+        String msg = TYPE_MISMATCH.getMessage();
+        logWarnOnce(e, TYPE_MISMATCH.getStatus().value(), msg);
         return ResponseEntity.status(TYPE_MISMATCH.getStatus())
-            .body(ApiErrorResponse.of(TYPE_MISMATCH.getStatus(), TYPE_MISMATCH.getMessage(), List.of(detail)));
+            .body(ApiErrorResponse.of(TYPE_MISMATCH.getStatus(), msg, List.of(detail)));
     }
 
     /** 메서드 파라미터 제약(@Min, @Pattern 등) 위반 */
@@ -135,41 +141,55 @@ public class GlobalExceptionHandler {
         List<ErrorDetail> errors = e.getConstraintViolations().stream()
             .map(this::toErrorDetail)
             .toList();
-        logWarn(e, METHOD_ARGUMENT_NOT_VALID.getStatus().value());
+        String msg = METHOD_ARGUMENT_NOT_VALID.getMessage();
+        logWarnOnce(e, METHOD_ARGUMENT_NOT_VALID.getStatus().value(), msg);
         return ResponseEntity.status(METHOD_ARGUMENT_NOT_VALID.getStatus())
-            .body(ApiErrorResponse.of(METHOD_ARGUMENT_NOT_VALID.getStatus(), METHOD_ARGUMENT_NOT_VALID.getMessage(), errors));
+            .body(ApiErrorResponse.of(METHOD_ARGUMENT_NOT_VALID.getStatus(), msg, errors));
     }
 
     /** 404 - 스프링 정적 리소스/핸들러 미발견 */
     @ExceptionHandler(NoResourceFoundException.class)
     public ResponseEntity<ApiErrorResponse<ErrorDetail>> handleNoResourceFound(NoResourceFoundException e) {
-        logWarn(e, RESOURCE_NOT_FOUND.getStatus().value());
+        String msg = RESOURCE_NOT_FOUND.getMessage();
+        logWarnOnce(e, RESOURCE_NOT_FOUND.getStatus().value(), msg);
         return ResponseEntity.status(RESOURCE_NOT_FOUND.getStatus())
-            .body(ApiErrorResponse.of(RESOURCE_NOT_FOUND.getStatus(), RESOURCE_NOT_FOUND.getMessage()));
+            .body(ApiErrorResponse.of(RESOURCE_NOT_FOUND.getStatus(), msg));
     }
 
     /** 405 - 지원하지 않는 메서드 */
     @ExceptionHandler(HttpRequestMethodNotSupportedException.class)
     public ResponseEntity<ApiErrorResponse<ErrorDetail>> handleMethodNotSupported(HttpRequestMethodNotSupportedException e) {
-        logWarn(e, METHOD_NOT_ALLOWED.getStatus().value());
+        String msg = METHOD_NOT_ALLOWED.getMessage();
+        logWarnOnce(e, METHOD_NOT_ALLOWED.getStatus().value(), msg);
         return ResponseEntity.status(METHOD_NOT_ALLOWED.getStatus())
-            .body(ApiErrorResponse.of(METHOD_NOT_ALLOWED.getStatus(), METHOD_NOT_ALLOWED.getMessage()));
+            .body(ApiErrorResponse.of(METHOD_NOT_ALLOWED.getStatus(), msg));
+    }
+
+    /** 409 - DB/유니크 제약 위반 등 */
+    @ExceptionHandler({DataIntegrityViolationException.class, DuplicateKeyException.class})
+    public ResponseEntity<ApiErrorResponse<ErrorDetail>> handleConflict(RuntimeException e) {
+        String msg = CONFLICT.getMessage();
+        logWarnOnce(e, CONFLICT.getStatus().value(), msg);
+        return ResponseEntity.status(CONFLICT.getStatus())
+            .body(ApiErrorResponse.of(CONFLICT.getStatus(), msg));
     }
 
     /** 415 - 미지원 미디어 타입 */
     @ExceptionHandler(HttpMediaTypeNotSupportedException.class)
     public ResponseEntity<ApiErrorResponse<ErrorDetail>> handleMediaTypeNotSupported(HttpMediaTypeNotSupportedException e) {
-        logWarn(e, UNSUPPORTED_MEDIA_TYPE.getStatus().value());
+        String msg = UNSUPPORTED_MEDIA_TYPE.getMessage();
+        logWarnOnce(e, UNSUPPORTED_MEDIA_TYPE.getStatus().value(), msg);
         return ResponseEntity.status(UNSUPPORTED_MEDIA_TYPE.getStatus())
-            .body(ApiErrorResponse.of(UNSUPPORTED_MEDIA_TYPE.getStatus(), UNSUPPORTED_MEDIA_TYPE.getMessage()));
+            .body(ApiErrorResponse.of(UNSUPPORTED_MEDIA_TYPE.getStatus(), msg));
     }
 
     /** 최종 캐치 */
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ApiErrorResponse<ErrorDetail>> handleException(Exception e) {
-        logError(e, INTERNAL_SERVER_ERROR.getStatus().value());
+        String msg = INTERNAL_SERVER_ERROR.getMessage();
+        logErrorOnce(e, INTERNAL_SERVER_ERROR.getStatus().value(), msg);
         return ResponseEntity.status(INTERNAL_SERVER_ERROR.getStatus())
-            .body(ApiErrorResponse.of(INTERNAL_SERVER_ERROR.getStatus(), INTERNAL_SERVER_ERROR.getMessage()));
+            .body(ApiErrorResponse.of(INTERNAL_SERVER_ERROR.getStatus(), msg));
     }
 
     private ErrorDetail toErrorDetail(ConstraintViolation<?> v) {
@@ -177,13 +197,16 @@ public class GlobalExceptionHandler {
         return ErrorDetail.of(field, v.getMessage(), v.getInvalidValue());
     }
 
-    private void logWarn(Exception e, int code) {
-        log.warn(e.getMessage(), e);
-        log.warn(LOG_FORMAT, e.getClass().getSimpleName(), code, e.getMessage());
+    /** 메시지 폴백 유틸 */
+    private static String firstNonNull(String a, String b, String c) {
+        return a != null ? a : (b != null ? b : c);
     }
 
-    private void logError(Exception e, int code) {
-        log.error(e.getMessage(), e);
-        log.error(LOG_FORMAT, e.getClass().getSimpleName(), code, e.getMessage());
+    /** 로깅 */
+    private void logWarnOnce(Exception e, int code, String msg) {
+        log.warn("Class: {}, Code: {}, Message: {}", e.getClass().getSimpleName(), code, msg, e);
+    }
+    private void logErrorOnce(Exception e, int code, String msg) {
+        log.error("Class: {}, Code: {}, Message: {}", e.getClass().getSimpleName(), code, msg, e);
     }
 }
