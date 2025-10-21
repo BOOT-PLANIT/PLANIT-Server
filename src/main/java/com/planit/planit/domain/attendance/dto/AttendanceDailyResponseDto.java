@@ -1,22 +1,34 @@
 package com.planit.planit.domain.attendance.dto;
 
+import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 
 @Data
 public class AttendanceDailyResponseDto {
+  @Schema(description = "출결 ID", example = "1")
+  private Long attendanceId;
 
-  private Long attendanceId; // 출결 ID
-  private String status; // 출결 상태(present, absent, late, left_early 등)
+  @Schema(description = "출결 상태", example = "present")
+  private String status;
 
-  private Long bootcampId; // 부트캠프 ID
-  private String bootcampName; // 부트캠프 이름
+  @Schema(description = "부트캠프 ID", example = "1")
+  private Long bootcampId;
 
-  private Long sessionId; // 세션 ID
+  @Schema(description = "부트캠프 이름", example = "AI Bootcamp")
+  private String bootcampName;
 
-  private String classDate; // 수업 날짜
+  @Schema(description = "세션 ID", example = "1")
+  private Long sessionId;
 
-  private Integer unitNo; // 단위번호
-  private String startDate; // 단위기간 시작일
-  private String endDate; // 단위기간 종료일
+  @Schema(description = "수업 날짜", example = "2025-09-01")
+  private String classDate;
 
+  @Schema(description = "단위기간 번호", example = "1")
+  private Integer unitNo;
+
+  @Schema(description = "단위기간 시작일", example = "2025-09-01")
+  private String startDate;
+
+  @Schema(description = "단위기간 종료일", example = "2025-09-30")
+  private String endDate;
 }

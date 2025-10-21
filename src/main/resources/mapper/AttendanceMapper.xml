@@ -27,8 +27,8 @@
 	
 	<!-- 일일 출결 등록 -->
   <insert id="regist" parameterType="com.planit.planit.domain.attendance.dto.AttendanceDTO" useGeneratedKeys="true" keyProperty="id">
-  	INSERT INTO attendance (user_id, session_id, period_id, status, created_at)
-    VALUES ( #{userId}, #{sessionId}, #{periodId}, #{status}, #{createdAt})
+  	INSERT INTO attendance (user_id, session_id, period_id, status)
+    VALUES ( #{userId}, #{sessionId}, #{periodId}, #{status})
   </insert>
 
 
