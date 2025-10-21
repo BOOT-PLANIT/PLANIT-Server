@@ -104,12 +104,16 @@ public class BootcampService {
      */
     private int calculateUnitNo(LocalDate baseDate, LocalDate targetDate, int baseDay) {
         // 월 차이 계산
-        int monthsDiff = (targetDate.getYear() - baseDate.getYear()) * 12 
-                        + (targetDate.getMonthValue() - baseDate.getMonthValue());
+        int monthsDiff = (targetDate.getYear() - baseDate.getYear()) * 12
+                + (targetDate.getMonthValue() - baseDate.getMonthValue());
         
-        // 기준일보다 이전 날짜면 이전 단위기간
-        if (targetDate.getDayOfMonth() < baseDay && monthsDiff > 0) {
-            return monthsDiff;
+        // 해당 월의 실제 기준일 계산 (월말 처리)
+        YearMonth targetYm = YearMonth.from(targetDate);
+        int actualBaseDay = Math.min(baseDay, targetYm.lengthOfMonth());
+        
+        // 기준일보다 이전이면 이전 단위기간
+        if (targetDate.getDayOfMonth() < actualBaseDay) {
+            return Math.max(1, monthsDiff); // 최소 1
         }
         
         return monthsDiff + 1;
