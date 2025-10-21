@@ -5,7 +5,7 @@
 <mapper namespace="com.planit.planit.domain.attendance.mapper.AttendanceMapper">
 
 <!-- 일일 출결 조회 -->
-<select id="getDaily" resultType="com.planit.planit.domain.attendance.dto.AttendanceDailyResponseDto">
+<select id="getDaily" resultType="com.planit.planit.domain.attendance.dto.AttendanceDailyResponseDTO">
     SELECT 
         a.id            AS attendanceId,
         a.status        AS status,
@@ -24,6 +24,16 @@
       AND s.bootcamp_id = #{bootcampId}
       AND s.class_date = #{date}
 </select>
+
+	<!--특정 날짜에 수강정보 조회 -->
+	<select id="getDailySession" resultType="map">
+	    SELECT 
+	        id,
+	        period_id
+	    FROM sessions
+	    WHERE bootcamp_id = #{bootcampId}
+	      AND class_date = #{date}
+	</select>
 	
 	<!-- 일일 출결 등록 -->
   <insert id="regist" parameterType="com.planit.planit.domain.attendance.dto.AttendanceDTO" useGeneratedKeys="true" keyProperty="id">

@@ -4,7 +4,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 
 @Data
-public class AttendanceDailyResponseDto {
+public class AttendanceDailyResponseDTO {
   @Schema(description = "출결 ID", example = "1")
   private Long attendanceId;
 

@@ -11,7 +11,8 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import com.planit.planit.domain.attendance.dto.AttendanceDTO;
-import com.planit.planit.domain.attendance.dto.AttendanceDailyResponseDto;
+import com.planit.planit.domain.attendance.dto.AttendanceDailyResponseDTO;
+import com.planit.planit.domain.attendance.dto.AttendanceRegistRequestDTO;
 import com.planit.planit.domain.attendance.service.AttendanceService;
 import com.planit.planit.global.common.response.ApiResponse;
 import io.swagger.v3.oas.annotations.Operation;
@@ -35,7 +36,7 @@ public class AttendanceController {
       responses = {@io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200",
           description = "출결 조회 성공",
           content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
-              schema = @Schema(implementation = AttendanceDailyResponseDto.class)))})
+              schema = @Schema(implementation = AttendanceDailyResponseDTO.class)))})
   @GetMapping("/{userId}")
   public ApiResponse<?> getDailyAttendance(
       @Parameter(description = "조회할 사용자 ID", example = "1") @PathVariable("userId") long userId,
@@ -45,7 +46,7 @@ public class AttendanceController {
 
       @Parameter(description = "조회할 부프캠프 ID",
           example = "1") @RequestParam(value = "bootcampId") long bootcampId) {
-    AttendanceDailyResponseDto daily = service.getDaily(userId, bootcampId, date);
+    AttendanceDailyResponseDTO daily = service.getDaily(userId, bootcampId, date);
 
     if (daily == null) {
       // 해당일자 출결정보가 없으면 등록화면으로
@@ -63,7 +64,7 @@ public class AttendanceController {
           description = "출결 등록 성공")})
   @PostMapping
   public ApiResponse<String> AttendanceRegist(
-      @RequestBody @Schema(implementation = AttendanceDTO.class) AttendanceDTO attendance) {
+      @RequestBody @Schema(implementation = AttendanceRegistRequestDTO.class) AttendanceRegistRequestDTO attendance) {
     service.regist(attendance);
     return ApiResponse.success("출결 등록 성공");
   }

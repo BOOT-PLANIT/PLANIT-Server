@@ -1,9 +1,16 @@
 package com.planit.planit.domain.attendance.service;
 
+import java.util.Map;
+
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
 import com.planit.planit.domain.attendance.dto.AttendanceDTO;
-import com.planit.planit.domain.attendance.dto.AttendanceDailyResponseDto;
+import com.planit.planit.domain.attendance.dto.AttendanceDailyResponseDTO;
+import com.planit.planit.domain.attendance.dto.AttendanceRegistRequestDTO;
 import com.planit.planit.domain.attendance.mapper.AttendanceMapper;
+import com.planit.planit.global.common.exception.BaseException;
+
 import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -23,8 +30,8 @@ public class AttendanceService {
    * @param date 선택한 날짜(YYYY-MM-DD)
    * @return 선택한 날짜로 조회한 출결 정보
    */
-  public AttendanceDailyResponseDto getDaily(Long userId, Long bootcampId, String date) {
-    AttendanceDailyResponseDto daily = mapper.getDaily(userId, bootcampId, date);
+  public AttendanceDailyResponseDTO getDaily(Long userId, Long bootcampId, String date) {
+    AttendanceDailyResponseDTO daily = mapper.getDaily(userId, bootcampId, date);
     return daily;
   }
 
@@ -34,9 +41,28 @@ public class AttendanceService {
    * @param attendance 출결 정보 (테이블 전체정보)
    */
 
-  public void regist(AttendanceDTO attendance) {
-    log.info("[출결 등록 시작] attendance={}", attendance);
-    mapper.regist(attendance);
+  @Transactional
+  public void regist(AttendanceRegistRequestDTO requestDTO) {
+    log.info("[출결 등록 시작] attendance={}", requestDTO);
+    
+    long bootcampId = requestDTO.getBootcampId();
+    String date = requestDTO.getDate();
+    //특정 날짜에 강의가 있는지 없는지 체크
+    Map<String, Object> result = mapper.getDailySession(bootcampId,date);
+    
+    if(result==null) {
+//    	BaseException(INTERNAL_SERVER_ERROR,"강의가 없는날");
+    	System.out.println("강의없");
+    } else {
+    	AttendanceDTO attendance = new AttendanceDTO();
+    	attendance.setUserId(requestDTO.getUserId());
+    	attendance.setSessionId(((Number) result.get("id")).longValue());
+    	attendance.setPeriodId(((Number) result.get("period_id")).longValue());
+    	attendance.setStatus(requestDTO.getStatus());
+    	//강의있는날 출결 등록
+    	mapper.regist(attendance);
+    }
+    
 
   }
 
