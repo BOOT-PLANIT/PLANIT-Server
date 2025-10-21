@@ -23,7 +23,18 @@ public enum ErrorCode {
     CONFLICT(HttpStatus.CONFLICT, "충돌이 발생했습니다."),
 
     // 5XX
-    INTERNAL_SERVER_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "Server 내부 에러가 발생했습니다.");
+    INTERNAL_SERVER_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "Server 내부 에러가 발생했습니다."),
+
+    // Bootcamp Errors
+    BOOTCAMP_NOT_FOUND(HttpStatus.NOT_FOUND, "부트캠프를 찾을 수 없습니다."),
+    BOOTCAMP_ALREADY_EXISTS(HttpStatus.CONFLICT, "이미 존재하는 부트캠프입니다."),
+    BOOTCAMP_INVALID_CLASS_DATES(HttpStatus.BAD_REQUEST, "유효하지 않은 교육일 형식입니다."),
+
+    // Session Errors
+    SESSION_NOT_FOUND(HttpStatus.NOT_FOUND, "세션을 찾을 수 없습니다."),
+
+    // UnitPeriod Errors
+    UNIT_PERIOD_NOT_FOUND(HttpStatus.NOT_FOUND, "단위기간을 찾을 수 없습니다.");
 
     private final HttpStatus status;
 

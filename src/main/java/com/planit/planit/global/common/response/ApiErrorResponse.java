@@ -1,8 +1,9 @@
 package com.planit.planit.global.common.response;
 
 import java.util.Objects;
-import org.springframework.http.HttpStatus;
 import java.util.List;
+
+import org.springframework.http.HttpStatus;
 
 public record ApiErrorResponse<E>(int code, String message, List<E> errors) {
 
@@ -17,6 +18,10 @@ public record ApiErrorResponse<E>(int code, String message, List<E> errors) {
     public static <E> ApiErrorResponse<E> of(HttpStatus status, String message, List<E> errors) {
         Objects.requireNonNull(status, "HttpStatus must not be null");
         Objects.requireNonNull(message, "Message must not be null");
-        return new ApiErrorResponse<>(status.value(), message, errors != null ? errors : List.of());
+        return new ApiErrorResponse<>(
+            status.value(),
+            message,
+            errors != null ? List.copyOf(errors) : List.of()
+        );
     }
 }
