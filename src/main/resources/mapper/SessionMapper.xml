@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.planit.planit.domain.session.mapper.SessionMapper">
+
+    <!-- 전체 조회 -->
+    <select id="findAll" resultType="com.planit.planit.domain.session.dto.SessionDTO">
+        SELECT id, bootcamp_id as "bootcampId", period_id as "periodId", 
+               class_date as "classDate", created_at as "createdAt", updated_at as "updatedAt"
+        FROM sessions
+        ORDER BY class_date ASC
+    </select>
+
+    <!-- 부트캠프별 조회 -->
+    <select id="findByBootcampId" parameterType="long" resultType="com.planit.planit.domain.session.dto.SessionDTO">
+        SELECT id, bootcamp_id as "bootcampId", period_id as "periodId", 
+               class_date as "classDate", created_at as "createdAt", updated_at as "updatedAt"
+        FROM sessions
+        WHERE bootcamp_id = #{bootcampId}
+        ORDER BY class_date ASC
+    </select>
+
+    <!-- 단일 조회 -->
+    <select id="findById" parameterType="long" resultType="com.planit.planit.domain.session.dto.SessionDTO">
+        SELECT id, bootcamp_id as "bootcampId", period_id as "periodId", 
+               class_date as "classDate", created_at as "createdAt", updated_at as "updatedAt"
+        FROM sessions
+        WHERE id = #{id}
+    </select>
+
+    <!-- 단일 추가 -->
+    <insert id="insert" parameterType="com.planit.planit.domain.session.dto.SessionDTO" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO sessions (bootcamp_id, period_id, class_date, created_at, updated_at)
+        VALUES (#{bootcampId}, #{periodId}, #{classDate}, NOW(), NOW())
+    </insert>
+
+    <!-- 일괄 추가 -->
+    <insert id="insertBatch" parameterType="java.util.List">
+        INSERT INTO sessions (bootcamp_id, period_id, class_date, created_at, updated_at)
+        VALUES
+        <foreach collection="list" item="session" separator=",">
+            (#{session.bootcampId}, #{session.periodId}, #{session.classDate}, NOW(), NOW())
+        </foreach>
+    </insert>
+
+    <!-- 수정 -->
+    <update id="update" parameterType="com.planit.planit.domain.session.dto.SessionDTO">
+        UPDATE sessions
+        SET bootcamp_id = #{bootcampId},
+            period_id = #{periodId},
+            class_date = #{classDate},
+            updated_at = NOW()
+        WHERE id = #{id}
+    </update>
+
+    <!-- 단일 삭제 -->
+    <delete id="delete" parameterType="long">
+        DELETE FROM sessions WHERE id = #{id}
+    </delete>
+
+    <!-- 부트캠프별 삭제 -->
+    <delete id="deleteByBootcampId" parameterType="long">
+        DELETE FROM sessions WHERE bootcamp_id = #{bootcampId}
+    </delete>
+
+</mapper>
