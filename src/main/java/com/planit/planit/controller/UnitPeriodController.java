@@ -2,6 +2,8 @@ package com.planit.planit.controller;
 
 import java.util.List;
 
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -64,8 +66,12 @@ public class UnitPeriodController {
         }
     )
     @GetMapping("/{id}")
-    public UnitPeriodDTO getOne(@PathVariable Long id) {
-        return unitPeriodService.getUnitPeriod(id);
+    public ResponseEntity<UnitPeriodDTO> getOne(@PathVariable Long id) {
+        UnitPeriodDTO dto = unitPeriodService.getUnitPeriod(id);
+        if (dto == null) {
+    		return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
+        }
+        return ResponseEntity.ok(dto);
     }
 
     @Operation(

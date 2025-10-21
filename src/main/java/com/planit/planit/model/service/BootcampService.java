@@ -1,5 +1,6 @@
 package com.planit.planit.model.service;
 
+import java.time.YearMonth;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
@@ -62,9 +63,14 @@ public class BootcampService {
                     unitPeriod.setBootcampId(bootcamp.getId());
                     unitPeriod.setUnitNo(unitNo);
                     
-                    // 단위기간의 시작일과 종료일 계산
-                    LocalDate periodStart = firstDate.plusMonths(unitNo - 1);
-                    LocalDate periodEnd = periodStart.plusMonths(1).minusDays(1);
+                 // 단위기간의 시작/종료일 계산 (baseDay 기준, 연속성 보장)
+                    YearMonth ym = YearMonth.from(firstDate).plusMonths(unitNo - 1);
+                    int startDay = Math.min(baseDay, ym.lengthOfMonth());
+                    LocalDate periodStart = ym.atDay(startDay);
+                    YearMonth nextYm = ym.plusMonths(1);
+                    int nextStartDay = Math.min(baseDay, nextYm.lengthOfMonth());
+                    LocalDate nextStart = nextYm.atDay(nextStartDay);
+                    LocalDate periodEnd = nextStart.minusDays(1);
                     
                     unitPeriod.setStartDate(periodStart);
                     unitPeriod.setEndDate(periodEnd);
