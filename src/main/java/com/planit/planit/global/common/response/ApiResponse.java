@@ -4,11 +4,12 @@ import org.springframework.http.HttpStatus;
 
 public record ApiResponse<T>(int code, String message, T data) {
 
-    public static <T> ApiResponse<T> response(HttpStatus httpStatus, String message, T data) {
-        return new ApiResponse<>(httpStatus.value(), message, data);
+    public static <T> ApiResponse<T> success(T data) {
+        return new ApiResponse<>(HttpStatus.OK.value(), "성공", data);
     }
 
-    public static <T> ApiResponse<T> response(HttpStatus httpStatus, String message) {
-        return new ApiResponse<>(httpStatus.value(), message, null);
+    public static <T> ApiResponse<T> success(String message, T data) {
+        return new ApiResponse<>(HttpStatus.OK.value(), message, data);
     }
 }
+
