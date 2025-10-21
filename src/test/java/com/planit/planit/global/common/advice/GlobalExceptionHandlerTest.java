@@ -34,7 +34,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 /**
  * - 성공: ApiResponse
- * - 실패: ApiErrorResponse<ErrorDetail> (errors는 항상 빈 배열 [])
+ * - 실패: ApiErrorResponse<ErrorDetail>
  */
 class GlobalExceptionHandlerTest {
 

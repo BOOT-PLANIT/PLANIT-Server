@@ -17,6 +17,7 @@ import org.springframework.http.converter.HttpMessageNotReadableException;
 
 import org.springframework.validation.BindException;
 
+import org.springframework.validation.BindingResult;
 import org.springframework.web.HttpMediaTypeNotSupportedException;
 import org.springframework.web.HttpRequestMethodNotSupportedException;
 
@@ -49,9 +50,8 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(BaseException.class)
     public ResponseEntity<ApiErrorResponse<ErrorDetail>> handleBaseException(BaseException e) {
         ErrorCode error = e.getErrorCode();
-        String msg = Optional.ofNullable(e.getMessage())
-            .or(() -> Optional.ofNullable(error.getMessage()))
-            .orElse(DEFAULT_SERVER_MESSAGE);
+        String msg = (e.getMessage() != null) ? e.getMessage()
+            : (error.getMessage() != null ? error.getMessage() : DEFAULT_SERVER_MESSAGE);
         logWarn(e, error.getStatus().value(), msg);
         return ResponseEntity.status(error.getStatus())
             .body(ApiErrorResponse.of(error.getStatus(), msg));
@@ -87,19 +87,20 @@ public class GlobalExceptionHandler {
     /** @Valid @RequestBody 필드 단위 검증 실패 */
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<ApiErrorResponse<ErrorDetail>> handleMethodArgumentNotValid(MethodArgumentNotValidException e) {
-        List<ErrorDetail> errors = e.getBindingResult().getFieldErrors().stream()
-            .map(fe -> ErrorDetail.of(fe.getField(), fe.getDefaultMessage(), fe.getRejectedValue()))
-            .toList();
-        String msg = METHOD_ARGUMENT_NOT_VALID.getMessage();
-        logWarn(e, METHOD_ARGUMENT_NOT_VALID.getStatus().value(), msg);
-        return ResponseEntity.status(METHOD_ARGUMENT_NOT_VALID.getStatus())
-            .body(ApiErrorResponse.of(METHOD_ARGUMENT_NOT_VALID.getStatus(), msg, errors));
+        return handleBindingResultErrors(e, e.getBindingResult());
     }
 
     /** @Validated @ModelAttribute 바인딩/검증 실패 */
     @ExceptionHandler(BindException.class)
     public ResponseEntity<ApiErrorResponse<ErrorDetail>> handleBindException(BindException e) {
-        List<ErrorDetail> errors = e.getBindingResult().getFieldErrors().stream()
+        return handleBindingResultErrors(e, e.getBindingResult());
+    }
+
+    // 공통 처리 추출 (DRY)
+    private ResponseEntity<ApiErrorResponse<ErrorDetail>> handleBindingResultErrors(
+        Exception e, BindingResult bindingResult
+    ) {
+        List<ErrorDetail> errors = bindingResult.getFieldErrors().stream()
             .map(fe -> ErrorDetail.of(fe.getField(), fe.getDefaultMessage(), fe.getRejectedValue()))
             .toList();
         String msg = METHOD_ARGUMENT_NOT_VALID.getMessage();
