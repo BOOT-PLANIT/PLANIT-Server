@@ -15,6 +15,7 @@ import com.planit.planit.domain.bootcamp.service.BootcampService;
 import com.planit.planit.global.common.response.ApiResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 
 @RestController
 @RequestMapping("/api/v1/bootcamps")
@@ -61,7 +62,7 @@ public class BootcampController {
           @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "500",
               description = "서버 에러")})
   @PostMapping
-  public ApiResponse<BootcampDTO> add(@RequestBody BootcampDTO bootcamp) {
+  public ApiResponse<BootcampDTO> add(@Valid @RequestBody BootcampDTO bootcamp) {
     bootcampService.addBootcamp(bootcamp);
     return ApiResponse.response(HttpStatus.CREATED, "부트캠프 등록 성공", bootcamp);
   }
@@ -75,7 +76,8 @@ public class BootcampController {
           @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "500",
               description = "서버 에러")})
   @PutMapping("/{id}")
-  public ApiResponse<BootcampDTO> update(@PathVariable Long id, @RequestBody BootcampDTO bootcamp) {
+  public ApiResponse<BootcampDTO> update(@PathVariable Long id,
+      @Valid @RequestBody BootcampDTO bootcamp) {
     bootcamp.setId(id);
     bootcampService.updateBootcamp(bootcamp);
     return ApiResponse.response(HttpStatus.OK, "부트캠프 수정 성공", bootcamp);
