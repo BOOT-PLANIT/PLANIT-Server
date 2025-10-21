@@ -41,7 +41,7 @@ class GlobalExceptionHandlerTest {
     @RestController
     @RequestMapping("/test")
     @Validated // 메서드 파라미터 검증용
-    public static class TestController {
+    static class TestController {
 
         /** BaseException -> UNAUTHORIZED(401) */
         @GetMapping("/unauthorized")
@@ -85,7 +85,7 @@ class GlobalExceptionHandlerTest {
     }
 
     @Getter @Setter @NoArgsConstructor
-    public static class SimpleDto {
+    static class SimpleDto {
         @NotBlank(message = "name은 비어 있을 수 없습니다.")
         private String name;
 
