@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
+	"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.planit.planit.domain.attendance.mapper.AttendanceMapper">
+
+<!-- 일일 출결 조회 -->
+<select id="getDaily" resultType="com.planit.planit.domain.attendance.dto.AttendanceDailyResponseDto">
+    SELECT 
+        a.id AS attendanceId,
+        a.user_id AS userId,
+        u.username AS username,
+        a.status AS status,
+        s.period_id AS periodId,
+        s.class_date AS classDate,
+        b.id AS bootcampId,
+        b.name AS bootcampName
+    FROM attendance a
+    JOIN sessions s ON a.session_id = s.id
+    JOIN users u ON a.user_id = u.id
+    JOIN bootcamps b ON s.bootcamp_id = b.id
+    WHERE a.user_id = #{userId}
+      AND s.bootcamp_id = #{bootcampId}
+      AND s.class_date = #{date}
+</select>
+	
+	<!-- 일일 출결 등록 -->
+  <insert id="regist" parameterType="com.planit.planit.domain.attendance.dto.AttendanceDTO" useGeneratedKeys="true" keyProperty="id">
+  	INSERT INTO attendance (user_id, session_id, period_id, status, created_at)
+    VALUES ( #{userId}, #{sessionId}, #{periodId}, #{status}, #{createdAt})
+  </insert>
+
+
+  <!-- 일일 출결 수정 -->
+  <update id="update" parameterType="com.planit.planit.domain.attendance.dto.AttendanceDTO">
+    UPDATE attendance
+    SET
+      status = #{status},
+      updated_at = NOW()
+    WHERE
+      id = #{id}
+  </update>
+</mapper>
+
+
