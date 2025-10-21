@@ -26,4 +26,5 @@ public class DataBaseConfiguration {
 		System.out.println(dataSource.toString());
 		return dataSource;
 	}
+
 }
