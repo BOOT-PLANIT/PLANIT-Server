@@ -5,12 +5,11 @@ import com.planit.planit.global.common.exception.ErrorCode;
 
 public class SessionNotFoundException extends BaseException {
 
-  public SessionNotFoundException() {
-    super(ErrorCode.SESSION_NOT_FOUND);
-  }
+    public SessionNotFoundException() {
+        super(ErrorCode.SESSION_NOT_FOUND);
+    }
 
-  public SessionNotFoundException(String message) {
-    super(ErrorCode.SESSION_NOT_FOUND, message);
-  }
+    public SessionNotFoundException(String message) {
+        super(ErrorCode.SESSION_NOT_FOUND, message);
+    }
 }
-

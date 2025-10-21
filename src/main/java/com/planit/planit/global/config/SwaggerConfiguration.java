@@ -37,5 +37,4 @@ public class SwaggerConfiguration {
 		return GroupedOpenApi.builder().group("planit-test").pathsToMatch("/test/**").build();
 	}
 
-	 
 }
