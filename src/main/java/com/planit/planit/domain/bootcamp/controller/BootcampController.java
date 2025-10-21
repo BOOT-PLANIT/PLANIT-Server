@@ -2,7 +2,8 @@ package com.planit.planit.domain.bootcamp.controller;
 
 import java.util.List;
 
-import com.planit.planit.domain.bootcamp.dto.BootcampDTO;
+import com.planit.planit.domain.bootcamp.dto.BootcampRequestDTO;
+import com.planit.planit.domain.bootcamp.dto.BootcampResponseDTO;
 import com.planit.planit.domain.bootcamp.service.BootcampService;
 import com.planit.planit.global.common.response.ApiResponse;
 import com.planit.planit.global.common.response.ErrorDetail;
@@ -54,8 +55,8 @@ public class BootcampController {
         }
     )
     @GetMapping
-    public ResponseEntity<ApiResponse<List<BootcampDTO>>> getAll() {
-        List<BootcampDTO> bootcamps = bootcampService.getAllBootcamps();
+    public ResponseEntity<ApiResponse<List<BootcampResponseDTO>>> getAll() {
+        List<BootcampResponseDTO> bootcamps = bootcampService.getAllBootcamps();
         return ResponseEntity.ok(
             ApiResponse.success("부트캠프 목록 조회 성공", bootcamps)
         );
@@ -92,8 +93,8 @@ public class BootcampController {
         }
     )
     @GetMapping("/{id}")
-    public ResponseEntity<ApiResponse<BootcampDTO>> getOne(@PathVariable Long id) {
-        BootcampDTO bootcamp = bootcampService.getBootcamp(id);
+    public ResponseEntity<ApiResponse<BootcampResponseDTO>> getOne(@PathVariable Long id) {
+        BootcampResponseDTO bootcamp = bootcampService.getBootcamp(id);
         return ResponseEntity.ok(
             ApiResponse.success("부트캠프 조회 성공", bootcamp)
         );
@@ -130,8 +131,8 @@ public class BootcampController {
         }
     )
     @PostMapping
-    public ResponseEntity<ApiResponse<BootcampDTO>> add(@Valid @RequestBody BootcampDTO bootcamp) {
-        bootcampService.addBootcamp(bootcamp);
+    public ResponseEntity<ApiResponse<BootcampResponseDTO>> add(@Valid @RequestBody BootcampRequestDTO request) {
+        BootcampResponseDTO bootcamp = bootcampService.addBootcamp(request);
         return ResponseEntity.status(HttpStatus.CREATED).body(
             ApiResponse.success("부트캠프 등록 성공", bootcamp)
         );
@@ -168,12 +169,11 @@ public class BootcampController {
         }
     )
     @PutMapping("/{id}")
-    public ResponseEntity<ApiResponse<BootcampDTO>> update(
+    public ResponseEntity<ApiResponse<BootcampResponseDTO>> update(
         @PathVariable Long id,
-        @Valid @RequestBody BootcampDTO bootcamp
+        @Valid @RequestBody BootcampRequestDTO request
     ) {
-        bootcamp.setId(id);
-        bootcampService.updateBootcamp(bootcamp);
+        BootcampResponseDTO bootcamp = bootcampService.updateBootcamp(id, request);
         return ResponseEntity.ok(
             ApiResponse.success("부트캠프 수정 성공", bootcamp)
         );
@@ -221,14 +221,14 @@ public class BootcampController {
     static class BootcampListResponseSchema {
         @Schema(example = "200") public int code;
         @Schema(example = "부트캠프 목록 조회 성공") public String message;
-        public List<BootcampDTO> data;
+        public List<BootcampResponseDTO> data;
     }
 
     @Schema(name = "BootcampOneResponse", description = "부트캠프 단건 응답")
     static class BootcampOneResponseSchema {
         @Schema(example = "200") public int code;
         @Schema(example = "부트캠프 조회 성공") public String message;
-        public BootcampDTO data;
+        public BootcampResponseDTO data;
     }
 
     @Schema(name = "VoidResponse", description = "데이터 없는 성공 응답")

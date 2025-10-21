@@ -4,9 +4,12 @@ import java.time.LocalDate;
 import java.time.YearMonth;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import com.planit.planit.domain.bootcamp.dto.BootcampDTO;
+import com.planit.planit.domain.bootcamp.dto.BootcampRequestDTO;
+import com.planit.planit.domain.bootcamp.dto.BootcampResponseDTO;
 import com.planit.planit.domain.bootcamp.exception.BootcampInvalidClassDatesException;
 import com.planit.planit.domain.bootcamp.exception.BootcampNotFoundException;
 import com.planit.planit.domain.bootcamp.mapper.BootcampMapper;
@@ -28,25 +31,34 @@ public class BootcampService {
         this.unitPeriodMapper = unitPeriodMapper;
     }
 
-    public List<BootcampDTO> getAllBootcamps() {
-        return bootcampMapper.findAll();
+    public List<BootcampResponseDTO> getAllBootcamps() {
+        List<BootcampDTO> bootcamps = bootcampMapper.findAll();
+        return bootcamps.stream()
+            .map(this::toResponseDTO)
+            .collect(Collectors.toList());
     }
 
-    public BootcampDTO getBootcamp(Long id) {
+    public BootcampResponseDTO getBootcamp(Long id) {
         BootcampDTO bootcamp = bootcampMapper.findById(id);
         if (bootcamp == null) {
             throw new BootcampNotFoundException("ID가 " + id + "인 부트캠프를 찾을 수 없습니다.");
         }
-        return bootcamp;
+        return toResponseDTO(bootcamp);
     }
 
     @Transactional
-    public void addBootcamp(BootcampDTO bootcamp) {
-        // 1. 부트캠프 저장
+    public BootcampResponseDTO addBootcamp(BootcampRequestDTO request) {
+        // 1. Request DTO를 내부 DTO로 변환
+        BootcampDTO bootcamp = toInternalDTO(request);
+        
+        // 2. 부트캠프 저장 (생성시간은 Mapper에서 NOW()로 자동 설정)
         bootcampMapper.insert(bootcamp);
 
-        // 2. 교육일이 있으면 단위기간 및 세션 생성
+        // 3. 교육일이 있으면 단위기간 및 세션 생성
         createUnitPeriodsAndSessions(bootcamp);
+        
+        // 4. 저장된 데이터 조회 후 Response DTO로 반환
+        return getBootcamp(bootcamp.getId());
     }
 
     /**
@@ -184,21 +196,29 @@ public class BootcampService {
     }
 
     @Transactional
-    public void updateBootcamp(BootcampDTO bootcamp) {
+    public BootcampResponseDTO updateBootcamp(Long id, BootcampRequestDTO request) {
         // 부트캠프 존재 확인
-        BootcampDTO existingBootcamp = bootcampMapper.findById(bootcamp.getId());
+        BootcampDTO existingBootcamp = bootcampMapper.findById(id);
         if (existingBootcamp == null) {
-            throw new BootcampNotFoundException("ID가 " + bootcamp.getId() + "인 부트캠프를 찾을 수 없습니다.");
+            throw new BootcampNotFoundException("ID가 " + id + "인 부트캠프를 찾을 수 없습니다.");
         }
 
+        // Request DTO를 내부 DTO로 변환
+        BootcampDTO bootcamp = toInternalDTO(request);
+        bootcamp.setId(id);
+
+        // 부트캠프 수정 (업데이트 시간은 Mapper에서 NOW()로 자동 설정)
         bootcampMapper.update(bootcamp);
 
         // 기존 세션 및 단위기간 삭제
-        sessionMapper.deleteByBootcampId(bootcamp.getId());
-        unitPeriodMapper.deleteByBootcampId(bootcamp.getId());
+        sessionMapper.deleteByBootcampId(id);
+        unitPeriodMapper.deleteByBootcampId(id);
 
         // 교육일이 있으면 단위기간 및 세션 재생성
         createUnitPeriodsAndSessions(bootcamp);
+        
+        // 수정된 데이터 조회 후 Response DTO로 반환
+        return getBootcamp(id);
     }
 
     @Transactional
@@ -215,6 +235,33 @@ public class BootcampService {
         unitPeriodMapper.deleteByBootcampId(id);
         // 부트캠프 삭제
         bootcampMapper.delete(id);
+    }
+
+    /**
+     * Request DTO를 내부 DTO로 변환
+     */
+    private BootcampDTO toInternalDTO(BootcampRequestDTO request) {
+        BootcampDTO dto = new BootcampDTO();
+        dto.setName(request.getName());
+        dto.setOrganizer(request.getOrganizer());
+        dto.setIsKdt(request.getIsKdt());
+        dto.setClassDates(request.getClassDates());
+        return dto;
+    }
+
+    /**
+     * 내부 DTO를 Response DTO로 변환
+     */
+    private BootcampResponseDTO toResponseDTO(BootcampDTO dto) {
+        BootcampResponseDTO response = new BootcampResponseDTO();
+        response.setId(dto.getId());
+        response.setName(dto.getName());
+        response.setOrganizer(dto.getOrganizer());
+        response.setIsKdt(dto.getIsKdt());
+        response.setClassDates(dto.getClassDates());
+        response.setCreatedAt(dto.getCreatedAt());
+        response.setUpdatedAt(dto.getUpdatedAt());
+        return response;
     }
 }
 
