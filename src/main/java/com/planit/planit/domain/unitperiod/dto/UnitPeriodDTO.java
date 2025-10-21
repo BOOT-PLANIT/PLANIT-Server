@@ -3,17 +3,14 @@ package com.planit.planit.domain.unitperiod.dto;
 import java.time.LocalDate;
 import java.time.OffsetDateTime;
 import io.swagger.v3.oas.annotations.media.Schema;
-import jakarta.validation.constraints.NotNull;
 import lombok.Data;
 
 @Data
 public class UnitPeriodDTO {
   @Schema(description = "단위기간 ID", example = "1")
-  @NotNull(message = "단위기간 ID는 필수입니다")
   private Long id;
 
   @Schema(description = "부트캠프 ID", example = "1")
-  @NotNull(message = "부트캠프 ID는 필수입니다")
   private Long bootcampId;
 
   @Schema(description = "단위기간 번호", example = "1")
