@@ -3,26 +3,26 @@
         PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 
-<mapper namespace="com.planit.planit.model.dao.UserMapper">
+<mapper namespace="com.planit.planit.domain.user.mapper.UserMapper">
 
     <!-- 전체 조회 -->
-    <select id="findAll" resultType="com.planit.planit.model.dto.UserDTO">
+    <select id="findAll" resultType="com.planit.planit.domain.user.dto.UserDTO">
         SELECT * FROM test_users
     </select>
 
     <!-- 단일 조회 -->
-    <select id="findById" parameterType="long" resultType="com.planit.planit.model.dto.UserDTO">
+    <select id="findById" parameterType="long" resultType="com.planit.planit.domain.user.dto.UserDTO">
         SELECT * FROM test_users WHERE id = #{id}
     </select>
 
     <!-- 추가 -->
-    <insert id="insert" parameterType="com.planit.planit.model.dto.UserDTO" useGeneratedKeys="true" keyProperty="id">
+    <insert id="insert" parameterType="com.planit.planit.domain.user.dto.UserDTO" useGeneratedKeys="true" keyProperty="id">
         INSERT INTO test_users (name, email)
         VALUES (#{name}, #{email})
     </insert>
 
     <!-- 수정 -->
-    <update id="update" parameterType="com.planit.planit.model.dto.UserDTO">
+    <update id="update" parameterType="com.planit.planit.domain.user.dto.UserDTO">
         UPDATE test_users
         SET name = #{name},
             email = #{email}

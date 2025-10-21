@@ -3,30 +3,30 @@
         PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 
-<mapper namespace="com.planit.planit.model.dao.BootcampMapper">
+<mapper namespace="com.planit.planit.domain.bootcamp.mapper.BootcampMapper">
 
     <!-- 전체 조회 -->
-    <select id="findAll" resultType="com.planit.planit.model.dto.BootcampDTO">
+    <select id="findAll" resultType="com.planit.planit.domain.bootcamp.dto.BootcampDTO">
         SELECT id, name, is_kdt as "isKdt", created_at as "createdAt", updated_at as "updatedAt"
         FROM bootcamps
         ORDER BY created_at DESC
     </select>
 
     <!-- 단일 조회 -->
-    <select id="findById" parameterType="long" resultType="com.planit.planit.model.dto.BootcampDTO">
+    <select id="findById" parameterType="long" resultType="com.planit.planit.domain.bootcamp.dto.BootcampDTO">
         SELECT id, name, is_kdt as "isKdt", created_at as "createdAt", updated_at as "updatedAt"
         FROM bootcamps
         WHERE id = #{id}
     </select>
 
     <!-- 추가 -->
-    <insert id="insert" parameterType="com.planit.planit.model.dto.BootcampDTO" useGeneratedKeys="true" keyProperty="id">
+    <insert id="insert" parameterType="com.planit.planit.domain.bootcamp.dto.BootcampDTO" useGeneratedKeys="true" keyProperty="id">
         INSERT INTO bootcamps (name, is_kdt, created_at, updated_at)
         VALUES (#{name}, #{isKdt}, NOW(), NOW())
     </insert>
 
     <!-- 수정 -->
-    <update id="update" parameterType="com.planit.planit.model.dto.BootcampDTO">
+    <update id="update" parameterType="com.planit.planit.domain.bootcamp.dto.BootcampDTO">
         UPDATE bootcamps
         SET name = #{name},
             is_kdt = #{isKdt},
@@ -40,4 +40,5 @@
     </delete>
 
 </mapper>
+
 
