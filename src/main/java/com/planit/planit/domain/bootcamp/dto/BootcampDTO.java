@@ -18,6 +18,10 @@ public class BootcampDTO {
   @NotBlank(message = "부트캠프 이름은 필수입니다")
   private String name;
 
+  @Schema(description = "기관 이름", example = "LG 유플러스")
+  @NotBlank(message = "기관 이름은 필수입니다")
+  private String organizer;
+
   @Schema(description = "K-Digital Training 여부", example = "false")
   @NotNull(message = "K-Digital Training 여부는 필수입니다")
   private Boolean isKdt;
