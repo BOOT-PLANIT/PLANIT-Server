@@ -20,6 +20,7 @@ import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 
 @RestController
 @RequestMapping("api/v1/attendance")
@@ -55,7 +56,7 @@ public class AttendanceController {
       responses = {@io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200",
           description = "출결 등록 성공")})
   @PostMapping
-  public ApiResponse<String> AttendanceRegist(@RequestBody @Schema(
+  public ApiResponse<String> AttendanceRegist(@Valid @RequestBody @Schema(
       implementation = AttendanceRegistRequestDTO.class) AttendanceRegistRequestDTO attendance) {
     service.regist(attendance);
     return ApiResponse.success("출결 등록 성공");
