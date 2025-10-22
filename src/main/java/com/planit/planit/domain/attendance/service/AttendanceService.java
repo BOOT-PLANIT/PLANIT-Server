@@ -1,5 +1,6 @@
 package com.planit.planit.domain.attendance.service;
 
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Map;
 import org.springframework.stereotype.Service;
@@ -58,6 +59,13 @@ public class AttendanceService {
     String date = requestDTO.getDate();
     // 특정 날짜에 강의가 있는지 없는지 체크 sessionId,periodId 받아옴
     Map<String, Object> result = mapper.getDailySession(bootcampId, date);
+
+    // 미래의 날짜에서는 출결등록 못하게 설정
+    LocalDate inputDate = LocalDate.parse(date);
+    LocalDate today = LocalDate.now();
+    if (inputDate.isAfter(today)) {
+      throw new BaseException(ErrorCode.FORBIDDEN, "선택 날짜가 오늘 이후 날짜이므로 출결 등록 불가합니다.") {};
+    }
 
     if (result == null) {
       throw new BaseException(ErrorCode.RESOURCE_NOT_FOUND, "해당 날짜에는 강의가 없습니다.") {};
