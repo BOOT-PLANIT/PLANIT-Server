@@ -30,6 +30,14 @@
         WHERE id = #{id}
     </select>
 
+    <!-- 부트캠프ID와 단위번호로 조회 -->
+    <select id="findByBootcampIdAndUnitNo" resultType="com.planit.planit.domain.unitperiod.dto.UnitPeriodDTO">
+        SELECT id, bootcamp_id as "bootcampId", unit_no as "unitNo", 
+               start_date as "startDate", end_date as "endDate", created_at as "createdAt"
+        FROM unit_periods
+        WHERE bootcamp_id = #{bootcampId} AND unit_no = #{unitNo}
+    </select>
+
     <!-- 추가 -->
     <insert id="insert" parameterType="com.planit.planit.domain.unitperiod.dto.UnitPeriodDTO" useGeneratedKeys="true" keyProperty="id">
         INSERT INTO unit_periods (bootcamp_id, unit_no, start_date, end_date, created_at)

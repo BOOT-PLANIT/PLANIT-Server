@@ -14,6 +14,8 @@ public class BootcampDTO {
   private String name;
   private String organizer;
   private Boolean isKdt;
+  private LocalDate startedAt;
+  private LocalDate endedAt;
   private List<LocalDate> classDates;
   private OffsetDateTime createdAt;
   private OffsetDateTime updatedAt;

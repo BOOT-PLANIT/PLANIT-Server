@@ -32,9 +32,11 @@ public enum ErrorCode {
 
     // Session Errors
     SESSION_NOT_FOUND(HttpStatus.NOT_FOUND, "세션을 찾을 수 없습니다."),
+    SESSION_UNIT_NO_REQUIRED(HttpStatus.BAD_REQUEST, "단위기간 번호는 필수입니다."),
 
     // UnitPeriod Errors
-    UNIT_PERIOD_NOT_FOUND(HttpStatus.NOT_FOUND, "단위기간을 찾을 수 없습니다.");
+    UNIT_PERIOD_NOT_FOUND(HttpStatus.NOT_FOUND, "단위기간을 찾을 수 없습니다."),
+    UNIT_PERIOD_DATES_REQUIRED(HttpStatus.BAD_REQUEST, "새로운 단위기간을 생성하려면 시작일과 종료일이 필요합니다.");
 
     private final HttpStatus status;
 
