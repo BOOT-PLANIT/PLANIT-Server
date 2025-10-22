@@ -6,19 +6,19 @@ import com.planit.planit.domain.session.dto.SessionDTO;
 
 @Mapper
 public interface SessionMapper {
-    List<SessionDTO> findAll();
+  List<SessionDTO> findAll();
 
-    List<SessionDTO> findByBootcampId(Long bootcampId);
+  List<SessionDTO> findByBootcampId(Long bootcampId);
 
-    SessionDTO findById(Long id);
+  SessionDTO findById(Long id);
 
-    void insert(SessionDTO session);
+  void insert(SessionDTO session);
 
-    void insertBatch(List<SessionDTO> sessions);
+  void insertBatch(List<SessionDTO> sessions);
 
-    void update(SessionDTO session);
+  void update(SessionDTO session);
 
-    void delete(Long id);
+  void delete(Long id);
 
-    void deleteByBootcampId(Long bootcampId);
+  void deleteByBootcampId(Long bootcampId);
 }
