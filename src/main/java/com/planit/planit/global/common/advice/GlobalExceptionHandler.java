@@ -8,7 +8,6 @@ import com.planit.planit.global.common.response.ErrorDetail;
 import jakarta.validation.ConstraintViolation;
 import jakarta.validation.ConstraintViolationException;
 
-import java.util.Optional;
 import lombok.extern.slf4j.Slf4j;
 
 import org.springframework.beans.TypeMismatchException;

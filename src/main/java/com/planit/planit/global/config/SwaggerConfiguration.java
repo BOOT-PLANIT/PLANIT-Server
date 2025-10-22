@@ -30,11 +30,5 @@ public class SwaggerConfiguration {
 
 		return new OpenAPI().components(new Components()).info(info);
 	}
-	
-	
-	@Bean
-	public GroupedOpenApi usersApi() {
-		return GroupedOpenApi.builder().group("planit-test").pathsToMatch("/test/**").build();
-	}
 
 }
