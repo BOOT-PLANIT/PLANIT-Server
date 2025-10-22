@@ -6,6 +6,7 @@ import org.springframework.transaction.annotation.Transactional;
 import com.planit.planit.domain.bootcamp.service.BootcampService;
 import com.planit.planit.domain.session.dto.SessionDTO;
 import com.planit.planit.domain.session.exception.SessionNotFoundException;
+import com.planit.planit.domain.session.exception.SessionUnitNoRequiredException;
 import com.planit.planit.domain.session.mapper.SessionMapper;
 import com.planit.planit.domain.unitperiod.dto.UnitPeriodDTO;
 import com.planit.planit.domain.unitperiod.service.UnitPeriodService;
@@ -48,7 +49,7 @@ public class SessionService {
 
     // 단위기간 정보 검증
     if (session.getUnitNo() == null) {
-      throw new IllegalArgumentException("단위기간 번호(unitNo)는 필수입니다.");
+      throw new SessionUnitNoRequiredException("단위기간 번호(unitNo)는 필수입니다.");
     }
 
     // 단위기간 찾거나 생성

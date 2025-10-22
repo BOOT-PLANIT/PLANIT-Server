@@ -5,6 +5,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import com.planit.planit.domain.bootcamp.service.BootcampService;
 import com.planit.planit.domain.unitperiod.dto.UnitPeriodDTO;
+import com.planit.planit.domain.unitperiod.exception.UnitPeriodDatesRequiredException;
 import com.planit.planit.domain.unitperiod.exception.UnitPeriodNotFoundException;
 import com.planit.planit.domain.unitperiod.mapper.UnitPeriodMapper;
 
@@ -65,7 +66,7 @@ public class UnitPeriodService {
       // 없으면 새로 생성
       // startDate와 endDate가 제공되지 않으면 오류
       if (unitPeriod.getStartDate() == null || unitPeriod.getEndDate() == null) {
-        throw new IllegalArgumentException(
+        throw new UnitPeriodDatesRequiredException(
             "새로운 단위기간을 생성하려면 시작일(periodStartDate)과 종료일(periodEndDate)이 필요합니다.");
       }
       unitPeriodMapper.insert(unitPeriod);
