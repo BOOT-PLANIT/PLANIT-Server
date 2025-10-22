@@ -6,17 +6,19 @@ import com.planit.planit.domain.unitperiod.dto.UnitPeriodDTO;
 
 @Mapper
 public interface UnitPeriodMapper {
-    List<UnitPeriodDTO> findAll();
+	List<UnitPeriodDTO> findAll();
 
-    List<UnitPeriodDTO> findByBootcampId(Long bootcampId);
+	List<UnitPeriodDTO> findByBootcampId(Long bootcampId);
 
-    UnitPeriodDTO findById(Long id);
+	UnitPeriodDTO findById(Long id);
 
-    void insert(UnitPeriodDTO unitPeriod);
+	UnitPeriodDTO findByBootcampIdAndUnitNo(Long bootcampId, Integer unitNo);
 
-    void update(UnitPeriodDTO unitPeriod);
+	void insert(UnitPeriodDTO unitPeriod);
 
-    void delete(Long id);
+	void update(UnitPeriodDTO unitPeriod);
 
-    void deleteByBootcampId(Long bootcampId);
+	void delete(Long id);
+
+	void deleteByBootcampId(Long bootcampId);
 }

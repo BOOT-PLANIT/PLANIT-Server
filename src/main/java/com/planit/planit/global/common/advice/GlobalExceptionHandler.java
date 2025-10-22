@@ -7,7 +7,6 @@ import com.planit.planit.global.common.response.ErrorDetail;
 
 import jakarta.validation.ConstraintViolation;
 import jakarta.validation.ConstraintViolationException;
-
 import lombok.extern.slf4j.Slf4j;
 
 import org.springframework.beans.TypeMismatchException;
@@ -42,7 +41,6 @@ import static com.planit.planit.global.common.exception.ErrorCode.*;
 @Slf4j
 @RestControllerAdvice
 public class GlobalExceptionHandler {
-
 	private static final String DEFAULT_SERVER_MESSAGE = "서버 오류가 발생했습니다.";
 
 	/** 도메인 정의 예외 */

@@ -7,27 +7,39 @@
 
     <!-- 전체 조회 -->
     <select id="findAll" resultType="com.planit.planit.domain.session.dto.SessionDTO">
-        SELECT id, bootcamp_id as "bootcampId", period_id as "periodId", 
-               class_date as "classDate", created_at as "createdAt", updated_at as "updatedAt"
-        FROM sessions
-        ORDER BY class_date ASC
+        SELECT s.id, s.bootcamp_id as "bootcampId", s.period_id as "periodId",
+               up.unit_no as "unitNo",
+               up.start_date as "periodStartDate",
+               up.end_date as "periodEndDate",
+               s.class_date as "classDate", s.created_at as "createdAt", s.updated_at as "updatedAt"
+        FROM sessions s
+        LEFT JOIN unit_periods up ON s.period_id = up.id
+        ORDER BY s.class_date ASC
     </select>
 
     <!-- 부트캠프별 조회 -->
     <select id="findByBootcampId" parameterType="long" resultType="com.planit.planit.domain.session.dto.SessionDTO">
-        SELECT id, bootcamp_id as "bootcampId", period_id as "periodId", 
-               class_date as "classDate", created_at as "createdAt", updated_at as "updatedAt"
-        FROM sessions
-        WHERE bootcamp_id = #{bootcampId}
-        ORDER BY class_date ASC
+        SELECT s.id, s.bootcamp_id as "bootcampId", s.period_id as "periodId",
+               up.unit_no as "unitNo",
+               up.start_date as "periodStartDate",
+               up.end_date as "periodEndDate",
+               s.class_date as "classDate", s.created_at as "createdAt", s.updated_at as "updatedAt"
+        FROM sessions s
+        LEFT JOIN unit_periods up ON s.period_id = up.id
+        WHERE s.bootcamp_id = #{bootcampId}
+        ORDER BY s.class_date ASC
     </select>
 
     <!-- 단일 조회 -->
     <select id="findById" parameterType="long" resultType="com.planit.planit.domain.session.dto.SessionDTO">
-        SELECT id, bootcamp_id as "bootcampId", period_id as "periodId", 
-               class_date as "classDate", created_at as "createdAt", updated_at as "updatedAt"
-        FROM sessions
-        WHERE id = #{id}
+        SELECT s.id, s.bootcamp_id as "bootcampId", s.period_id as "periodId",
+               up.unit_no as "unitNo",
+               up.start_date as "periodStartDate",
+               up.end_date as "periodEndDate",
+               s.class_date as "classDate", s.created_at as "createdAt", s.updated_at as "updatedAt"
+        FROM sessions s
+        LEFT JOIN unit_periods up ON s.period_id = up.id
+        WHERE s.id = #{id}
     </select>
 
     <!-- 단일 추가 -->

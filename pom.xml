@@ -139,7 +139,23 @@
 			<version>0.12.5</version>
 			<scope>runtime</scope>
 		</dependency>
+<<<<<<< HEAD
 	</dependencies>
+=======
+    <dependency>
+      <groupId>org.testng</groupId>
+      <artifactId>testng</artifactId>
+      <version>RELEASE</version>
+      <scope>compile</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-starter-validation</artifactId>
+    </dependency>
+
+
+  </dependencies>
+>>>>>>> e70eac27d2476ed1d477603f02101d15cb19c356
 
 	<build>
 		<plugins>

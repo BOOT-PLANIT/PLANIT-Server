@@ -41,7 +41,17 @@ public class BootcampService {
 		if (bootcamp == null) {
 			throw new BootcampNotFoundException("ID가 " + id + "인 부트캠프를 찾을 수 없습니다.");
 		}
-		return toResponseDTO(bootcamp);
+		BootcampResponseDTO response = toResponseDTO(bootcamp);
+
+		// 단건 조회 시 세션에서 classDate를 추출하여 classDates에 채움
+		List<SessionDTO> sessions = sessionMapper.findByBootcampId(id);
+		if (sessions != null && !sessions.isEmpty()) {
+			List<LocalDate> classDates =
+				sessions.stream().map(SessionDTO::getClassDate).sorted().collect(Collectors.toList());
+			response.setClassDates(classDates);
+		}
+
+		return response;
 	}
 
 	@Transactional
@@ -55,7 +65,12 @@ public class BootcampService {
 		// 3. 교육일이 있으면 단위기간 및 세션 생성
 		createUnitPeriodsAndSessions(bootcamp);
 
-		// 4. 저장된 데이터 조회 후 Response DTO로 반환
+		// 4. 세션 기반으로 부트캠프 시작일/종료일 갱신
+		if (bootcamp.getClassDates() != null && !bootcamp.getClassDates().isEmpty()) {
+			updateBootcampDates(bootcamp.getId());
+		}
+
+		// 5. 저장된 데이터 조회 후 Response DTO로 반환
 		return getBootcamp(bootcamp.getId());
 	}
 
@@ -186,6 +201,7 @@ public class BootcampService {
 			SessionDTO session = new SessionDTO();
 			session.setBootcampId(bootcampId);
 			session.setPeriodId(period.getId());
+			session.setUnitNo(unitNo);
 			session.setClassDate(classDate);
 			sessions.add(session);
 		}
@@ -208,13 +224,6 @@ public class BootcampService {
 		// 부트캠프 수정 (업데이트 시간은 Mapper에서 NOW()로 자동 설정)
 		bootcampMapper.update(bootcamp);
 
-		// 기존 세션 및 단위기간 삭제
-		sessionMapper.deleteByBootcampId(id);
-		unitPeriodMapper.deleteByBootcampId(id);
-
-		// 교육일이 있으면 단위기간 및 세션 재생성
-		createUnitPeriodsAndSessions(bootcamp);
-
 		// 수정된 데이터 조회 후 Response DTO로 반환
 		return getBootcamp(id);
 	}
@@ -233,6 +242,42 @@ public class BootcampService {
 		unitPeriodMapper.deleteByBootcampId(id);
 		// 부트캠프 삭제
 		bootcampMapper.delete(id);
+	}
+
+	/**
+	 * 부트캠프의 시작일/종료일을 세션 기반으로 갱신합니다.
+	 *
+	 * @param bootcampId 부트캠프 ID
+	 */
+	@Transactional
+	public void updateBootcampDates(Long bootcampId) {
+		// 부트캠프 존재 확인
+		BootcampDTO bootcamp = bootcampMapper.findById(bootcampId);
+		if (bootcamp == null) {
+			throw new BootcampNotFoundException("ID가 " + bootcampId + "인 부트캠프를 찾을 수 없습니다.");
+		}
+
+		// 해당 부트캠프의 모든 세션 조회
+		List<SessionDTO> sessions = sessionMapper.findByBootcampId(bootcampId);
+
+		if (sessions == null || sessions.isEmpty()) {
+			// 세션이 없으면 시작일/종료일을 null로 설정
+			bootcampMapper.updateDates(bootcampId, null, null);
+		} else {
+			// 세션의 classDate 기준으로 최소/최대 날짜 계산
+			LocalDate startedAt = sessions.stream()
+				.map(SessionDTO::getClassDate)
+				.min(LocalDate::compareTo)
+				.orElse(null);
+
+			LocalDate endedAt = sessions.stream()
+				.map(SessionDTO::getClassDate)
+				.max(LocalDate::compareTo)
+				.orElse(null);
+
+			// 부트캠프의 시작일/종료일 갱신
+			bootcampMapper.updateDates(bootcampId, startedAt, endedAt);
+		}
 	}
 
 	/**
@@ -256,6 +301,8 @@ public class BootcampService {
 		response.setName(dto.getName());
 		response.setOrganizer(dto.getOrganizer());
 		response.setIsKdt(dto.getIsKdt());
+		response.setStartedAt(dto.getStartedAt());
+		response.setEndedAt(dto.getEndedAt());
 		response.setClassDates(dto.getClassDates());
 		response.setCreatedAt(dto.getCreatedAt());
 		response.setUpdatedAt(dto.getUpdatedAt());

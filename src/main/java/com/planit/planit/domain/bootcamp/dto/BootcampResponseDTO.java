@@ -21,6 +21,12 @@ public class BootcampResponseDTO {
 	@Schema(description = "K-Digital Training 여부", example = "false")
 	private Boolean isKdt;
 
+	@Schema(description = "부트캠프 시작일 (세션 기반 자동 갱신)", example = "2025-01-25")
+	private LocalDate startedAt;
+
+	@Schema(description = "부트캠프 종료일 (세션 기반 자동 갱신)", example = "2025-06-30")
+	private LocalDate endedAt;
+
 	@Schema(description = "교육일 목록 (첫 날짜가 기준일이 되어 단위기간 자동 생성)",
 		example = "[\"2025-01-25\", \"2025-01-26\", \"2025-01-27\"]")
 	private List<LocalDate> classDates;
