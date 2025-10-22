@@ -1,16 +1,14 @@
 package com.planit.planit.domain.attendance.service;
 
 import java.util.Map;
-
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
 import com.planit.planit.domain.attendance.dto.AttendanceDTO;
 import com.planit.planit.domain.attendance.dto.AttendanceDailyResponseDTO;
 import com.planit.planit.domain.attendance.dto.AttendanceRegistRequestDTO;
 import com.planit.planit.domain.attendance.mapper.AttendanceMapper;
 import com.planit.planit.global.common.exception.BaseException;
-
+import com.planit.planit.global.common.exception.ErrorCode;
 import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -32,6 +30,16 @@ public class AttendanceService {
    */
   public AttendanceDailyResponseDTO getDaily(Long userId, Long bootcampId, String date) {
     AttendanceDailyResponseDTO daily = mapper.getDaily(userId, bootcampId, date);
+    if (daily == null) {
+      // 특정 날짜에 강의가 있는지 없는지 체크 sessionId,periodId 받아옴
+      Map<String, Object> result = mapper.getDailySession(bootcampId, date);
+
+      if (result == null) { // 해당 날짜에 강의 일정이 없음
+        throw new BaseException(ErrorCode.RESOURCE_NOT_FOUND, "해당 날짜에는 강의가 없습니다.") {};
+      } else { // 해당 날짜에 강의는 있지만 출석등록을 아직 하지않음
+        throw new BaseException(ErrorCode.PARAMETER_NOT_FOUND, "출결 등록이 필요합니다.") {};
+      }
+    }
     return daily;
   }
 
@@ -44,25 +52,25 @@ public class AttendanceService {
   @Transactional
   public void regist(AttendanceRegistRequestDTO requestDTO) {
     log.info("[출결 등록 시작] attendance={}", requestDTO);
-    
+
     long bootcampId = requestDTO.getBootcampId();
     String date = requestDTO.getDate();
-    //특정 날짜에 강의가 있는지 없는지 체크
-    Map<String, Object> result = mapper.getDailySession(bootcampId,date);
-    
-    if(result==null) {
-//    	BaseException(INTERNAL_SERVER_ERROR,"강의가 없는날");
-    	System.out.println("강의없");
+    // 특정 날짜에 강의가 있는지 없는지 체크 sessionId,periodId 받아옴
+    Map<String, Object> result = mapper.getDailySession(bootcampId, date);
+
+    if (result == null) {
+      throw new BaseException(ErrorCode.INTERNAL_SERVER_ERROR, "해당날짜의 강의가없어 등록불가") {};
+
     } else {
-    	AttendanceDTO attendance = new AttendanceDTO();
-    	attendance.setUserId(requestDTO.getUserId());
-    	attendance.setSessionId(((Number) result.get("id")).longValue());
-    	attendance.setPeriodId(((Number) result.get("period_id")).longValue());
-    	attendance.setStatus(requestDTO.getStatus());
-    	//강의있는날 출결 등록
-    	mapper.regist(attendance);
+      AttendanceDTO attendance = new AttendanceDTO();
+      attendance.setUserId(requestDTO.getUserId());
+      attendance.setSessionId(((Number) result.get("id")).longValue());
+      attendance.setPeriodId(((Number) result.get("period_id")).longValue());
+      attendance.setStatus(requestDTO.getStatus());
+      // 강의있는날 출결 등록
+      mapper.regist(attendance);
     }
-    
+
 
   }
 

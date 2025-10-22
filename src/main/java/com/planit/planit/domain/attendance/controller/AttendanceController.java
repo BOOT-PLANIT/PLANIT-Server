@@ -48,23 +48,15 @@ public class AttendanceController {
           example = "1") @RequestParam(value = "bootcampId") long bootcampId) {
     AttendanceDailyResponseDTO daily = service.getDaily(userId, bootcampId, date);
 
-    if (daily == null) {
-      // 해당일자 출결정보가 없으면 등록화면으로
-      return ApiResponse.success(date + " 출결 등록 가능", true);
-
-    } else {
-      // 출결정보가 있으면 보여주고, 수정화면으로
-      return ApiResponse.success(date + " 출결 조회", daily);
-    }
-
+    return ApiResponse.success(daily);
   }
 
   @Operation(summary = "일단위 출결 등록", description = "선택한 일자의 출결 정보를 등록합니다..",
       responses = {@io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200",
           description = "출결 등록 성공")})
   @PostMapping
-  public ApiResponse<String> AttendanceRegist(
-      @RequestBody @Schema(implementation = AttendanceRegistRequestDTO.class) AttendanceRegistRequestDTO attendance) {
+  public ApiResponse<String> AttendanceRegist(@RequestBody @Schema(
+      implementation = AttendanceRegistRequestDTO.class) AttendanceRegistRequestDTO attendance) {
     service.regist(attendance);
     return ApiResponse.success("출결 등록 성공");
   }
