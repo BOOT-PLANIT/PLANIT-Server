@@ -59,6 +59,7 @@
         resultType="com.planit.planit.domain.attendance.dto.AttendanceTotalResponseDTO">	    
 	    SELECT 
 		    a.user_id AS userId,
+		    up.unit_no AS unitNo,
 		    COUNT(CASE WHEN a.status = 'present' THEN 1 END) AS presentCount,
 		    COUNT(CASE WHEN a.status = 'absent' THEN 1 END) AS absentCount,
 		    COUNT(CASE WHEN a.status = 'late' THEN 1 END) AS lateCount,
