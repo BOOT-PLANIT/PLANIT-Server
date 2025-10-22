@@ -41,7 +41,17 @@ public class BootcampService {
     if (bootcamp == null) {
       throw new BootcampNotFoundException("ID가 " + id + "인 부트캠프를 찾을 수 없습니다.");
     }
-    return toResponseDTO(bootcamp);
+    BootcampResponseDTO response = toResponseDTO(bootcamp);
+
+    // 단건 조회 시 세션에서 classDate를 추출하여 classDates에 채움
+    List<SessionDTO> sessions = sessionMapper.findByBootcampId(id);
+    if (sessions != null && !sessions.isEmpty()) {
+      List<LocalDate> classDates =
+          sessions.stream().map(SessionDTO::getClassDate).sorted().collect(Collectors.toList());
+      response.setClassDates(classDates);
+    }
+
+    return response;
   }
 
   @Transactional
