@@ -6,13 +6,13 @@ import com.planit.planit.domain.bootcamp.dto.BootcampDTO;
 
 @Mapper
 public interface BootcampMapper {
-    List<BootcampDTO> findAll();
+	List<BootcampDTO> findAll();
 
-    BootcampDTO findById(Long id);
+	BootcampDTO findById(Long id);
 
-    void insert(BootcampDTO bootcamp);
+	void insert(BootcampDTO bootcamp);
 
-    void update(BootcampDTO bootcamp);
+	void update(BootcampDTO bootcamp);
 
-    void delete(Long id);
+	void delete(Long id);
 }
