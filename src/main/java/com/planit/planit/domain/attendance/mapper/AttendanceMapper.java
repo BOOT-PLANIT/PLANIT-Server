@@ -1,5 +1,6 @@
 package com.planit.planit.domain.attendance.mapper;
 
+import java.util.List;
 import java.util.Map;
 import org.apache.ibatis.annotations.Mapper;
 import com.planit.planit.domain.attendance.dto.AttendanceDTO;
@@ -18,4 +19,6 @@ public interface AttendanceMapper {
 
   // 일단위 출결 수정
   public void update(AttendanceDTO dto);
+
+  public List<AttendanceDailyResponseDTO> getPeriod(Long userId, Long bootcampId, Integer unitNo);
 }

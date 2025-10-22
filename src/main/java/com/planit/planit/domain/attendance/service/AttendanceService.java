@@ -1,5 +1,6 @@
 package com.planit.planit.domain.attendance.service;
 
+import java.util.List;
 import java.util.Map;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -88,6 +89,18 @@ public class AttendanceService {
   public void update(AttendanceDTO attendance) {
     log.info("[출결 수정 시작] attendance={}", attendance);
     mapper.update(attendance);
+  }
+
+  /**
+   * 단위 기간 출결 정보 조회
+   * 
+   * @param userId 사용자 ID
+   * @param bootcampId 부트캠프 ID
+   * @param periodId
+   */
+  public List<AttendanceDailyResponseDTO> getPeriod(Long userId, Long bootcampId, Integer unitNo) {
+    List<AttendanceDailyResponseDTO> attendance = mapper.getPeriod(userId, bootcampId, unitNo);
+    return attendance;
   }
 
 }

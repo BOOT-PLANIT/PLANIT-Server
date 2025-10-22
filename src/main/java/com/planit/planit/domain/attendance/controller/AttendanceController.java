@@ -1,6 +1,7 @@
 package com.planit.planit.domain.attendance.controller;
 
 
+import java.util.List;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
@@ -40,13 +41,13 @@ public class AttendanceController {
               schema = @Schema(implementation = AttendanceDailyResponseDTO.class)))})
   @GetMapping("/{userId}")
   public ApiResponse<?> getDailyAttendance(
-      @Parameter(description = "조회할 사용자 ID", example = "1") @PathVariable("userId") long userId,
+      @Parameter(description = "조회할 사용자 ID", example = "1") @PathVariable("userId") Long userId,
 
       @Parameter(description = "조회할 날짜",
           example = "2025-09-01") @RequestParam(value = "date") String date,
 
       @Parameter(description = "조회할 부프캠프 ID",
-          example = "1") @RequestParam(value = "bootcampId") long bootcampId) {
+          example = "1") @RequestParam(value = "bootcampId") Long bootcampId) {
     AttendanceDailyResponseDTO daily = service.getDaily(userId, bootcampId, date);
 
     return ApiResponse.success(daily);
@@ -71,4 +72,15 @@ public class AttendanceController {
     service.update(attendance);
     return ApiResponse.success("출결 수정 성공");
   }
+
+  @GetMapping("/period/{userId}")
+  public ApiResponse<?> getPeriodAttendance(@PathVariable("userId") Long userId,
+      @RequestParam(value = "bootcampId") Long bootcampId,
+      @RequestParam(value = "unitNo") Integer unitNo) {
+
+    List<AttendanceDailyResponseDTO> attendance = service.getPeriod(userId, bootcampId, unitNo);
+    return ApiResponse.success(attendance);
+  }
+
+
 }

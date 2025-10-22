@@ -52,6 +52,30 @@
       id = #{id}
       AND user_id = #{userId}
   </update>
+  
+  <select id="getPeriod"
+        parameterType="map"
+        resultType="com.planit.planit.domain.attendance.dto.AttendanceDailyResponseDTO">
+	    SELECT
+	        a.id               AS attendanceId,
+	        a.status           AS status,
+	        s.id               AS sessionId,
+	        s.class_date       AS classDate,
+	        b.id               AS bootcampId,
+	        b.name             AS bootcampName,
+	        up.unit_no         AS unitNo,
+	        up.start_date      AS startDate,
+	        up.end_date        AS endDate
+	    FROM attendance a
+	    JOIN sessions s ON a.session_id = s.id
+	    JOIN unit_periods up ON a.period_id = up.id
+	    JOIN bootcamps b ON s.bootcamp_id = b.id
+	    WHERE a.user_id = #{userId}
+	      AND s.bootcamp_id = #{bootcampId}
+	      AND up.unit_no = #{unitNo}  
+	    ORDER BY s.class_date ASC
+	</select>
+  
 </mapper>
 
 
