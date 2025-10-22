@@ -1,5 +1,6 @@
 package com.planit.planit.domain.attendance.dto;
 
+import com.planit.planit.domain.attendance.enums.AttendanceStatus;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 
@@ -9,7 +10,7 @@ public class AttendanceDailyResponseDTO {
   private Long attendanceId;
 
   @Schema(description = "출결 상태", example = "present")
-  private String status;
+  private AttendanceStatus status;
 
   @Schema(description = "부트캠프 ID", example = "1")
   private Long bootcampId;

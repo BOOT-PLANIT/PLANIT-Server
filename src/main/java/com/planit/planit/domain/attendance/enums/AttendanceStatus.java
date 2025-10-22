@@ -1,10 +1,10 @@
 package com.planit.planit.domain.attendance.enums;
 
 public enum AttendanceStatus {
-  PRESENT, // 출석
-  ABSENT, // 결석
-  LATE, // 지각
-  LEFT_EARLY, // 조퇴
+  present, // 출석
+  absent, // 결석
+  late, // 지각
+  left_early, // 조퇴
   annual, // 연차
-  LEAVE // 공가
+  leave // 공가
 }

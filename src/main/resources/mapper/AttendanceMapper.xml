@@ -50,6 +50,7 @@
       updated_at = NOW()
     WHERE
       id = #{id}
+      AND user_id = #{userId}
   </update>
 </mapper>
 

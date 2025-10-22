@@ -20,7 +20,7 @@ public class AttendanceDTO {
   @Schema(description = "단위기간 ID", example = "2")
   private Long periodId;
 
-  @Schema(description = "출결 상태", example = "PRESENT")
+  @Schema(description = "출결 상태", example = "present")
   private AttendanceStatus status;
 
   @Schema(description = "생성 시각")

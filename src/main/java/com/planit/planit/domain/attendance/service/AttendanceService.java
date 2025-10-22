@@ -59,7 +59,7 @@ public class AttendanceService {
     Map<String, Object> result = mapper.getDailySession(bootcampId, date);
 
     if (result == null) {
-      throw new BaseException(ErrorCode.INTERNAL_SERVER_ERROR, "해당날짜의 강의가없어 등록불가") {};
+      throw new BaseException(ErrorCode.RESOURCE_NOT_FOUND, "해당 날짜에는 강의가 없습니다.") {};
 
     } else {
       AttendanceDTO attendance = new AttendanceDTO();
@@ -67,7 +67,13 @@ public class AttendanceService {
       attendance.setSessionId(((Number) result.get("id")).longValue());
       attendance.setPeriodId(((Number) result.get("period_id")).longValue());
       attendance.setStatus(requestDTO.getStatus());
-      // 강의있는날 출결 등록
+
+      // 중복 방지: 기존 출결 존재 여부 확인
+      if (mapper.getDaily(requestDTO.getUserId(), requestDTO.getBootcampId(),
+          requestDTO.getDate()) != null) {
+        throw new BaseException(ErrorCode.CONFLICT, "이미 등록된 출결입니다.") {};
+      }
+      // 출결 등록
       mapper.regist(attendance);
     }
 
