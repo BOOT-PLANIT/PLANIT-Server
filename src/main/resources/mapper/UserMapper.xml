@@ -1,37 +1,40 @@
-<?xml version="1.0" encoding="UTF-8" ?>
+<?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE mapper
-        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
-        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
-
+	PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+	"https://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.planit.planit.domain.user.mapper.UserMapper">
 
-    <!-- 전체 조회 -->
-    <select id="findAll" resultType="com.planit.planit.domain.user.dto.UserDTO">
-        SELECT * FROM test_users
-    </select>
+	<resultMap id="UserMap" type="com.planit.planit.domain.user.model.UserAccount">
+		<id     property="id"           column="id"/>
+		<result property="uid"          column="uid"/>
+		<result property="email"        column="email"/>
+		<result property="displayName"  column="display_name"/>
+		<result property="photoUrl"     column="photo_url"/>
+		<result property="userLevel"     column="user_level" javaType="com.planit.planit.domain.user.model.UserLevel"/>
+		<result property="provider"     column="provider"/>
+		<result property="emailVerified" column="email_verified"/>
+		<result property="createdAt"    column="created_at"/>
+		<result property="lastLoginAt"  column="last_login_at"/>
+	</resultMap>
 
-    <!-- 단일 조회 -->
-    <select id="findById" parameterType="long" resultType="com.planit.planit.domain.user.dto.UserDTO">
-        SELECT * FROM test_users WHERE id = #{id}
-    </select>
+	<select id="findByUid" parameterType="string" resultMap="UserMap">
+		SELECT * FROM users WHERE uid = #{uid}
+	</select>
 
-    <!-- 추가 -->
-    <insert id="insert" parameterType="com.planit.planit.domain.user.dto.UserDTO" useGeneratedKeys="true" keyProperty="id">
-        INSERT INTO test_users (name, email)
-        VALUES (#{name}, #{email})
-    </insert>
+	<insert id="insertUser" parameterType="com.planit.planit.domain.user.model.UserAccount">
+		INSERT INTO users(uid, email, display_name, photo_url, user_level, provider, email_verified)
+		VALUES (#{uid}, #{email}, #{displayName}, #{photoUrl}, #{userLevel}, #{provider}, #{emailVerified})
+	</insert>
 
-    <!-- 수정 -->
-    <update id="update" parameterType="com.planit.planit.domain.user.dto.UserDTO">
-        UPDATE test_users
-        SET name = #{name},
-            email = #{email}
-        WHERE id = #{id}
-    </update>
+	<update id="updateLastLogin" parameterType="string">
+		UPDATE users SET last_login_at = NOW() WHERE uid = #{uid}
+	</update>
 
-    <!-- 삭제 -->
-    <delete id="delete" parameterType="long">
-        DELETE FROM test_users WHERE id = #{id}
-    </delete>
+	<!-- 개발자용 레벨 변경 -->
+	<update id="updateUserLevel" parameterType="map">
+		UPDATE users
+		SET user_level = #{userLevel}
+		WHERE uid = #{uid}
+	</update>
 
 </mapper>
