@@ -24,6 +24,9 @@ public interface AttendanceMapper {
   // 단위기간 출결 조회
   public AttendanceTotalResponseDTO getPeriod(Long userId, Long bootcampId, Integer unitNo);
 
-  // 특정 부트캠프에 단위기간 조회
+  // 특정 부트캠프에 단위기간 조회ㅇ
   public List<Integer> getBootcampUnitno(Long bootcampId);
+
+  // 오늘까지의 전체출결 조회
+  public AttendanceTotalResponseDTO getTotal(Long userId, Long bootcampId, String today);
 }

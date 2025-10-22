@@ -121,4 +121,18 @@ public class AttendanceService {
     return attendance;
   }
 
+  /**
+   * 오늘까지 전체출결 정보 조회
+   * 
+   * @param userId 사용자 ID
+   * @param bootcampId 부트캠프 ID
+   * @return attendance 처음부터 오늘까지 전체 출결 현황 (출석,조퇴,휴가 등등 및 전체 출석일수 카운트)
+   */
+  public AttendanceTotalResponseDTO getTotal(Long userId, Long bootcampId) {
+
+    LocalDate today = LocalDate.now(); // 오늘날짜 불러오기 (YYYY-MM-DD)
+    AttendanceTotalResponseDTO attendance = mapper.getTotal(userId, bootcampId, today.toString());
+
+    return attendance;
+  }
 }

@@ -82,5 +82,12 @@ public class AttendanceController {
     return ApiResponse.success(attendance);
   }
 
+  @GetMapping("/total/{userId}")
+  public ApiResponse<?> getTotalAttendance(@PathVariable("userId") Long userId,
+      @RequestParam(value = "bootcampId") Long bootcampId) {
+
+    AttendanceTotalResponseDTO attendance = service.getTotal(userId, bootcampId);
+    return ApiResponse.success(attendance);
+  }
 
 }
