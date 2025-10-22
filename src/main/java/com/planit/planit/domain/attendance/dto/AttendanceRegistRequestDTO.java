@@ -8,10 +8,10 @@ import lombok.Data;
 @Data
 public class AttendanceRegistRequestDTO {
   @Schema(description = "사용자 ID", example = "5")
-  private long userId;
+  private Long userId;
 
   @Schema(description = "부트캠프 ID", example = "1")
-  private long bootcampId;
+  private Long bootcampId;
 
   @Schema(description = "출결 상태", example = "present")
   private AttendanceStatus status;
