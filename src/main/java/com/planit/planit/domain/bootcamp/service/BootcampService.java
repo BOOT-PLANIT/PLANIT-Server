@@ -44,7 +44,7 @@ public class BootcampService {
 
     BootcampResponseDTO response = toResponseDTO(bootcamp);
 
-    // 단건 조회 시 세션에서 classDate를 추출하여 classDates에 채우기
+    // 단건 조회 시 세션에서 classDate를 추출하여 classDates에 채움
     List<SessionDTO> sessions = sessionMapper.findByBootcampId(id);
     if (sessions != null && !sessions.isEmpty()) {
       List<LocalDate> classDates =
