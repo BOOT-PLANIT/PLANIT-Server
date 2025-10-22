@@ -1,7 +1,6 @@
 package com.planit.planit.domain.attendance.controller;
 
 
-import java.util.List;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
@@ -14,6 +13,7 @@ import org.springframework.web.bind.annotation.RestController;
 import com.planit.planit.domain.attendance.dto.AttendanceDTO;
 import com.planit.planit.domain.attendance.dto.AttendanceDailyResponseDTO;
 import com.planit.planit.domain.attendance.dto.AttendanceRegistRequestDTO;
+import com.planit.planit.domain.attendance.dto.AttendanceTotalResponseDTO;
 import com.planit.planit.domain.attendance.service.AttendanceService;
 import com.planit.planit.global.common.response.ApiResponse;
 import io.swagger.v3.oas.annotations.Operation;
@@ -78,7 +78,7 @@ public class AttendanceController {
       @RequestParam(value = "bootcampId") Long bootcampId,
       @RequestParam(value = "unitNo") Integer unitNo) {
 
-    List<AttendanceDailyResponseDTO> attendance = service.getPeriod(userId, bootcampId, unitNo);
+    AttendanceTotalResponseDTO attendance = service.getPeriod(userId, bootcampId, unitNo);
     return ApiResponse.success(attendance);
   }
 

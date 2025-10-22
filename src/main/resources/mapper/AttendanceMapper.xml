@@ -53,27 +53,36 @@
       AND user_id = #{userId}
   </update>
   
+  <!--단위 기간 출결 조회-->
   <select id="getPeriod"
         parameterType="map"
-        resultType="com.planit.planit.domain.attendance.dto.AttendanceDailyResponseDTO">
-	    SELECT
-	        a.id               AS attendanceId,
-	        a.status           AS status,
-	        s.id               AS sessionId,
-	        s.class_date       AS classDate,
-	        b.id               AS bootcampId,
-	        b.name             AS bootcampName,
-	        up.unit_no         AS unitNo,
-	        up.start_date      AS startDate,
-	        up.end_date        AS endDate
-	    FROM attendance a
-	    JOIN sessions s ON a.session_id = s.id
-	    JOIN unit_periods up ON a.period_id = up.id
-	    JOIN bootcamps b ON s.bootcamp_id = b.id
-	    WHERE a.user_id = #{userId}
-	      AND s.bootcamp_id = #{bootcampId}
-	      AND up.unit_no = #{unitNo}  
-	    ORDER BY s.class_date ASC
+        resultType="com.planit.planit.domain.attendance.dto.AttendanceTotalResponseDTO">	    
+	    SELECT 
+		    a.user_id AS userId,
+		    COUNT(CASE WHEN a.status = 'present' THEN 1 END) AS presentCount,
+		    COUNT(CASE WHEN a.status = 'absent' THEN 1 END) AS absentCount,
+		    COUNT(CASE WHEN a.status = 'late' THEN 1 END) AS lateCount,
+		    COUNT(CASE WHEN a.status = 'left_early' THEN 1 END) AS leftEarlyCount,
+		    COUNT(CASE WHEN a.status = 'annual' THEN 1 END) AS annualCount,
+		    COUNT(CASE WHEN a.status = 'leave' THEN 1 END) AS leaveCount,
+		    (
+		        SELECT COUNT(*) 
+		        FROM sessions s2
+		        JOIN unit_periods up2 ON s2.period_id = up2.id
+		        WHERE s2.bootcamp_id = s.bootcamp_id
+		          AND up2.unit_no = up.unit_no
+		    ) AS totalSessions
+		FROM attendance a
+		JOIN sessions s ON a.session_id = s.id
+		JOIN unit_periods up ON s.period_id = up.id
+		WHERE a.user_id = #{userId}
+		  AND s.bootcamp_id = #{bootcampId}
+		  AND up.unit_no = #{unitNo}
+		GROUP BY a.user_id;
+	</select>
+	
+	<select id="getBootcampUnitno" resultType="int">
+		select unit_no from unit_periods where bootcamp_id = #{bootcampId};
 	</select>
   
 </mapper>

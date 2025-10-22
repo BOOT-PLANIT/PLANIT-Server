@@ -8,6 +8,7 @@ import org.springframework.transaction.annotation.Transactional;
 import com.planit.planit.domain.attendance.dto.AttendanceDTO;
 import com.planit.planit.domain.attendance.dto.AttendanceDailyResponseDTO;
 import com.planit.planit.domain.attendance.dto.AttendanceRegistRequestDTO;
+import com.planit.planit.domain.attendance.dto.AttendanceTotalResponseDTO;
 import com.planit.planit.domain.attendance.mapper.AttendanceMapper;
 import com.planit.planit.global.common.exception.BaseException;
 import com.planit.planit.global.common.exception.ErrorCode;
@@ -104,10 +105,19 @@ public class AttendanceService {
    * 
    * @param userId 사용자 ID
    * @param bootcampId 부트캠프 ID
-   * @param periodId
+   * @param unitNo 단위 기간 번호
+   * @return attendance 기간단위 출결 현황 (출석,조퇴,휴가 등등 및 전체 출석일수 카운트)
    */
-  public List<AttendanceDailyResponseDTO> getPeriod(Long userId, Long bootcampId, Integer unitNo) {
-    List<AttendanceDailyResponseDTO> attendance = mapper.getPeriod(userId, bootcampId, unitNo);
+  public AttendanceTotalResponseDTO getPeriod(Long userId, Long bootcampId, Integer unitNo) {
+    List<Integer> unitList = mapper.getBootcampUnitno(bootcampId);
+    if (!unitList.contains(unitNo)) { // 부트캠프에 존재하는 단위기간인지 검사
+      throw new BaseException(ErrorCode.RESOURCE_NOT_FOUND, "해당 부트캠프에 존재하지 않는 단위기간입니다.") {};
+    }
+    AttendanceTotalResponseDTO attendance = mapper.getPeriod(userId, bootcampId, unitNo);
+    if (attendance == null) { // 단위기간은 있지만 단위기간에 아직 등록된 출결이 없음
+      throw new BaseException(ErrorCode.RESOURCE_NOT_FOUND, "해당 단위기간에 등록된 출결이 없습니다.") {};
+    }
+
     return attendance;
   }
 

@@ -5,6 +5,7 @@ import java.util.Map;
 import org.apache.ibatis.annotations.Mapper;
 import com.planit.planit.domain.attendance.dto.AttendanceDTO;
 import com.planit.planit.domain.attendance.dto.AttendanceDailyResponseDTO;
+import com.planit.planit.domain.attendance.dto.AttendanceTotalResponseDTO;
 
 @Mapper
 public interface AttendanceMapper {
@@ -20,5 +21,9 @@ public interface AttendanceMapper {
   // 일단위 출결 수정
   public void update(AttendanceDTO dto);
 
-  public List<AttendanceDailyResponseDTO> getPeriod(Long userId, Long bootcampId, Integer unitNo);
+  // 단위기간 출결 조회
+  public AttendanceTotalResponseDTO getPeriod(Long userId, Long bootcampId, Integer unitNo);
+
+  // 특정 부트캠프에 단위기간 조회
+  public List<Integer> getBootcampUnitno(Long bootcampId);
 }
