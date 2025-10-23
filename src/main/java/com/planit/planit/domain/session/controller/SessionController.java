@@ -8,10 +8,10 @@ import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import com.planit.planit.domain.session.dto.SessionCreateRequestDTO;
 import com.planit.planit.domain.session.dto.SessionDTO;
 import com.planit.planit.domain.session.service.SessionService;
 import com.planit.planit.global.common.response.ApiResponse;
@@ -90,12 +90,12 @@ public class SessionController {
     return ResponseEntity.ok(ApiResponse.success("세션 조회 성공", session));
   }
 
-  @Operation(summary = "세션 등록", 
-      description = "새로운 세션을 등록합니다. "
-          + "**필수 필드**: bootcampId, unitNo, classDate. "
-          + "단위기간(unitNo)이 이미 존재하면 해당 단위기간을 사용하고, "
-          + "존재하지 않으면 periodStartDate와 periodEndDate를 제공해야 새로 생성됩니다.",
-      responses = {
+	@Operation(summary = "세션 등록", 
+		description = "새로운 세션을 등록합니다. "
+			+ "**필수 필드**: bootcampId, classDate. "
+			+ "unitNo, periodStartDate, periodEndDate는 자동으로 계산됩니다. "
+			+ "단위기간이 존재하지 않으면 자동으로 생성됩니다.",
+		responses = {
           @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "201",
               description = "등록 성공",
               content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
@@ -109,33 +109,10 @@ public class SessionController {
               content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
                   schema = @Schema(implementation = ApiErrorResponseSchema.class)))})
   @PostMapping
-  public ResponseEntity<ApiResponse<SessionDTO>> add(@Valid @RequestBody SessionDTO request) {
-    sessionService.addSession(request);
+  public ResponseEntity<ApiResponse<SessionDTO>> add(@Valid @RequestBody SessionCreateRequestDTO request) {
+    SessionDTO createdSession = sessionService.addSession(request);
     return ResponseEntity.status(HttpStatus.CREATED)
-        .body(ApiResponse.success("세션 등록 성공", request));
-  }
-
-  @Operation(summary = "세션 수정", 
-      description = "기존 세션 정보를 수정합니다. unitNo가 제공되면 해당 단위기간을 찾거나 생성합니다.",
-      responses = {
-          @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200",
-              description = "수정 성공",
-              content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
-                  schema = @Schema(implementation = SessionOneResponseSchema.class))),
-          @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404",
-              description = "세션을 찾을 수 없음",
-              content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
-                  schema = @Schema(implementation = ApiErrorResponseSchema.class))),
-          @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "500",
-              description = "서버 에러",
-              content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
-                  schema = @Schema(implementation = ApiErrorResponseSchema.class)))})
-  @PutMapping("/{id}")
-  public ResponseEntity<ApiResponse<SessionDTO>> update(@PathVariable Long id,
-      @Valid @RequestBody SessionDTO request) {
-    request.setId(id);
-    sessionService.updateSession(request);
-    return ResponseEntity.ok(ApiResponse.success("세션 수정 성공", request));
+        .body(ApiResponse.success("세션 등록 성공", createdSession));
   }
 
   @Operation(summary = "세션 삭제", description = "세션을 삭제합니다.",
