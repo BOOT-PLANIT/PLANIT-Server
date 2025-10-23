@@ -57,6 +57,20 @@ public class BootcampService {
 		return response;
 	}
 
+	/**
+	 * 부트캠프를 비관적 락으로 조회합니다 (세션 추가 시 동시성 제어용).
+	 * 
+	 * @param id 부트캠프 ID
+	 * @return 부트캠프 정보
+	 */
+	public BootcampDTO getBootcampForUpdate(Long id) {
+		BootcampDTO bootcamp = bootcampMapper.findByIdForUpdate(id);
+		if (bootcamp == null) {
+			throw new BootcampNotFoundException("ID가 " + id + "인 부트캠프를 찾을 수 없습니다.");
+		}
+		return bootcamp;
+	}
+
 	@Transactional
 	public BootcampResponseDTO addBootcamp(BootcampRequestDTO request) {
 		// 1. Request DTO를 내부 DTO로 변환

@@ -10,11 +10,13 @@ public interface UnitPeriodMapper {
 
 	List<UnitPeriodDTO> findByBootcampId(Long bootcampId);
 
-	UnitPeriodDTO findById(Long id);
+  UnitPeriodDTO findById(Long id);
 
-	UnitPeriodDTO findByBootcampIdAndUnitNo(Long bootcampId, Integer unitNo);
+  UnitPeriodDTO findByBootcampIdAndUnitNo(Long bootcampId, Integer unitNo);
 
-	void insert(UnitPeriodDTO unitPeriod);
+  UnitPeriodDTO findByBootcampIdAndUnitNoForUpdate(Long bootcampId, Integer unitNo);
+
+  void insert(UnitPeriodDTO unitPeriod);
 
 	void update(UnitPeriodDTO unitPeriod);
 

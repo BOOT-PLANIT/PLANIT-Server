@@ -5,7 +5,6 @@ import java.time.YearMonth;
 import java.util.List;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import com.planit.planit.domain.bootcamp.dto.BootcampResponseDTO;
 import com.planit.planit.domain.bootcamp.service.BootcampService;
 import com.planit.planit.domain.session.dto.SessionDTO;
 import com.planit.planit.domain.session.exception.SessionBeforeBootcampStartException;
@@ -47,8 +46,9 @@ public class SessionService {
 
 	@Transactional
 	public SessionDTO addSession(com.planit.planit.domain.session.dto.SessionCreateRequestDTO request) {
-		// 부트캠프 존재 여부 검증 (존재하지 않으면 BootcampNotFoundException 발생)
-		BootcampResponseDTO bootcamp = bootcampService.getBootcamp(request.getBootcampId());
+		// 부트캠프 비관적 락으로 조회 (동시성 문제 방지)
+		com.planit.planit.domain.bootcamp.dto.BootcampDTO bootcamp = 
+			bootcampService.getBootcampForUpdate(request.getBootcampId());
 
 		// 부트캠프 시작일 이후인지 검증
 		if (bootcamp.getStartedAt() != null && request.getClassDate().isBefore(bootcamp.getStartedAt())) {
