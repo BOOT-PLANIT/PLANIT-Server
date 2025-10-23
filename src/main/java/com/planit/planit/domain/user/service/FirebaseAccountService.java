@@ -30,16 +30,17 @@ public class FirebaseAccountService {
 		final String photoUrl = token.getPicture();
 		final boolean emailVerified = Boolean.TRUE.equals(token.isEmailVerified());
 
-		String provider = null;
+		String provider = "unknown";
 		Object firebaseClaim = token.getClaims().get("firebase");
 		if (firebaseClaim instanceof Map<?, ?> map) {
 			Object sip = map.get("sign_in_provider");
-			provider = (sip != null) ? sip.toString() : null;
+			provider = (sip != null) ? sip.toString() : provider;
 		}
 
-		String userLevel = null;
-		Object ul = token.getClaims().get("user_level");
-		if (ul != null) userLevel = ul.toString();
+		String userLevelStr = Optional.ofNullable(token.getClaims().get("user_level"))
+			.map(Object::toString)
+			.orElse("USER");
+		UserLevel level = UserLevel.fromClaim(userLevelStr);
 
 		var found = mapper.findByUid(uid);
 		if (found == null) {
@@ -49,7 +50,7 @@ public class FirebaseAccountService {
 				.displayName(displayName)
 				.photoUrl(photoUrl)
 				.provider(provider)
-				.userLevel(UserLevel.valueOf(userLevel))
+				.userLevel(level)
 				.emailVerified(emailVerified)
 				.build();
 			mapper.insertUser(userAccount);
@@ -57,11 +58,12 @@ public class FirebaseAccountService {
 			mapper.updateLastLogin(uid);
 		}
 
+		// 권한 설정
 		List<GrantedAuthority> authorities = new ArrayList<>();
 		if ((email != null && ADMIN_EMAILS.contains(email)) || ADMIN_UIDS.contains(uid)) {
-			authorities.add(new SimpleGrantedAuthority("ROLE_ADMIN"));
+			authorities.add(new SimpleGrantedAuthority(UserLevel.ADMIN.asRole()));
 		} else {
-			authorities.add(new SimpleGrantedAuthority("ROLE_USER"));
+			authorities.add(new SimpleGrantedAuthority(level.asRole()));
 		}
 
 		return User.withUsername(uid)

@@ -1,4 +1,4 @@
-package com.planit.planit.domain.user.contoller;
+package com.planit.planit.domain.user.controller;
 
 import org.springframework.security.core.Authentication;
 import com.planit.planit.domain.user.mapper.UserMapper;

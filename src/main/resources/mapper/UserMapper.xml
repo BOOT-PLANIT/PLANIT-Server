@@ -18,12 +18,26 @@
 	</resultMap>
 
 	<select id="findByUid" parameterType="string" resultMap="UserMap">
-		SELECT * FROM users WHERE uid = #{uid}
+		SELECT id, uid, email, display_name, photo_url,
+	         user_level, provider, email_verified,
+	         created_at, last_login_at
+	  FROM users
+	  WHERE uid = #{uid}
 	</select>
 
-	<insert id="insertUser" parameterType="com.planit.planit.domain.user.model.UserAccount">
-		INSERT INTO users(uid, email, display_name, photo_url, user_level, provider, email_verified)
-		VALUES (#{uid}, #{email}, #{displayName}, #{photoUrl}, #{userLevel}, #{provider}, #{emailVerified})
+	<insert id="insertUser" parameterType="com.planit.planit.domain.user.model.UserAccount" useGeneratedKeys="true" keyProperty="id">
+		INSERT INTO users(
+			uid, email, display_name, photo_url, user_level, provider, email_verified
+	  )
+	  VALUES (
+			#{uid},
+	    #{email},
+	    #{displayName},
+	    #{photoUrl},
+	    #{userLevel, typeHandler=org.apache.ibatis.type.EnumTypeHandler},
+	    #{provider},
+	    #{emailVerified}
+	  )
 	</insert>
 
 	<update id="updateLastLogin" parameterType="string">

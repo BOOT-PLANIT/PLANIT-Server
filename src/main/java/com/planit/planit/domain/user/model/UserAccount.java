@@ -11,9 +11,9 @@ public class UserAccount {
 	private String email;
 	private String displayName;
 	private String photoUrl;
-	private UserLevel userLevel;
+	private UserLevel userLevel; // DB Default: USER
 	private String provider;
 	private boolean emailVerified;
-	private LocalDateTime createdAt;
-	private LocalDateTime lastLoginAt;
+	private LocalDateTime createdAt;  // DB Default
+	private LocalDateTime lastLoginAt;   // DB Default
 }
