@@ -1,7 +1,6 @@
 package com.planit.planit.domain.session.service;
 
 import java.time.LocalDate;
-import java.time.YearMonth;
 import java.util.List;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -18,12 +17,15 @@ public class SessionService {
 	private final SessionMapper sessionMapper;
 	private final BootcampService bootcampService;
 	private final UnitPeriodService unitPeriodService;
+	private final com.planit.planit.domain.unitperiod.util.UnitPeriodCalculator unitPeriodCalculator;
 
 	public SessionService(SessionMapper sessionMapper, BootcampService bootcampService,
-		UnitPeriodService unitPeriodService) {
+		UnitPeriodService unitPeriodService,
+		com.planit.planit.domain.unitperiod.util.UnitPeriodCalculator unitPeriodCalculator) {
 		this.sessionMapper = sessionMapper;
 		this.bootcampService = bootcampService;
 		this.unitPeriodService = unitPeriodService;
+		this.unitPeriodCalculator = unitPeriodCalculator;
 	}
 
 	public List<SessionDTO> getAllSessions() {
@@ -128,23 +130,10 @@ public class SessionService {
 			baseDate = session.getClassDate();
 		}
 
-		int baseDay = baseDate.getDayOfMonth();
+		int baseDay = unitPeriodCalculator.getBaseDay(baseDate);
 
-		// unitNo 계산 (BootcampService의 로직과 동일)
-		int monthsDiff = (session.getClassDate().getYear() - baseDate.getYear()) * 12
-			+ (session.getClassDate().getMonthValue() - baseDate.getMonthValue());
-
-		// 해당 월의 실제 기준일 계산 (월말 처리)
-		YearMonth targetYm = YearMonth.from(session.getClassDate());
-		int actualBaseDay = Math.min(baseDay, targetYm.lengthOfMonth());
-
-		// 기준일보다 이전이면 이전 단위기간
-		int unitNo;
-		if (session.getClassDate().getDayOfMonth() < actualBaseDay) {
-			unitNo = Math.max(1, monthsDiff); // 최소 1
-		} else {
-			unitNo = monthsDiff + 1;
-		}
+		// unitNo 계산 (공통 유틸리티 사용)
+		int unitNo = unitPeriodCalculator.calculateUnitNo(baseDate, session.getClassDate(), baseDay);
 
 		session.setUnitNo(unitNo);
 	}
@@ -176,17 +165,11 @@ public class SessionService {
 			baseDate = session.getClassDate();
 		}
 
-		int baseDay = baseDate.getDayOfMonth();
+		int baseDay = unitPeriodCalculator.getBaseDay(baseDate);
 
-		// unitNo를 기반으로 단위기간 시작일/종료일 계산
-		YearMonth startYm = YearMonth.from(baseDate).plusMonths(session.getUnitNo() - 1);
-		int startDay = Math.min(baseDay, startYm.lengthOfMonth());
-		LocalDate periodStart = startYm.atDay(startDay);
-
-		YearMonth endYm = startYm.plusMonths(1);
-		int endDay = Math.min(baseDay, endYm.lengthOfMonth());
-		LocalDate nextStart = endYm.atDay(endDay);
-		LocalDate periodEnd = nextStart.minusDays(1);
+		// 단위기간 시작일/종료일 계산 (공통 유틸리티 사용)
+		LocalDate periodStart = unitPeriodCalculator.calculatePeriodStartDate(baseDate, session.getUnitNo(), baseDay);
+		LocalDate periodEnd = unitPeriodCalculator.calculatePeriodEndDate(baseDate, session.getUnitNo(), baseDay);
 
 		session.setPeriodStartDate(periodStart);
 		session.setPeriodEndDate(periodEnd);
