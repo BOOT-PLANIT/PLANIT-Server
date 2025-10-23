@@ -79,7 +79,7 @@
 		WHERE a.user_id = #{userId}
 		  AND s.bootcamp_id = #{bootcampId}
 		  AND up.unit_no = #{unitNo}
-		GROUP BY a.user_id;
+		GROUP BY a.user_id, unit_no;
 	</select>
 	
 	<!--부트캠프에 존재하는 단위기간 조회-->
