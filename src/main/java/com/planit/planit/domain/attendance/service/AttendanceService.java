@@ -13,17 +13,16 @@ import com.planit.planit.domain.attendance.mapper.AttendanceMapper;
 import com.planit.planit.global.common.exception.BaseException;
 import com.planit.planit.global.common.exception.ErrorCode;
 import jakarta.validation.constraints.NotNull;
-import lombok.AllArgsConstructor;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 @Service
 @Slf4j
-@AllArgsConstructor
+@RequiredArgsConstructor
 public class AttendanceService {
 
   @NotNull
-  private AttendanceMapper mapper;
-
+  private final AttendanceMapper mapper;
 
   /**
    * 일일 기간 출결 정보 조회
@@ -132,6 +131,9 @@ public class AttendanceService {
 
     LocalDate today = LocalDate.now(); // 오늘날짜 불러오기 (YYYY-MM-DD)
     AttendanceTotalResponseDTO attendance = mapper.getTotal(userId, bootcampId, today.toString());
+    if (attendance == null) {
+      throw new BaseException(ErrorCode.RESOURCE_NOT_FOUND, "불러올 출결정보가 없습니다.") {};
+    }
 
     return attendance;
   }

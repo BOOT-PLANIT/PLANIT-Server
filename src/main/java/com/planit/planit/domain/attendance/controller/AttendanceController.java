@@ -73,18 +73,33 @@ public class AttendanceController {
     return ApiResponse.success("출결 수정 성공");
   }
 
+  @Operation(summary = "기간단위 출결 조회", description = "기간 단위 출결 정보를 조회합니다. ",
+      responses = {@io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200",
+          description = "기단 단위 출결 조회 성공",
+          content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
+              schema = @Schema(implementation = AttendanceTotalResponseDTO.class)))})
   @GetMapping("/period/{userId}")
-  public ApiResponse<?> getPeriodAttendance(@PathVariable("userId") Long userId,
-      @RequestParam(value = "bootcampId") Long bootcampId,
-      @RequestParam(value = "unitNo") Integer unitNo) {
+  public ApiResponse<?> getPeriodAttendance(
+      @Parameter(description = "조회할 사용자 ID", example = "1") @PathVariable("userId") Long userId,
+      @Parameter(description = "조회할 부트캠프 ID",
+          example = "1") @RequestParam(value = "bootcampId") Long bootcampId,
+      @Parameter(description = "조회할 기간단위 번호",
+          example = "1") @RequestParam(value = "unitNo") Integer unitNo) {
 
     AttendanceTotalResponseDTO attendance = service.getPeriod(userId, bootcampId, unitNo);
     return ApiResponse.success(attendance);
   }
 
+  @Operation(summary = "오늘까지 총 출결 조회", description = "오늘 날짜까지의 총 출결 정보를 조회합니다. ",
+      responses = {@io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200",
+          description = "총 출결 조회 성공",
+          content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
+              schema = @Schema(implementation = AttendanceTotalResponseDTO.class)))})
   @GetMapping("/total/{userId}")
-  public ApiResponse<?> getTotalAttendance(@PathVariable("userId") Long userId,
-      @RequestParam(value = "bootcampId") Long bootcampId) {
+  public ApiResponse<?> getTotalAttendance(
+      @Parameter(description = "조회할 사용자 ID", example = "1") @PathVariable("userId") Long userId,
+      @Parameter(description = "조회할 부트캠프 ID",
+          example = "1") @RequestParam(value = "bootcampId") Long bootcampId) {
 
     AttendanceTotalResponseDTO attendance = service.getTotal(userId, bootcampId);
     return ApiResponse.success(attendance);
