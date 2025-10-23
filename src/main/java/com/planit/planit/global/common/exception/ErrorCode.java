@@ -33,6 +33,7 @@ public enum ErrorCode {
 	// Session Errors
 	SESSION_NOT_FOUND(HttpStatus.NOT_FOUND, "세션을 찾을 수 없습니다."),
 	SESSION_UNIT_NO_REQUIRED(HttpStatus.BAD_REQUEST, "단위기간 번호는 필수입니다."),
+	SESSION_BEFORE_BOOTCAMP_START(HttpStatus.BAD_REQUEST, "세션 날짜는 부트캠프 시작일 이후여야 합니다."),
 
 	// UnitPeriod Errors
 	UNIT_PERIOD_NOT_FOUND(HttpStatus.NOT_FOUND, "단위기간을 찾을 수 없습니다."),
