@@ -73,7 +73,7 @@ public class AttendanceController {
     return ApiResponse.success("출결 수정 성공");
   }
 
-  @Operation(summary = "단위 출결 조회", description = "단위 기간 출결 정보를 조회합니다. ",
+  @Operation(summary = "단위 기간 출결 조회", description = "단위 기간 출결 정보를 조회합니다. ",
       responses = {@io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200",
           description = "단위 기간 출결 조회 성공",
           content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
