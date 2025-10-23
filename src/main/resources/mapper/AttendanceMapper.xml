@@ -52,6 +52,67 @@
       id = #{id}
       AND user_id = #{userId}
   </update>
+  
+  <!--단위 기간 출결 조회-->
+  <select id="getPeriod"
+        parameterType="map"
+        resultType="com.planit.planit.domain.attendance.dto.AttendanceTotalResponseDTO">	    
+	    SELECT 
+		    a.user_id AS userId,
+		    up.unit_no AS unitNo,
+		    COUNT(CASE WHEN a.status = 'present' THEN 1 END) AS presentCount,
+		    COUNT(CASE WHEN a.status = 'absent' THEN 1 END) AS absentCount,
+		    COUNT(CASE WHEN a.status = 'late' THEN 1 END) AS lateCount,
+		    COUNT(CASE WHEN a.status = 'left_early' THEN 1 END) AS leftEarlyCount,
+		    COUNT(CASE WHEN a.status = 'annual' THEN 1 END) AS annualCount,
+		    COUNT(CASE WHEN a.status = 'leave' THEN 1 END) AS leaveCount,
+		    (
+		        SELECT COUNT(*) 
+		        FROM sessions s2
+		        JOIN unit_periods up2 ON s2.period_id = up2.id
+		        WHERE s2.bootcamp_id = s.bootcamp_id
+		          AND up2.unit_no = up.unit_no
+		    ) AS totalSessions
+		FROM attendance a
+		JOIN sessions s ON a.session_id = s.id
+		JOIN unit_periods up ON s.period_id = up.id
+		WHERE a.user_id = #{userId}
+		  AND s.bootcamp_id = #{bootcampId}
+		  AND up.unit_no = #{unitNo}
+		GROUP BY a.user_id, unit_no;
+	</select>
+	
+	<!--부트캠프에 존재하는 단위기간 조회-->
+	<select id="getBootcampUnitno" resultType="int">
+		select unit_no from unit_periods where bootcamp_id = #{bootcampId};
+	</select>
+  
+  <!--오늘까지 전체 출결 조회 (&lt; : <이라는뜻)-->
+  <select id="getTotal"
+        parameterType="map"
+        resultType="com.planit.planit.domain.attendance.dto.AttendanceTotalResponseDTO">	    
+		SELECT 
+		    a.user_id AS userId,
+		    COUNT(CASE WHEN a.status = 'present' THEN 1 END) AS presentCount,
+		    COUNT(CASE WHEN a.status = 'absent' THEN 1 END) AS absentCount,
+		    COUNT(CASE WHEN a.status = 'late' THEN 1 END) AS lateCount,
+		    COUNT(CASE WHEN a.status = 'left_early' THEN 1 END) AS leftEarlyCount,
+		    COUNT(CASE WHEN a.status = 'annual' THEN 1 END) AS annualCount,
+		    COUNT(CASE WHEN a.status = 'leave' THEN 1 END) AS leaveCount,
+		    (
+		        SELECT COUNT(*) 
+		        FROM sessions s2
+		        WHERE s2.bootcamp_id = s.bootcamp_id
+		    ) AS totalSessions
+		FROM attendance a
+		JOIN sessions s ON a.session_id = s.id
+		JOIN unit_periods up ON s.period_id = up.id
+		WHERE a.user_id = #{userId} 
+		  AND s.bootcamp_id = #{bootcampId}
+		  AND s.class_date &lt;= CURDATE()
+		GROUP BY a.user_id;
+	</select>
+	
 </mapper>
 
 

@@ -13,6 +13,7 @@ import org.springframework.web.bind.annotation.RestController;
 import com.planit.planit.domain.attendance.dto.AttendanceDTO;
 import com.planit.planit.domain.attendance.dto.AttendanceDailyResponseDTO;
 import com.planit.planit.domain.attendance.dto.AttendanceRegistRequestDTO;
+import com.planit.planit.domain.attendance.dto.AttendanceTotalResponseDTO;
 import com.planit.planit.domain.attendance.service.AttendanceService;
 import com.planit.planit.global.common.response.ApiResponse;
 import io.swagger.v3.oas.annotations.Operation;
@@ -40,13 +41,13 @@ public class AttendanceController {
               schema = @Schema(implementation = AttendanceDailyResponseDTO.class)))})
   @GetMapping("/{userId}")
   public ApiResponse<?> getDailyAttendance(
-      @Parameter(description = "조회할 사용자 ID", example = "1") @PathVariable("userId") long userId,
+      @Parameter(description = "조회할 사용자 ID", example = "1") @PathVariable("userId") Long userId,
 
       @Parameter(description = "조회할 날짜",
           example = "2025-09-01") @RequestParam(value = "date") String date,
 
       @Parameter(description = "조회할 부프캠프 ID",
-          example = "1") @RequestParam(value = "bootcampId") long bootcampId) {
+          example = "1") @RequestParam(value = "bootcampId") Long bootcampId) {
     AttendanceDailyResponseDTO daily = service.getDaily(userId, bootcampId, date);
 
     return ApiResponse.success(daily);
@@ -71,4 +72,37 @@ public class AttendanceController {
     service.update(attendance);
     return ApiResponse.success("출결 수정 성공");
   }
+
+  @Operation(summary = "단위 기간 출결 조회", description = "단위 기간 출결 정보를 조회합니다. ",
+      responses = {@io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200",
+          description = "단위 기간 출결 조회 성공",
+          content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
+              schema = @Schema(implementation = AttendanceTotalResponseDTO.class)))})
+  @GetMapping("/period/{userId}")
+  public ApiResponse<?> getPeriodAttendance(
+      @Parameter(description = "조회할 사용자 ID", example = "1") @PathVariable("userId") Long userId,
+      @Parameter(description = "조회할 부트캠프 ID",
+          example = "1") @RequestParam(value = "bootcampId") Long bootcampId,
+      @Parameter(description = "조회할 기간단위 번호",
+          example = "1") @RequestParam(value = "unitNo") Integer unitNo) {
+
+    AttendanceTotalResponseDTO attendance = service.getPeriod(userId, bootcampId, unitNo);
+    return ApiResponse.success(attendance);
+  }
+
+  @Operation(summary = "오늘까지 총 출결 조회", description = "오늘 날짜까지의 총 출결 정보를 조회합니다. ",
+      responses = {@io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200",
+          description = "총 출결 조회 성공",
+          content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
+              schema = @Schema(implementation = AttendanceTotalResponseDTO.class)))})
+  @GetMapping("/total/{userId}")
+  public ApiResponse<?> getTotalAttendance(
+      @Parameter(description = "조회할 사용자 ID", example = "1") @PathVariable("userId") Long userId,
+      @Parameter(description = "조회할 부트캠프 ID",
+          example = "1") @RequestParam(value = "bootcampId") Long bootcampId) {
+
+    AttendanceTotalResponseDTO attendance = service.getTotal(userId, bootcampId);
+    return ApiResponse.success(attendance);
+  }
+
 }

@@ -1,26 +1,28 @@
 package com.planit.planit.domain.attendance.service;
 
+import java.time.LocalDate;
+import java.util.List;
 import java.util.Map;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import com.planit.planit.domain.attendance.dto.AttendanceDTO;
 import com.planit.planit.domain.attendance.dto.AttendanceDailyResponseDTO;
 import com.planit.planit.domain.attendance.dto.AttendanceRegistRequestDTO;
+import com.planit.planit.domain.attendance.dto.AttendanceTotalResponseDTO;
 import com.planit.planit.domain.attendance.mapper.AttendanceMapper;
 import com.planit.planit.global.common.exception.BaseException;
 import com.planit.planit.global.common.exception.ErrorCode;
 import jakarta.validation.constraints.NotNull;
-import lombok.AllArgsConstructor;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 @Service
 @Slf4j
-@AllArgsConstructor
+@RequiredArgsConstructor
 public class AttendanceService {
 
   @NotNull
-  private AttendanceMapper mapper;
-
+  private final AttendanceMapper mapper;
 
   /**
    * 일일 기간 출결 정보 조회
@@ -58,6 +60,13 @@ public class AttendanceService {
     // 특정 날짜에 강의가 있는지 없는지 체크 sessionId,periodId 받아옴
     Map<String, Object> result = mapper.getDailySession(bootcampId, date);
 
+    // 미래의 날짜에서는 출결등록 못하게 설정
+    LocalDate inputDate = LocalDate.parse(date);
+    LocalDate today = LocalDate.now();
+    if (inputDate.isAfter(today)) {
+      throw new BaseException(ErrorCode.FORBIDDEN, "선택 날짜가 오늘 이후 날짜이므로 출결 등록 불가합니다.") {};
+    }
+
     if (result == null) {
       throw new BaseException(ErrorCode.RESOURCE_NOT_FOUND, "해당 날짜에는 강의가 없습니다.") {};
 
@@ -90,4 +99,42 @@ public class AttendanceService {
     mapper.update(attendance);
   }
 
+  /**
+   * 단위 기간 출결 정보 조회
+   * 
+   * @param userId 사용자 ID
+   * @param bootcampId 부트캠프 ID
+   * @param unitNo 단위 기간 번호
+   * @return attendance 기간단위 출결 현황 (출석,조퇴,휴가 등등 및 전체 출석일수 카운트)
+   */
+  public AttendanceTotalResponseDTO getPeriod(Long userId, Long bootcampId, Integer unitNo) {
+    List<Integer> unitList = mapper.getBootcampUnitno(bootcampId);
+    if (!unitList.contains(unitNo)) { // 부트캠프에 존재하는 단위기간인지 검사
+      throw new BaseException(ErrorCode.RESOURCE_NOT_FOUND, "해당 부트캠프에 존재하지 않는 단위기간입니다.") {};
+    }
+    AttendanceTotalResponseDTO attendance = mapper.getPeriod(userId, bootcampId, unitNo);
+    if (attendance == null) { // 단위기간은 있지만 단위기간에 아직 등록된 출결이 없음
+      throw new BaseException(ErrorCode.RESOURCE_NOT_FOUND, "해당 단위기간에 등록된 출결이 없습니다.") {};
+    }
+
+    return attendance;
+  }
+
+  /**
+   * 오늘까지 전체출결 정보 조회
+   * 
+   * @param userId 사용자 ID
+   * @param bootcampId 부트캠프 ID
+   * @return attendance 처음부터 오늘까지 전체 출결 현황 (출석,조퇴,휴가 등등 및 전체 출석일수 카운트)
+   */
+  public AttendanceTotalResponseDTO getTotal(Long userId, Long bootcampId) {
+
+
+    AttendanceTotalResponseDTO attendance = mapper.getTotal(userId, bootcampId);
+    if (attendance == null) {
+      throw new BaseException(ErrorCode.RESOURCE_NOT_FOUND, "불러올 출결정보가 없습니다.") {};
+    }
+
+    return attendance;
+  }
 }
