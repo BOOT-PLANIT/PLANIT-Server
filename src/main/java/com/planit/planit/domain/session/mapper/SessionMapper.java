@@ -16,8 +16,6 @@ public interface SessionMapper {
 
     void insertBatch(List<SessionDTO> sessions);
 
-    void update(SessionDTO session);
-
     void delete(Long id);
 
     void deleteByBootcampId(Long bootcampId);
