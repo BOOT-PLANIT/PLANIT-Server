@@ -28,4 +28,12 @@ public class AttendanceDTO {
 
   @Schema(description = "수정 시각")
   private OffsetDateTime updatedAt;
+
+  // id 없이 쓰고 싶을 때를 위한 편의 생성자
+  public AttendanceDTO(Long userId, Long sessionId, Long periodId, AttendanceStatus status) {
+    this.userId = userId;
+    this.sessionId = sessionId;
+    this.periodId = periodId;
+    this.status = status;
+  }
 }
