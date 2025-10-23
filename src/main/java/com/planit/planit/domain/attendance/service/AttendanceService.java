@@ -129,8 +129,8 @@ public class AttendanceService {
    */
   public AttendanceTotalResponseDTO getTotal(Long userId, Long bootcampId) {
 
-    LocalDate today = LocalDate.now(); // 오늘날짜 불러오기 (YYYY-MM-DD)
-    AttendanceTotalResponseDTO attendance = mapper.getTotal(userId, bootcampId, today.toString());
+
+    AttendanceTotalResponseDTO attendance = mapper.getTotal(userId, bootcampId);
     if (attendance == null) {
       throw new BaseException(ErrorCode.RESOURCE_NOT_FOUND, "불러올 출결정보가 없습니다.") {};
     }

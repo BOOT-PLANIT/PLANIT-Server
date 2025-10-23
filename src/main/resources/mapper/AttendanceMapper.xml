@@ -109,7 +109,7 @@
 		JOIN unit_periods up ON s.period_id = up.id
 		WHERE a.user_id = #{userId} 
 		  AND s.bootcamp_id = #{bootcampId}
-		  AND s.class_date &lt;= #{today}
+		  AND s.class_date &lt;= CURDATE()
 		GROUP BY a.user_id;
 	</select>
 	
