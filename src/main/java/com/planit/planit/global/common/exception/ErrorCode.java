@@ -29,6 +29,7 @@ public enum ErrorCode {
 	BOOTCAMP_NOT_FOUND(HttpStatus.NOT_FOUND, "부트캠프를 찾을 수 없습니다."),
 	BOOTCAMP_ALREADY_EXISTS(HttpStatus.CONFLICT, "이미 존재하는 부트캠프입니다."),
 	BOOTCAMP_INVALID_CLASS_DATES(HttpStatus.BAD_REQUEST, "유효하지 않은 교육일 형식입니다."),
+	BOOTCAMP_PARSE_FAILED(HttpStatus.BAD_REQUEST, "부트캠프 정보를 파싱할 수 없습니다. 텍스트 형식을 확인해주세요."),
 
 	// Session Errors
 	SESSION_NOT_FOUND(HttpStatus.NOT_FOUND, "세션을 찾을 수 없습니다."),

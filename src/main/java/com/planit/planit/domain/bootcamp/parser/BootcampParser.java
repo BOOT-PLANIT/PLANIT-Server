@@ -8,6 +8,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import org.springframework.stereotype.Component;
 import com.planit.planit.domain.bootcamp.dto.BootcampParseResponseDTO;
+import com.planit.planit.domain.bootcamp.exception.BootcampParseFailedException;
 
 @Component
 public class BootcampParser {
@@ -17,6 +18,7 @@ public class BootcampParser {
    * 
    * @param text 고용24에서 복사한 텍스트
    * @return 파싱된 부트캠프 정보
+   * @throws BootcampParseFailedException 파싱 실패 시
    */
   public BootcampParseResponseDTO parse(String text) {
     // 훈련과정명 추출 (탭으로 구분, 쉼표 제외)
@@ -68,11 +70,45 @@ public class BootcampParser {
     // 날짜 정렬
     attendanceDates.sort(LocalDate::compareTo);
 
+    // 파싱 결과 검증
+    validateParseResult(courseName, institution, attendanceDates);
+
     // 결과 반환
     return BootcampParseResponseDTO.builder()
         .name(courseName)
         .organizer(institution)
         .classDates(attendanceDates)
         .build();
+  }
+
+  /**
+   * 파싱 결과를 검증합니다.
+   * 
+   * @param courseName 훈련과정명
+   * @param institution 훈련기관명
+   * @param attendanceDates 교육일 목록
+   * @throws BootcampParseFailedException 필수 정보가 누락된 경우
+   */
+  private void validateParseResult(String courseName, String institution, List<LocalDate> attendanceDates) {
+    List<String> missingFields = new ArrayList<>();
+
+    if (courseName == null || courseName.trim().isEmpty()) {
+      missingFields.add("훈련과정명");
+    }
+
+    if (institution == null || institution.trim().isEmpty()) {
+      missingFields.add("훈련기관명");
+    }
+
+    if (attendanceDates == null || attendanceDates.isEmpty()) {
+      missingFields.add("시간표");
+    }
+
+    if (!missingFields.isEmpty()) {
+      String message = String.format(
+          "부트캠프 정보를 파싱할 수 없습니다. 누락된 정보: %s. 고용24 시간표 페이지에서 전체 텍스트를 복사했는지 확인해주세요.",
+          String.join(", ", missingFields));
+      throw new BootcampParseFailedException(message);
+    }
   }
 }
