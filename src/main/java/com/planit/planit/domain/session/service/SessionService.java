@@ -65,8 +65,12 @@ public class SessionService {
 		session.setBootcampId(request.getBootcampId());
 		session.setClassDate(request.getClassDate());
 
-		// 기준일 결정 (한 번만 계산하여 재사용)
-		LocalDate baseDate = determineBaseDate(session);
+		// 기준일 결정 (bootcamp.startedAt 활용)
+		// 검증 통과 시 classDate >= startedAt 보장되므로, startedAt을 그대로 사용
+		LocalDate baseDate = (bootcamp.getStartedAt() != null) 
+			? bootcamp.getStartedAt() 
+			: request.getClassDate();
+		
 		int baseDay = unitPeriodCalculator.getBaseDay(baseDate);
 
 		// unitNo 자동 계산
@@ -118,28 +122,6 @@ public class SessionService {
 
 		// 부트캠프의 시작일/종료일 갱신
 		bootcampService.updateBootcampDates(bootcampId);
-	}
-
-	/**
-	 * 기준일을 결정합니다.
-	 * 기존 세션 중 가장 빠른 날짜와 현재 세션의 classDate 중 더 빠른 날짜를 기준일로 사용합니다.
-	 * 
-	 * @param session 세션 정보 (bootcampId, classDate 필요)
-	 * @return 기준일
-	 */
-	private LocalDate determineBaseDate(SessionDTO session) {
-		// 부트캠프의 기존 세션 중 최소 날짜 조회 (집계 쿼리 + FOR UPDATE)
-		LocalDate existingMinDate = sessionMapper.findMinClassDateByBootcampIdForUpdate(session.getBootcampId());
-
-		if (existingMinDate != null) {
-			// 현재 세션의 classDate가 더 빠르면 그것을 기준으로
-			return session.getClassDate().isBefore(existingMinDate) 
-				? session.getClassDate() 
-				: existingMinDate;
-		} else {
-			// 첫 세션이면 classDate를 기준으로
-			return session.getClassDate();
-		}
 	}
 
 	/**
