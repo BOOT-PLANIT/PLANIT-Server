@@ -42,6 +42,14 @@
         WHERE s.id = #{id}
     </select>
 
+    <!-- 부트캠프별 최소 교육일 조회 (비관적 락) -->
+    <select id="findMinClassDateByBootcampIdForUpdate" parameterType="long" resultType="java.time.LocalDate">
+        SELECT MIN(class_date)
+        FROM sessions
+        WHERE bootcamp_id = #{bootcampId}
+        FOR UPDATE
+    </select>
+
     <!-- 단일 추가 -->
     <insert id="insert" parameterType="com.planit.planit.domain.session.dto.SessionDTO" useGeneratedKeys="true" keyProperty="id">
         INSERT INTO sessions (bootcamp_id, period_id, class_date, created_at, updated_at)

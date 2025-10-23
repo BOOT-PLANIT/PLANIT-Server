@@ -65,11 +65,15 @@ public class SessionService {
 		session.setBootcampId(request.getBootcampId());
 		session.setClassDate(request.getClassDate());
 
+		// 기준일 결정 (한 번만 계산하여 재사용)
+		LocalDate baseDate = determineBaseDate(session);
+		int baseDay = unitPeriodCalculator.getBaseDay(baseDate);
+
 		// unitNo 자동 계산
-		calculateUnitNo(session);
+		calculateUnitNo(session, baseDate, baseDay);
 
 		// periodStartDate와 periodEndDate 자동 계산
-		calculatePeriodDates(session);
+		calculatePeriodDates(session, baseDate, baseDay);
 
 		// 단위기간 찾거나 생성
 		UnitPeriodDTO unitPeriod = new UnitPeriodDTO();
@@ -124,16 +128,10 @@ public class SessionService {
 	 * @return 기준일
 	 */
 	private LocalDate determineBaseDate(SessionDTO session) {
-		// 부트캠프의 기존 세션들 조회
-		List<SessionDTO> existingSessions = sessionMapper.findByBootcampId(session.getBootcampId());
+		// 부트캠프의 기존 세션 중 최소 날짜 조회 (집계 쿼리 + FOR UPDATE)
+		LocalDate existingMinDate = sessionMapper.findMinClassDateByBootcampIdForUpdate(session.getBootcampId());
 
-		if (existingSessions != null && !existingSessions.isEmpty()) {
-			// 기존 세션 중 가장 빠른 날짜 찾기
-			LocalDate existingMinDate = existingSessions.stream()
-				.map(SessionDTO::getClassDate)
-				.min(LocalDate::compareTo)
-				.orElse(session.getClassDate());
-
+		if (existingMinDate != null) {
 			// 현재 세션의 classDate가 더 빠르면 그것을 기준으로
 			return session.getClassDate().isBefore(existingMinDate) 
 				? session.getClassDate() 
@@ -147,29 +145,24 @@ public class SessionService {
 	/**
 	 * 단위기간 번호를 자동으로 계산합니다.
 	 * 
-	 * @param session 세션 정보 (bootcampId, classDate 필요)
+	 * @param session 세션 정보 (classDate 필요)
+	 * @param baseDate 기준일
+	 * @param baseDay 기준일의 일(day)
 	 */
-	private void calculateUnitNo(SessionDTO session) {
-		// 기준일 결정
-		LocalDate baseDate = determineBaseDate(session);
-		int baseDay = unitPeriodCalculator.getBaseDay(baseDate);
-
+	private void calculateUnitNo(SessionDTO session, LocalDate baseDate, int baseDay) {
 		// unitNo 계산 (공통 유틸리티 사용)
 		int unitNo = unitPeriodCalculator.calculateUnitNo(baseDate, session.getClassDate(), baseDay);
-
 		session.setUnitNo(unitNo);
 	}
 
 	/**
 	 * 단위기간의 시작일/종료일을 자동으로 계산합니다.
 	 * 
-	 * @param session 세션 정보 (bootcampId, unitNo, classDate 필요)
+	 * @param session 세션 정보 (unitNo 필요)
+	 * @param baseDate 기준일
+	 * @param baseDay 기준일의 일(day)
 	 */
-	private void calculatePeriodDates(SessionDTO session) {
-		// 기준일 결정
-		LocalDate baseDate = determineBaseDate(session);
-		int baseDay = unitPeriodCalculator.getBaseDay(baseDate);
-
+	private void calculatePeriodDates(SessionDTO session, LocalDate baseDate, int baseDay) {
 		// 단위기간 시작일/종료일 계산 (공통 유틸리티 사용)
 		LocalDate periodStart = unitPeriodCalculator.calculatePeriodStartDate(baseDate, session.getUnitNo(), baseDay);
 		LocalDate periodEnd = unitPeriodCalculator.calculatePeriodEndDate(baseDate, session.getUnitNo(), baseDay);
