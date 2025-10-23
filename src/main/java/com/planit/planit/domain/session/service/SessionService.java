@@ -53,7 +53,7 @@ public class SessionService {
 		com.planit.planit.domain.bootcamp.dto.BootcampDTO bootcamp = 
 			bootcampService.getBootcampForUpdate(request.getBootcampId());
 
-		// 부트캠프 시작일 이후인지 검증
+		// 부트캠프 시작일 이후인지 검증 (엄격한 검증)
 		if (bootcamp.getStartedAt() != null && request.getClassDate().isBefore(bootcamp.getStartedAt())) {
 			throw new SessionBeforeBootcampStartException(
 				"세션 날짜(" + request.getClassDate() + ")는 부트캠프 시작일(" 
@@ -65,8 +65,7 @@ public class SessionService {
 		session.setBootcampId(request.getBootcampId());
 		session.setClassDate(request.getClassDate());
 
-		// 기준일 결정 (bootcamp.startedAt 활용)
-		// 검증 통과 시 classDate >= startedAt 보장되므로, startedAt을 그대로 사용
+		// 기준일 결정: startedAt이 설정되어 있으면 사용, 없으면 현재 classDate를 기준으로 함
 		LocalDate baseDate = (bootcamp.getStartedAt() != null) 
 			? bootcamp.getStartedAt() 
 			: request.getClassDate();
