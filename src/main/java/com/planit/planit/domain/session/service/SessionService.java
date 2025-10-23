@@ -7,6 +7,7 @@ import org.springframework.transaction.annotation.Transactional;
 import com.planit.planit.domain.bootcamp.service.BootcampService;
 import com.planit.planit.domain.session.dto.SessionDTO;
 import com.planit.planit.domain.session.exception.SessionBeforeBootcampStartException;
+import com.planit.planit.domain.session.exception.SessionIsBootcampStartDateException;
 import com.planit.planit.domain.session.exception.SessionNotFoundException;
 import com.planit.planit.domain.session.mapper.SessionMapper;
 import com.planit.planit.domain.unitperiod.dto.UnitPeriodDTO;
@@ -97,10 +98,50 @@ public class SessionService {
 		}
 
 		Long bootcampId = existingSession.getBootcampId();
+
+		// 부트캠프 조회하여 시작일 확인
+		com.planit.planit.domain.bootcamp.dto.BootcampDTO bootcamp = 
+			bootcampService.getBootcampForUpdate(bootcampId);
+
+		// 부트캠프 시작일에 해당하는 세션인지 확인
+		if (bootcamp.getStartedAt() != null && 
+			existingSession.getClassDate().equals(bootcamp.getStartedAt())) {
+			throw new SessionIsBootcampStartDateException(
+				"부트캠프 시작일(" + bootcamp.getStartedAt() + ")에 해당하는 세션은 삭제할 수 없습니다.");
+		}
+
 		sessionMapper.delete(id);
 
 		// 부트캠프의 시작일/종료일 갱신
 		bootcampService.updateBootcampDates(bootcampId);
+	}
+
+	/**
+	 * 기준일을 결정합니다.
+	 * 기존 세션 중 가장 빠른 날짜와 현재 세션의 classDate 중 더 빠른 날짜를 기준일로 사용합니다.
+	 * 
+	 * @param session 세션 정보 (bootcampId, classDate 필요)
+	 * @return 기준일
+	 */
+	private LocalDate determineBaseDate(SessionDTO session) {
+		// 부트캠프의 기존 세션들 조회
+		List<SessionDTO> existingSessions = sessionMapper.findByBootcampId(session.getBootcampId());
+
+		if (existingSessions != null && !existingSessions.isEmpty()) {
+			// 기존 세션 중 가장 빠른 날짜 찾기
+			LocalDate existingMinDate = existingSessions.stream()
+				.map(SessionDTO::getClassDate)
+				.min(LocalDate::compareTo)
+				.orElse(session.getClassDate());
+
+			// 현재 세션의 classDate가 더 빠르면 그것을 기준으로
+			return session.getClassDate().isBefore(existingMinDate) 
+				? session.getClassDate() 
+				: existingMinDate;
+		} else {
+			// 첫 세션이면 classDate를 기준으로
+			return session.getClassDate();
+		}
 	}
 
 	/**
@@ -109,27 +150,8 @@ public class SessionService {
 	 * @param session 세션 정보 (bootcampId, classDate 필요)
 	 */
 	private void calculateUnitNo(SessionDTO session) {
-		// 부트캠프의 기존 세션들 조회
-		List<SessionDTO> existingSessions = sessionMapper.findByBootcampId(session.getBootcampId());
-
 		// 기준일 결정
-		LocalDate baseDate;
-		if (existingSessions != null && !existingSessions.isEmpty()) {
-			// 기존 세션 중 가장 빠른 날짜 찾기
-			baseDate = existingSessions.stream()
-				.map(SessionDTO::getClassDate)
-				.min(LocalDate::compareTo)
-				.orElse(session.getClassDate());
-
-			// 현재 세션의 classDate가 더 빠르면 그것을 기준으로
-			if (session.getClassDate().isBefore(baseDate)) {
-				baseDate = session.getClassDate();
-			}
-		} else {
-			// 첫 세션이면 classDate를 기준으로
-			baseDate = session.getClassDate();
-		}
-
+		LocalDate baseDate = determineBaseDate(session);
 		int baseDay = unitPeriodCalculator.getBaseDay(baseDate);
 
 		// unitNo 계산 (공통 유틸리티 사용)
@@ -144,27 +166,8 @@ public class SessionService {
 	 * @param session 세션 정보 (bootcampId, unitNo, classDate 필요)
 	 */
 	private void calculatePeriodDates(SessionDTO session) {
-		// 부트캠프의 기존 세션들 조회
-		List<SessionDTO> existingSessions = sessionMapper.findByBootcampId(session.getBootcampId());
-
-		// 기준일 결정: 기존 세션 중 가장 빠른 날짜 또는 현재 classDate
-		LocalDate baseDate;
-		if (existingSessions != null && !existingSessions.isEmpty()) {
-			// 기존 세션 중 가장 빠른 날짜 찾기
-			baseDate = existingSessions.stream()
-				.map(SessionDTO::getClassDate)
-				.min(LocalDate::compareTo)
-				.orElse(session.getClassDate());
-
-			// 현재 세션의 classDate가 더 빠르면 그것을 기준으로
-			if (session.getClassDate().isBefore(baseDate)) {
-				baseDate = session.getClassDate();
-			}
-		} else {
-			// 첫 세션이면 classDate를 기준으로
-			baseDate = session.getClassDate();
-		}
-
+		// 기준일 결정
+		LocalDate baseDate = determineBaseDate(session);
 		int baseDay = unitPeriodCalculator.getBaseDay(baseDate);
 
 		// 단위기간 시작일/종료일 계산 (공통 유틸리티 사용)

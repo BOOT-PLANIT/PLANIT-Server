@@ -115,12 +115,17 @@ public class SessionController {
         .body(ApiResponse.success("세션 등록 성공", createdSession));
   }
 
-  @Operation(summary = "세션 삭제", description = "세션을 삭제합니다.",
+  @Operation(summary = "세션 삭제", 
+      description = "세션을 삭제합니다. 단, 부트캠프의 시작일에 해당하는 세션은 삭제할 수 없습니다.",
       responses = {
           @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200",
               description = "삭제 성공",
               content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
                   schema = @Schema(implementation = VoidResponseSchema.class))),
+          @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400",
+              description = "부트캠프 시작일 세션은 삭제 불가",
+              content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
+                  schema = @Schema(implementation = ApiErrorResponseSchema.class))),
           @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404",
               description = "세션을 찾을 수 없음",
               content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,

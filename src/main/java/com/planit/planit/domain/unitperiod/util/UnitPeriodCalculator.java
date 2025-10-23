@@ -18,7 +18,7 @@ public class UnitPeriodCalculator {
    * @param baseDate 기준일 (첫 교육일)
    * @param targetDate 계산할 날짜
    * @param baseDay 기준일의 일(day)
-   * @return 단위기간 번호 (1부터 시작)
+   * @return 단위기간 번호 (1부터 시작, 항상 1 이상)
    */
   public int calculateUnitNo(LocalDate baseDate, LocalDate targetDate, int baseDay) {
     // 월 차이 계산
@@ -34,7 +34,8 @@ public class UnitPeriodCalculator {
       return Math.max(1, monthsDiff); // 최소 1
     }
 
-    return monthsDiff + 1;
+    // targetDate가 baseDate보다 이전이어도 최소 1 보장
+    return Math.max(1, monthsDiff + 1);
   }
 
   /**
