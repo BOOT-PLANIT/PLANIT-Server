@@ -23,12 +23,15 @@ public class BootcampService {
 	private final BootcampMapper bootcampMapper;
 	private final SessionMapper sessionMapper;
 	private final UnitPeriodMapper unitPeriodMapper;
+	private final com.planit.planit.domain.bootcamp.parser.BootcampParser bootcampParser;
 
 	public BootcampService(BootcampMapper bootcampMapper, SessionMapper sessionMapper,
-		UnitPeriodMapper unitPeriodMapper) {
+		UnitPeriodMapper unitPeriodMapper,
+		com.planit.planit.domain.bootcamp.parser.BootcampParser bootcampParser) {
 		this.bootcampMapper = bootcampMapper;
 		this.sessionMapper = sessionMapper;
 		this.unitPeriodMapper = unitPeriodMapper;
+		this.bootcampParser = bootcampParser;
 	}
 
 	public List<BootcampResponseDTO> getAllBootcamps() {
@@ -307,5 +310,15 @@ public class BootcampService {
 		response.setCreatedAt(dto.getCreatedAt());
 		response.setUpdatedAt(dto.getUpdatedAt());
 		return response;
+	}
+
+	/**
+	 * 고용24 텍스트를 파싱하여 부트캠프 정보를 추출합니다.
+	 * 
+	 * @param text 고용24에서 복사한 텍스트
+	 * @return 파싱된 부트캠프 정보
+	 */
+	public com.planit.planit.domain.bootcamp.dto.BootcampParseResponseDTO parseBootcampText(String text) {
+		return bootcampParser.parse(text);
 	}
 }

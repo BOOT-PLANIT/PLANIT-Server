@@ -12,6 +12,8 @@ import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import com.planit.planit.domain.bootcamp.dto.BootcampParseRequestDTO;
+import com.planit.planit.domain.bootcamp.dto.BootcampParseResponseDTO;
 import com.planit.planit.domain.bootcamp.dto.BootcampRequestDTO;
 import com.planit.planit.domain.bootcamp.dto.BootcampResponseDTO;
 import com.planit.planit.domain.bootcamp.service.BootcampService;
@@ -68,6 +70,28 @@ public class BootcampController {
 	public ResponseEntity<ApiResponse<BootcampResponseDTO>> getOne(@PathVariable Long id) {
 		BootcampResponseDTO bootcamp = bootcampService.getBootcamp(id);
 		return ResponseEntity.ok(ApiResponse.success("부트캠프 조회 성공", bootcamp));
+	}
+
+	@Operation(summary = "고용24 텍스트 파싱", 
+		description = "고용24에서 복사한 텍스트를 파싱하여 부트캠프 정보를 추출합니다.",
+		responses = {
+			@io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200",
+				description = "파싱 성공",
+				content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
+					schema = @Schema(implementation = BootcampParseResponseSchema.class))),
+			@io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400",
+				description = "잘못된 요청",
+				content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
+					schema = @Schema(implementation = ApiErrorResponseSchema.class))),
+			@io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "500",
+				description = "서버 에러",
+				content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
+					schema = @Schema(implementation = ApiErrorResponseSchema.class)))})
+	@PostMapping("/parse")
+	public ResponseEntity<ApiResponse<BootcampParseResponseDTO>> parse(
+		@Valid @RequestBody BootcampParseRequestDTO request) {
+		BootcampParseResponseDTO result = bootcampService.parseBootcampText(request.getText());
+		return ResponseEntity.ok(ApiResponse.success("부트캠프 텍스트 파싱 성공", result));
 	}
 
 	@Operation(summary = "부트캠프 등록", description = "새로운 부트캠프를 등록합니다.",
@@ -131,6 +155,15 @@ public class BootcampController {
 	public ResponseEntity<ApiResponse<Void>> delete(@PathVariable Long id) {
 		bootcampService.deleteBootcamp(id);
 		return ResponseEntity.ok(new ApiResponse<>(HttpStatus.OK.value(), "부트캠프 삭제 성공", null));
+	}
+
+	@Schema(name = "BootcampParseResponse", description = "부트캠프 파싱 응답")
+	static class BootcampParseResponseSchema {
+		@Schema(example = "200")
+		public int code;
+		@Schema(example = "부트캠프 텍스트 파싱 성공")
+		public String message;
+		public BootcampParseResponseDTO data;
 	}
 
 	@Schema(name = "BootcampListResponse", description = "부트캠프 목록 응답")
