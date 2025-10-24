@@ -144,6 +144,35 @@ public class AttendanceService {
       throw new BaseException(ErrorCode.RESOURCE_NOT_FOUND, "해당 단위기간에 등록된 출결이 없습니다.") {};
     }
 
+    // 출석,지각,조퇴,연차,휴가의 합
+    Integer totalPresentCount = attendance.getPresentCount() + attendance.getLateCount()
+        + attendance.getLeftEarlyCount() + attendance.getAnnualCount() + attendance.getLeaveCount();
+
+    // 지각+조퇴 3회 쌓인거 출석수에 반영
+    totalPresentCount -= (attendance.getLateCount() + attendance.getLeftEarlyCount()) / 3;
+
+    // 실제 총 결석수
+    Integer totalAbsentCount = attendance.getAbsentCount()
+        + (attendance.getLateCount() + attendance.getLeftEarlyCount()) / 3;
+
+    attendance.setTotalPresentCount(totalPresentCount);
+    attendance.setTotalAbsentCount(totalAbsentCount);
+
+    // kdt 여부에 따른 훈련지원금 차이
+    Integer subsidy = 0;
+    if (mapper.Iskdt(bootcampId)) {
+      subsidy = 15800;
+    } else {
+      subsidy = 5800;
+    }
+
+    // 훈련 지원금 최대 20기준으로 받을수있는거 처리
+    if (totalPresentCount > 20) {
+      attendance.setTotalSubsidy(20 * subsidy);
+    } else {
+      attendance.setTotalSubsidy(totalPresentCount * subsidy);
+    }
+
     return attendance;
   }
 

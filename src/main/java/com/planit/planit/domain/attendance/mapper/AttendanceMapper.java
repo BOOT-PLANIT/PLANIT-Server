@@ -39,4 +39,7 @@ public interface AttendanceMapper {
 
   // 오늘까지의 전체출결 조회
   public AttendanceTotalResponseDTO getTotal(Long userId, Long bootcampId);
+
+  // kdt부트캠프인지 아닌지 확인
+  public boolean Iskdt(Long bootcampId);
 }

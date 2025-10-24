@@ -119,6 +119,13 @@
 	<select id="getBootcampUnitno" resultType="int">
 		select unit_no from unit_periods where bootcamp_id = #{bootcampId};
 	</select>
+	
+	<!--kdt유무 확인-->
+	<select id="Iskdt" parameterType="long" resultType="boolean">
+	  SELECT is_kdt
+	  FROM bootcamps
+	  WHERE id = #{bootcampId}
+	</select>
   
   <!--오늘까지 전체 출결 조회 (&lt; : <이라는뜻)-->
   <select id="getTotal"
