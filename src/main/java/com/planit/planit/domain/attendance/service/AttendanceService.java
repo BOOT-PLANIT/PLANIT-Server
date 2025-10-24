@@ -105,12 +105,12 @@ public class AttendanceService {
       if (!existingDates.isEmpty()) {
         throw new BaseException(ErrorCode.CONFLICT, "이미 출결이 등록된 날짜가 있습니다: " + existingDates) {};
       }
+      
       // AttendanceDTO 리스트 생성
       List<AttendanceDTO> attendanceList =
           sessions.stream().map(s -> new AttendanceDTO(requestDTO.getUserId(), s.getSessionId(),
               s.getPeriodId(), requestDTO.getStatus())).toList();
-
-
+      
       // 출결 등록
       mapper.regist(attendanceList);
     }

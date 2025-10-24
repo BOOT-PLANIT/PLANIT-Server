@@ -1,7 +1,6 @@
 package com.planit.planit.domain.bootcamp.service;
 
 import java.time.LocalDate;
-import java.time.YearMonth;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -23,12 +22,18 @@ public class BootcampService {
 	private final BootcampMapper bootcampMapper;
 	private final SessionMapper sessionMapper;
 	private final UnitPeriodMapper unitPeriodMapper;
+	private final com.planit.planit.domain.bootcamp.parser.BootcampParser bootcampParser;
+	private final com.planit.planit.domain.unitperiod.util.UnitPeriodCalculator unitPeriodCalculator;
 
 	public BootcampService(BootcampMapper bootcampMapper, SessionMapper sessionMapper,
-		UnitPeriodMapper unitPeriodMapper) {
+		UnitPeriodMapper unitPeriodMapper,
+		com.planit.planit.domain.bootcamp.parser.BootcampParser bootcampParser,
+		com.planit.planit.domain.unitperiod.util.UnitPeriodCalculator unitPeriodCalculator) {
 		this.bootcampMapper = bootcampMapper;
 		this.sessionMapper = sessionMapper;
 		this.unitPeriodMapper = unitPeriodMapper;
+		this.bootcampParser = bootcampParser;
+		this.unitPeriodCalculator = unitPeriodCalculator;
 	}
 
 	public List<BootcampResponseDTO> getAllBootcamps() {
@@ -54,6 +59,20 @@ public class BootcampService {
 		return response;
 	}
 
+	/**
+	 * 부트캠프를 비관적 락으로 조회합니다 (세션 추가 시 동시성 제어용).
+	 * 
+	 * @param id 부트캠프 ID
+	 * @return 부트캠프 정보
+	 */
+	public BootcampDTO getBootcampForUpdate(Long id) {
+		BootcampDTO bootcamp = bootcampMapper.findByIdForUpdate(id);
+		if (bootcamp == null) {
+			throw new BootcampNotFoundException("ID가 " + id + "인 부트캠프를 찾을 수 없습니다.");
+		}
+		return bootcamp;
+	}
+
 	@Transactional
 	public BootcampResponseDTO addBootcamp(BootcampRequestDTO request) {
 		// 1. Request DTO를 내부 DTO로 변환
@@ -74,30 +93,6 @@ public class BootcampService {
 		return getBootcamp(bootcamp.getId());
 	}
 
-	/**
-	 * 교육일이 속한 단위기간 번호를 계산
-	 *
-	 * @param baseDate 기준일 (첫 교육일)
-	 * @param targetDate 계산할 날짜
-	 * @param baseDay 기준일의 일(day)
-	 * @return 단위기간 번호 (1부터 시작)
-	 */
-	private int calculateUnitNo(LocalDate baseDate, LocalDate targetDate, int baseDay) {
-		// 월 차이 계산
-		int monthsDiff = (targetDate.getYear() - baseDate.getYear()) * 12
-			+ (targetDate.getMonthValue() - baseDate.getMonthValue());
-
-		// 해당 월의 실제 기준일 계산 (월말 처리)
-		YearMonth targetYm = YearMonth.from(targetDate);
-		int actualBaseDay = Math.min(baseDay, targetYm.lengthOfMonth());
-
-		// 기준일보다 이전이면 이전 단위기간
-		if (targetDate.getDayOfMonth() < actualBaseDay) {
-			return Math.max(1, monthsDiff); // 최소 1
-		}
-
-		return monthsDiff + 1;
-	}
 
 	/**
 	 * 교육일을 기반으로 단위기간과 세션을 생성
@@ -119,7 +114,7 @@ public class BootcampService {
 
 		// 첫 날짜의 일(day)을 기준으로 단위기간 생성
 		LocalDate firstDate = sortedDates.get(0);
-		int baseDay = firstDate.getDayOfMonth();
+		int baseDay = unitPeriodCalculator.getBaseDay(firstDate);
 
 		// 각 교육일이 속한 단위기간을 계산하고 생성
 		java.util.Map<Integer, UnitPeriodDTO> periodMap =
@@ -154,7 +149,7 @@ public class BootcampService {
 		java.util.Map<Integer, UnitPeriodDTO> periodMap = new java.util.HashMap<>();
 
 		for (LocalDate classDate : sortedDates) {
-			int unitNo = calculateUnitNo(firstDate, classDate, baseDay);
+			int unitNo = unitPeriodCalculator.calculateUnitNo(firstDate, classDate, baseDay);
 
 			// 해당 단위기간이 아직 생성되지 않았으면 생성
 			if (!periodMap.containsKey(unitNo)) {
@@ -162,14 +157,9 @@ public class BootcampService {
 				unitPeriod.setBootcampId(bootcampId);
 				unitPeriod.setUnitNo(unitNo);
 
-				// 단위기간의 시작/종료일 계산 (baseDay 기준, 연속성 보장)
-				YearMonth ym = YearMonth.from(firstDate).plusMonths(unitNo - 1);
-				int startDay = Math.min(baseDay, ym.lengthOfMonth());
-				LocalDate periodStart = ym.atDay(startDay);
-				YearMonth nextYm = ym.plusMonths(1);
-				int nextStartDay = Math.min(baseDay, nextYm.lengthOfMonth());
-				LocalDate nextStart = nextYm.atDay(nextStartDay);
-				LocalDate periodEnd = nextStart.minusDays(1);
+				// 단위기간의 시작/종료일 계산 (공통 유틸리티 사용)
+				LocalDate periodStart = unitPeriodCalculator.calculatePeriodStartDate(firstDate, unitNo, baseDay);
+				LocalDate periodEnd = unitPeriodCalculator.calculatePeriodEndDate(firstDate, unitNo, baseDay);
 
 				unitPeriod.setStartDate(periodStart);
 				unitPeriod.setEndDate(periodEnd);
@@ -195,7 +185,7 @@ public class BootcampService {
 		List<SessionDTO> sessions = new ArrayList<>();
 
 		for (LocalDate classDate : sortedDates) {
-			int unitNo = calculateUnitNo(firstDate, classDate, baseDay);
+			int unitNo = unitPeriodCalculator.calculateUnitNo(firstDate, classDate, baseDay);
 			UnitPeriodDTO period = periodMap.get(unitNo);
 
 			SessionDTO session = new SessionDTO();
@@ -307,5 +297,15 @@ public class BootcampService {
 		response.setCreatedAt(dto.getCreatedAt());
 		response.setUpdatedAt(dto.getUpdatedAt());
 		return response;
+	}
+
+	/**
+	 * 고용24 텍스트를 파싱하여 부트캠프 정보를 추출합니다.
+	 * 
+	 * @param text 고용24에서 복사한 텍스트
+	 * @return 파싱된 부트캠프 정보
+	 */
+	public com.planit.planit.domain.bootcamp.dto.BootcampParseResponseDTO parseBootcampText(String text) {
+		return bootcampParser.parse(text);
 	}
 }
