@@ -2,6 +2,7 @@ package com.planit.planit.domain.session.service;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Set;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import com.planit.planit.domain.bootcamp.service.BootcampService;
@@ -13,6 +14,7 @@ import com.planit.planit.domain.session.exception.SessionIsBootcampStartDateExce
 import com.planit.planit.domain.session.exception.SessionNotFoundException;
 import com.planit.planit.domain.session.exception.SessionEmptyDeleteListException;
 import com.planit.planit.domain.session.exception.SessionDifferentBootcampException;
+import com.planit.planit.domain.session.exception.SessionDuplicateDateException;
 import com.planit.planit.domain.session.mapper.SessionMapper;
 import com.planit.planit.domain.unitperiod.dto.UnitPeriodDTO;
 import com.planit.planit.domain.unitperiod.service.UnitPeriodService;
@@ -57,10 +59,34 @@ public class SessionService {
 		com.planit.planit.domain.bootcamp.dto.BootcampDTO bootcamp = 
 			bootcampService.getBootcampForUpdate(request.getBootcampId());
 
-		// 기준일 결정: startedAt이 설정되어 있으면 사용, 없으면 첫 번째 세션의 classDate를 기준으로 함
+		// 요청된 세션 날짜들을 수집하고 중복 검증
+		List<LocalDate> requestDates = request.getSessions().stream()
+			.map(SessionCreateItemDTO::getClassDate)
+			.collect(java.util.stream.Collectors.toList());
+
+		// 요청 내에서 중복 날짜 검증
+		Set<LocalDate> uniqueDates = new java.util.HashSet<>(requestDates);
+		if (uniqueDates.size() != requestDates.size()) {
+			throw new SessionDuplicateDateException("요청 내에 중복된 날짜가 있습니다.");
+		}
+
+		// 기존 세션과의 중복 날짜 검증
+		List<SessionDTO> existingSessions = sessionMapper.findByBootcampId(request.getBootcampId());
+		Set<LocalDate> existingDates = existingSessions.stream()
+			.map(SessionDTO::getClassDate)
+			.collect(java.util.stream.Collectors.toSet());
+
+		for (LocalDate requestDate : requestDates) {
+			if (existingDates.contains(requestDate)) {
+				throw new SessionDuplicateDateException(
+					"날짜 " + requestDate + "에 해당하는 세션이 이미 존재합니다.");
+			}
+		}
+
+		// 기준일 결정: startedAt이 설정되어 있으면 사용, 없으면 세션들 중 가장 이른 날짜를 기준으로 함
 		LocalDate baseDate = (bootcamp.getStartedAt() != null) 
 			? bootcamp.getStartedAt() 
-			: request.getSessions().get(0).getClassDate();
+			: requestDates.stream().min(LocalDate::compareTo).orElse(requestDates.get(0));
 		
 		int baseDay = unitPeriodCalculator.getBaseDay(baseDate);
 
