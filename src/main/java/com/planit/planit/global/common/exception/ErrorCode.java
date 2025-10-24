@@ -39,6 +39,7 @@ public enum ErrorCode {
 	SESSION_EMPTY_DELETE_LIST(HttpStatus.BAD_REQUEST, "삭제할 세션이 없습니다."),
 	SESSION_DIFFERENT_BOOTCAMP(HttpStatus.BAD_REQUEST, "서로 다른 부트캠프의 세션들을 함께 삭제할 수 없습니다."),
 	SESSION_DUPLICATE_DATE(HttpStatus.CONFLICT, "동일한 날짜의 세션이 이미 존재합니다."),
+	SESSION_EMPTY_CREATE_LIST(HttpStatus.BAD_REQUEST, "등록할 세션이 없습니다."),
 
 	// UnitPeriod Errors
 	UNIT_PERIOD_NOT_FOUND(HttpStatus.NOT_FOUND, "단위기간을 찾을 수 없습니다."),

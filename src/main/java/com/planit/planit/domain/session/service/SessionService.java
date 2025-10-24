@@ -15,6 +15,7 @@ import com.planit.planit.domain.session.exception.SessionNotFoundException;
 import com.planit.planit.domain.session.exception.SessionEmptyDeleteListException;
 import com.planit.planit.domain.session.exception.SessionDifferentBootcampException;
 import com.planit.planit.domain.session.exception.SessionDuplicateDateException;
+import com.planit.planit.domain.session.exception.SessionEmptyCreateListException;
 import com.planit.planit.domain.session.mapper.SessionMapper;
 import com.planit.planit.domain.unitperiod.dto.UnitPeriodDTO;
 import com.planit.planit.domain.unitperiod.service.UnitPeriodService;
@@ -55,6 +56,11 @@ public class SessionService {
 
 	@Transactional
 	public List<SessionDTO> addSession(com.planit.planit.domain.session.dto.SessionCreateRequestDTO request) {
+		// 빈 리스트 검증
+		if (request.getSessions() == null || request.getSessions().isEmpty()) {
+			throw new SessionEmptyCreateListException("등록할 세션이 없습니다.");
+		}
+
 		// 부트캠프 비관적 락으로 조회 (동시성 문제 방지)
 		com.planit.planit.domain.bootcamp.dto.BootcampDTO bootcamp = 
 			bootcampService.getBootcampForUpdate(request.getBootcampId());
@@ -86,7 +92,8 @@ public class SessionService {
 		// 기준일 결정: startedAt이 설정되어 있으면 사용, 없으면 세션들 중 가장 이른 날짜를 기준으로 함
 		LocalDate baseDate = (bootcamp.getStartedAt() != null) 
 			? bootcamp.getStartedAt() 
-			: requestDates.stream().min(LocalDate::compareTo).orElse(requestDates.get(0));
+			: requestDates.stream().min(LocalDate::compareTo).orElseThrow(() -> 
+				new SessionEmptyCreateListException("세션 날짜를 찾을 수 없습니다."));
 		
 		int baseDay = unitPeriodCalculator.getBaseDay(baseDate);
 
