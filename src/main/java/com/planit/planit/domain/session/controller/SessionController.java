@@ -12,6 +12,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import com.planit.planit.domain.session.dto.SessionCreateRequestDTO;
+import com.planit.planit.domain.session.dto.SessionDeleteRequestDTO;
 import com.planit.planit.domain.session.dto.SessionDTO;
 import com.planit.planit.domain.session.service.SessionService;
 import com.planit.planit.global.common.response.ApiResponse;
@@ -91,15 +92,15 @@ public class SessionController {
   }
 
 	@Operation(summary = "세션 등록", 
-		description = "새로운 세션을 등록합니다. "
-			+ "**필수 필드**: bootcampId, classDate. "
+		description = "여러 세션을 한번에 등록합니다. "
+			+ "**필수 필드**: bootcampId, sessions[].classDate. "
 			+ "unitNo, periodStartDate, periodEndDate는 자동으로 계산됩니다. "
 			+ "단위기간이 존재하지 않으면 자동으로 생성됩니다.",
 		responses = {
           @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "201",
               description = "등록 성공",
               content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
-                  schema = @Schema(implementation = SessionOneResponseSchema.class))),
+                  schema = @Schema(implementation = SessionListResponseSchema.class))),
           @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400",
               description = "잘못된 요청",
               content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
@@ -109,14 +110,15 @@ public class SessionController {
               content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
                   schema = @Schema(implementation = ApiErrorResponseSchema.class)))})
   @PostMapping
-  public ResponseEntity<ApiResponse<SessionDTO>> add(@Valid @RequestBody SessionCreateRequestDTO request) {
-    SessionDTO createdSession = sessionService.addSession(request);
+  public ResponseEntity<ApiResponse<List<SessionDTO>>> add(@Valid @RequestBody SessionCreateRequestDTO request) {
+    List<SessionDTO> createdSessions = sessionService.addSession(request);
     return ResponseEntity.status(HttpStatus.CREATED)
-        .body(ApiResponse.success("세션 등록 성공", createdSession));
+        .body(ApiResponse.success("세션 등록 성공", createdSessions));
   }
 
+
   @Operation(summary = "세션 삭제", 
-      description = "세션을 삭제합니다. 단, 부트캠프의 시작일에 해당하는 세션은 삭제할 수 없습니다.",
+      description = "여러 세션을 한번에 삭제합니다. 단, 부트캠프의 시작일에 해당하는 세션은 삭제할 수 없습니다.",
       responses = {
           @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200",
               description = "삭제 성공",
@@ -134,9 +136,9 @@ public class SessionController {
               description = "서버 에러",
               content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
                   schema = @Schema(implementation = ApiErrorResponseSchema.class)))})
-  @DeleteMapping("/{id}")
-  public ResponseEntity<ApiResponse<Void>> delete(@PathVariable Long id) {
-    sessionService.deleteSession(id);
+  @DeleteMapping
+  public ResponseEntity<ApiResponse<Void>> delete(@Valid @RequestBody SessionDeleteRequestDTO request) {
+    sessionService.deleteSessions(request);
     return ResponseEntity.ok(new ApiResponse<>(HttpStatus.OK.value(), "세션 삭제 성공", null));
   }
 

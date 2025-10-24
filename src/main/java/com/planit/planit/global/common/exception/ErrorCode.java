@@ -36,6 +36,11 @@ public enum ErrorCode {
 	SESSION_UNIT_NO_REQUIRED(HttpStatus.BAD_REQUEST, "단위기간 번호는 필수입니다."),
 	SESSION_BEFORE_BOOTCAMP_START(HttpStatus.BAD_REQUEST, "세션 날짜는 부트캠프 시작일 이후여야 합니다."),
 	SESSION_IS_BOOTCAMP_START_DATE(HttpStatus.BAD_REQUEST, "부트캠프 시작일에 해당하는 세션은 삭제할 수 없습니다."),
+	SESSION_EMPTY_DELETE_LIST(HttpStatus.BAD_REQUEST, "삭제할 세션이 없습니다."),
+	SESSION_DIFFERENT_BOOTCAMP(HttpStatus.BAD_REQUEST, "서로 다른 부트캠프의 세션들을 함께 삭제할 수 없습니다."),
+	SESSION_DUPLICATE_DATE(HttpStatus.CONFLICT, "동일한 날짜의 세션이 이미 존재합니다."),
+	SESSION_EMPTY_CREATE_LIST(HttpStatus.BAD_REQUEST, "등록할 세션이 없습니다."),
+	SESSION_NULL_CLASS_DATE(HttpStatus.BAD_REQUEST, "세션의 수업 날짜는 필수입니다."),
 
 	// UnitPeriod Errors
 	UNIT_PERIOD_NOT_FOUND(HttpStatus.NOT_FOUND, "단위기간을 찾을 수 없습니다."),
