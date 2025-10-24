@@ -28,7 +28,7 @@ public class FirebaseAccountService {
 		final String email = token.getEmail();
 		final String displayName = token.getName();
 		final String photoUrl = token.getPicture();
-		final boolean emailVerified = Boolean.TRUE.equals(token.isEmailVerified());
+		final boolean emailVerified = token.isEmailVerified();
 
 		String provider = "unknown";
 		Object firebaseClaim = token.getClaims().get("firebase");
@@ -43,7 +43,7 @@ public class FirebaseAccountService {
 		UserLevel level = UserLevel.fromClaim(userLevelStr);
 
 		var found = mapper.findByUid(uid);
-		if (found == null) {
+		if (found.isEmpty()) {
 			var userAccount = UserAccount.builder()
 				.uid(uid)
 				.email(email)
@@ -63,7 +63,7 @@ public class FirebaseAccountService {
 		if ((email != null && ADMIN_EMAILS.contains(email)) || ADMIN_UIDS.contains(uid)) {
 			authorities.add(new SimpleGrantedAuthority(UserLevel.ADMIN.asRole()));
 		} else {
-			authorities.add(new SimpleGrantedAuthority(level.asRole()));
+			authorities.add(new SimpleGrantedAuthority(level.asRole())); // ROLE_USER 기본값
 		}
 
 		return User.withUsername(uid)

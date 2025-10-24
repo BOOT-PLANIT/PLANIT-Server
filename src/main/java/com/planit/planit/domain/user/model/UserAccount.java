@@ -13,7 +13,9 @@ public class UserAccount {
 	private String photoUrl;
 	private UserLevel userLevel; // DB Default: USER
 	private String provider;
-	private boolean emailVerified;
+	private Boolean emailVerified;
+	private Boolean isDeleted;
+	private LocalDateTime deletedAt;
 	private LocalDateTime createdAt;  // DB Default
 	private LocalDateTime lastLoginAt;   // DB Default
 }

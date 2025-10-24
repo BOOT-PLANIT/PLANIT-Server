@@ -5,50 +5,71 @@
 <mapper namespace="com.planit.planit.domain.user.mapper.UserMapper">
 
 	<resultMap id="UserMap" type="com.planit.planit.domain.user.model.UserAccount">
-		<id     property="id"           column="id"/>
-		<result property="uid"          column="uid"/>
-		<result property="email"        column="email"/>
-		<result property="displayName"  column="display_name"/>
-		<result property="photoUrl"     column="photo_url"/>
-		<result property="userLevel"     column="user_level" javaType="com.planit.planit.domain.user.model.UserLevel"/>
-		<result property="provider"     column="provider"/>
+		<id     property="id"            column="id"/>
+		<result property="uid"           column="uid"/>
+		<result property="email"         column="email"/>
+		<result property="displayName"   column="display_name"/>
+		<result property="photoUrl"      column="photo_url"/>
+		<result property="userLevel"     column="user_level"
+			javaType="com.planit.planit.domain.user.model.UserLevel"
+			typeHandler="org.apache.ibatis.type.EnumTypeHandler"/>
+		<result property="provider"      column="provider"/>
 		<result property="emailVerified" column="email_verified"/>
-		<result property="createdAt"    column="created_at"/>
-		<result property="lastLoginAt"  column="last_login_at"/>
+		<result property="isDeleted" column="is_deleted"/>
+		<result property="deletedAt"     column="deleted_at"/>
+		<result property="createdAt"     column="created_at"/>
+		<result property="lastLoginAt"   column="last_login_at"/>
 	</resultMap>
 
+	<!-- 활성 사용자만 조회 -->
 	<select id="findByUid" parameterType="string" resultMap="UserMap">
 		SELECT id, uid, email, display_name, photo_url,
-	         user_level, provider, email_verified,
-	         created_at, last_login_at
-	  FROM users
-	  WHERE uid = #{uid}
+		user_level, provider, email_verified,
+		is_deleted, deleted_at,
+		created_at, last_login_at
+		FROM users
+		WHERE uid = #{uid} AND is_deleted = 0
+		LIMIT 1
 	</select>
 
-	<insert id="insertUser" parameterType="com.planit.planit.domain.user.model.UserAccount" useGeneratedKeys="true" keyProperty="id">
+	<!-- 새 레코드 생성 -->
+	<insert id="insertUser"
+		parameterType="com.planit.planit.domain.user.model.UserAccount"
+		useGeneratedKeys="true" keyProperty="id">
 		INSERT INTO users(
-			uid, email, display_name, photo_url, user_level, provider, email_verified
-	  )
-	  VALUES (
-			#{uid},
-	    #{email},
-	    #{displayName},
-	    #{photoUrl},
-	    #{userLevel, typeHandler=org.apache.ibatis.type.EnumTypeHandler},
-	    #{provider},
-	    #{emailVerified}
-	  )
+		uid, email, display_name, photo_url,
+		user_level, provider, email_verified,
+		is_deleted, deleted_at, created_at, last_login_at
+		) VALUES (
+		#{uid},
+		#{email},
+		#{displayName},
+		#{photoUrl},
+		#{userLevel, typeHandler=org.apache.ibatis.type.EnumTypeHandler},
+		#{provider},
+		#{emailVerified},
+		0, NULL, NOW(), NOW()
+		)
 	</insert>
 
 	<update id="updateLastLogin" parameterType="string">
-		UPDATE users SET last_login_at = NOW() WHERE uid = #{uid}
+		UPDATE users
+		SET last_login_at = NOW()
+		WHERE uid = #{uid} AND is_deleted = 0
 	</update>
 
-	<!-- 개발자용 레벨 변경 -->
+	<!-- 소프트 삭제 (탈퇴) -->
+	<update id="softDeleteUser" parameterType="string">
+		UPDATE users
+		SET is_deleted = 1,
+		deleted_at = NOW()
+		WHERE uid = #{uid} AND is_deleted = 0
+	</update>
+
 	<update id="updateUserLevel" parameterType="map">
 		UPDATE users
-		SET user_level = #{userLevel}
-		WHERE uid = #{uid}
+		SET user_level = #{userLevel, typeHandler=org.apache.ibatis.type.EnumTypeHandler}
+		WHERE uid = #{uid} AND is_deleted = 0
 	</update>
 
 </mapper>

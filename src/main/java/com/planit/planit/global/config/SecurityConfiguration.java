@@ -41,7 +41,6 @@ public class SecurityConfiguration {
 				.requestMatchers("/", "/index.html", "/favicon.ico").permitAll()
 				.requestMatchers(PathRequest.toStaticResources().atCommonLocations()).permitAll()
 				.requestMatchers("/v3/api-docs/**", "/swagger-ui/**").permitAll()
-				.requestMatchers(HttpMethod.POST, "/api/v1/users").permitAll() // 회원가입 허용 용도, 추후 변경 가능
 				.anyRequest().authenticated()
 			)
 			.exceptionHandling(ex -> ex
