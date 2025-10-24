@@ -67,4 +67,21 @@
         DELETE FROM sessions WHERE bootcamp_id = #{bootcampId}
     </delete>
 
+    <!-- 부트캠프별 세션과 특정 유저의 출결 상태 조회 -->
+    <select id="findSessionsWithAttendanceByBootcampIdAndUserId" 
+            resultType="com.planit.planit.domain.session.dto.SessionWithAttendanceDTO">
+        SELECT 
+            s.id as "sessionId",
+            s.bootcamp_id as "bootcampId",
+            s.period_id as "periodId",
+            up.unit_no as "unitNo",
+            s.class_date as "classDate",
+            a.status as "attendanceStatus"
+        FROM sessions s
+        LEFT JOIN unit_periods up ON s.period_id = up.id
+        LEFT JOIN attendance a ON s.id = a.session_id AND a.user_id = #{userId}
+        WHERE s.bootcamp_id = #{bootcampId}
+        ORDER BY s.class_date ASC
+    </select>
+
 </mapper>

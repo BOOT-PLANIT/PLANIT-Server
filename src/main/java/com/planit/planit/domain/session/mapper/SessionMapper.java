@@ -2,7 +2,9 @@ package com.planit.planit.domain.session.mapper;
 
 import java.util.List;
 import org.apache.ibatis.annotations.Mapper;
+import org.apache.ibatis.annotations.Param;
 import com.planit.planit.domain.session.dto.SessionDTO;
+import com.planit.planit.domain.session.dto.SessionWithAttendanceDTO;
 
 @Mapper
 public interface SessionMapper {
@@ -19,4 +21,8 @@ public interface SessionMapper {
     void delete(Long id);
 
     void deleteByBootcampId(Long bootcampId);
+
+    List<SessionWithAttendanceDTO> findSessionsWithAttendanceByBootcampIdAndUserId(
+        @Param("bootcampId") Long bootcampId, 
+        @Param("userId") Long userId);
 }

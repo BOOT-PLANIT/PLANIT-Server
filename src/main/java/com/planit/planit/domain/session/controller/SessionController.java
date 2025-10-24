@@ -14,6 +14,7 @@ import org.springframework.web.bind.annotation.RestController;
 import com.planit.planit.domain.session.dto.SessionCreateRequestDTO;
 import com.planit.planit.domain.session.dto.SessionDeleteRequestDTO;
 import com.planit.planit.domain.session.dto.SessionDTO;
+import com.planit.planit.domain.session.dto.SessionWithAttendanceDTO;
 import com.planit.planit.domain.session.service.SessionService;
 import com.planit.planit.global.common.response.ApiResponse;
 import com.planit.planit.global.common.response.ErrorDetail;
@@ -142,6 +143,29 @@ public class SessionController {
     return ResponseEntity.ok(new ApiResponse<>(HttpStatus.OK.value(), "세션 삭제 성공", null));
   }
 
+  @Operation(summary = "부트캠프 세션과 유저 출결 상태 조회", 
+      description = "특정 부트캠프의 모든 세션과 특정 유저의 출결 상태를 조회합니다.",
+      responses = {
+          @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200",
+              description = "조회 성공",
+              content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
+                  schema = @Schema(implementation = SessionWithAttendanceListResponseSchema.class))),
+          @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404",
+              description = "부트캠프를 찾을 수 없음",
+              content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
+                  schema = @Schema(implementation = ApiErrorResponseSchema.class))),
+          @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "500",
+              description = "서버 에러",
+              content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
+                  schema = @Schema(implementation = ApiErrorResponseSchema.class)))})
+  @GetMapping("/bootcamp/{bootcampId}/user/{userId}/attendance")
+  public ResponseEntity<ApiResponse<List<SessionWithAttendanceDTO>>> getSessionsWithAttendance(
+      @PathVariable Long bootcampId, 
+      @PathVariable Long userId) {
+    List<SessionWithAttendanceDTO> sessions = sessionService.getSessionsWithAttendance(bootcampId, userId);
+    return ResponseEntity.ok(ApiResponse.success("세션과 출결 상태 조회 성공", sessions));
+  }
+
   @Schema(name = "SessionListResponse", description = "세션 목록 응답")
   static class SessionListResponseSchema {
     @Schema(example = "200")
@@ -167,6 +191,15 @@ public class SessionController {
     @Schema(example = "세션 삭제 성공")
     public String message;
     public Void data;
+  }
+
+  @Schema(name = "SessionWithAttendanceListResponse", description = "세션과 출결 상태 목록 응답")
+  static class SessionWithAttendanceListResponseSchema {
+    @Schema(example = "200")
+    public int code;
+    @Schema(example = "세션과 출결 상태 조회 성공")
+    public String message;
+    public List<SessionWithAttendanceDTO> data;
   }
 
   @Schema(name = "ApiErrorResponse", description = "실패 응답(에러)")
