@@ -38,8 +38,11 @@ public interface AttendanceMapper {
   public List<Integer> getBootcampUnitno(Long bootcampId);
 
   // 오늘까지의 전체출결 조회
-  public AttendanceTotalResponseDTO getTotal(Long userId, Long bootcampId);
+  public List<AttendanceTotalResponseDTO> getTotal(Long userId, Long bootcampId);
 
   // kdt부트캠프인지 아닌지 확인
   public boolean Iskdt(Long bootcampId);
+
+  // 특정 부트캠프의 전체 수강일 조회
+  public Integer bootcampTotalSession(Long bootcampId);
 }
