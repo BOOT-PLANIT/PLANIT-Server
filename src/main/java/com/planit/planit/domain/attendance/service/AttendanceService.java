@@ -98,11 +98,6 @@ public class AttendanceService {
       throw new BaseException(ErrorCode.RESOURCE_NOT_FOUND, "선택한 날짜중에 강의가 없는날짜가 포함되어있습니다.") {};
 
     } else {
-      // AttendanceDTO 리스트 생성
-      List<AttendanceDTO> attendanceList =
-          sessions.stream().map(s -> new AttendanceDTO(requestDTO.getUserId(), s.getSessionId(),
-              s.getPeriodId(), requestDTO.getStatus())).toList();
-
       // 이미 등록된 출결 확인
       List<String> existingDates = mapper.findAttendanceDates(requestDTO.getUserId(),
           requestDTO.getBootcampId(), requestDTO.getClassDates());
@@ -110,6 +105,11 @@ public class AttendanceService {
       if (!existingDates.isEmpty()) {
         throw new BaseException(ErrorCode.CONFLICT, "이미 출결이 등록된 날짜가 있습니다: " + existingDates) {};
       }
+      // AttendanceDTO 리스트 생성
+      List<AttendanceDTO> attendanceList =
+          sessions.stream().map(s -> new AttendanceDTO(requestDTO.getUserId(), s.getSessionId(),
+              s.getPeriodId(), requestDTO.getStatus())).toList();
+
 
       // 출결 등록
       mapper.regist(attendanceList);
