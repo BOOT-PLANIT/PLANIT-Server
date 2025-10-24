@@ -6,6 +6,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import com.planit.planit.domain.bootcamp.service.BootcampService;
 import com.planit.planit.domain.session.dto.SessionDTO;
+import com.planit.planit.domain.session.dto.SessionCreateItemDTO;
+import com.planit.planit.domain.session.dto.SessionDeleteRequestDTO;
 import com.planit.planit.domain.session.exception.SessionBeforeBootcampStartException;
 import com.planit.planit.domain.session.exception.SessionIsBootcampStartDateException;
 import com.planit.planit.domain.session.exception.SessionNotFoundException;
@@ -48,76 +50,99 @@ public class SessionService {
 	}
 
 	@Transactional
-	public SessionDTO addSession(com.planit.planit.domain.session.dto.SessionCreateRequestDTO request) {
+	public List<SessionDTO> addSession(com.planit.planit.domain.session.dto.SessionCreateRequestDTO request) {
 		// 부트캠프 비관적 락으로 조회 (동시성 문제 방지)
 		com.planit.planit.domain.bootcamp.dto.BootcampDTO bootcamp = 
 			bootcampService.getBootcampForUpdate(request.getBootcampId());
 
-		// 부트캠프 시작일 이후인지 검증 (엄격한 검증)
-		if (bootcamp.getStartedAt() != null && request.getClassDate().isBefore(bootcamp.getStartedAt())) {
-			throw new SessionBeforeBootcampStartException(
-				"세션 날짜(" + request.getClassDate() + ")는 부트캠프 시작일(" 
-				+ bootcamp.getStartedAt() + ") 이후여야 합니다.");
-		}
-
-		// SessionDTO 생성
-		SessionDTO session = new SessionDTO();
-		session.setBootcampId(request.getBootcampId());
-		session.setClassDate(request.getClassDate());
-
-		// 기준일 결정: startedAt이 설정되어 있으면 사용, 없으면 현재 classDate를 기준으로 함
+		// 기준일 결정: startedAt이 설정되어 있으면 사용, 없으면 첫 번째 세션의 classDate를 기준으로 함
 		LocalDate baseDate = (bootcamp.getStartedAt() != null) 
 			? bootcamp.getStartedAt() 
-			: request.getClassDate();
+			: request.getSessions().get(0).getClassDate();
 		
 		int baseDay = unitPeriodCalculator.getBaseDay(baseDate);
 
-		// unitNo 자동 계산
-		calculateUnitNo(session, baseDate, baseDay);
+		List<SessionDTO> createdSessions = new java.util.ArrayList<>();
 
-		// periodStartDate와 periodEndDate 자동 계산
-		calculatePeriodDates(session, baseDate, baseDay);
+		for (SessionCreateItemDTO sessionItem : request.getSessions()) {
+			// 부트캠프 시작일 이후인지 검증 (엄격한 검증)
+			if (bootcamp.getStartedAt() != null && sessionItem.getClassDate().isBefore(bootcamp.getStartedAt())) {
+				throw new SessionBeforeBootcampStartException(
+					"세션 날짜(" + sessionItem.getClassDate() + ")는 부트캠프 시작일(" 
+					+ bootcamp.getStartedAt() + ") 이후여야 합니다.");
+			}
 
-		// 단위기간 찾거나 생성
-		UnitPeriodDTO unitPeriod = new UnitPeriodDTO();
-		unitPeriod.setBootcampId(session.getBootcampId());
-		unitPeriod.setUnitNo(session.getUnitNo());
-		unitPeriod.setStartDate(session.getPeriodStartDate());
-		unitPeriod.setEndDate(session.getPeriodEndDate());
+			// SessionDTO 생성
+			SessionDTO session = new SessionDTO();
+			session.setBootcampId(request.getBootcampId());
+			session.setClassDate(sessionItem.getClassDate());
 
-		Long periodId = unitPeriodService.findOrCreateUnitPeriod(unitPeriod);
-		session.setPeriodId(periodId);
+			// unitNo 자동 계산
+			calculateUnitNo(session, baseDate, baseDay);
 
-		sessionMapper.insert(session);
+			// periodStartDate와 periodEndDate 자동 계산
+			calculatePeriodDates(session, baseDate, baseDay);
 
-		// 부트캠프의 시작일/종료일 갱신
-		bootcampService.updateBootcampDates(session.getBootcampId());
+			// 단위기간 찾거나 생성
+			UnitPeriodDTO unitPeriod = new UnitPeriodDTO();
+			unitPeriod.setBootcampId(session.getBootcampId());
+			unitPeriod.setUnitNo(session.getUnitNo());
+			unitPeriod.setStartDate(session.getPeriodStartDate());
+			unitPeriod.setEndDate(session.getPeriodEndDate());
 
-		// 생성된 세션 조회하여 반환
-		return sessionMapper.findById(session.getId());
-	}
+			Long periodId = unitPeriodService.findOrCreateUnitPeriod(unitPeriod);
+			session.setPeriodId(periodId);
 
-	@Transactional
-	public void deleteSession(Long id) {
-		SessionDTO existingSession = sessionMapper.findById(id);
-		if (existingSession == null) {
-			throw new SessionNotFoundException("ID가 " + id + "인 세션을 찾을 수 없습니다.");
+			sessionMapper.insert(session);
+
+			// 생성된 세션 조회하여 리스트에 추가
+			createdSessions.add(sessionMapper.findById(session.getId()));
 		}
 
-		Long bootcampId = existingSession.getBootcampId();
+		// 부트캠프의 시작일/종료일 갱신
+		bootcampService.updateBootcampDates(request.getBootcampId());
+
+		return createdSessions;
+	}
+
+
+	@Transactional
+	public void deleteSessions(SessionDeleteRequestDTO request) {
+		Long bootcampId = null;
+		
+		// 모든 세션이 존재하는지 확인하고 부트캠프 ID 수집
+		for (Long sessionId : request.getSessionIds()) {
+			SessionDTO existingSession = sessionMapper.findById(sessionId);
+			if (existingSession == null) {
+				throw new SessionNotFoundException("ID가 " + sessionId + "인 세션을 찾을 수 없습니다.");
+			}
+			
+			// 첫 번째 세션에서 부트캠프 ID 설정
+			if (bootcampId == null) {
+				bootcampId = existingSession.getBootcampId();
+			}
+		}
 
 		// 부트캠프 조회하여 시작일 확인
 		com.planit.planit.domain.bootcamp.dto.BootcampDTO bootcamp = 
 			bootcampService.getBootcampForUpdate(bootcampId);
 
-		// 부트캠프 시작일에 해당하는 세션인지 확인
-		if (bootcamp.getStartedAt() != null && 
-			existingSession.getClassDate().equals(bootcamp.getStartedAt())) {
-			throw new SessionIsBootcampStartDateException(
-				"부트캠프 시작일(" + bootcamp.getStartedAt() + ")에 해당하는 세션은 삭제할 수 없습니다.");
+		// 각 세션에 대해 부트캠프 시작일 검증
+		for (Long sessionId : request.getSessionIds()) {
+			SessionDTO existingSession = sessionMapper.findById(sessionId);
+			
+			// 부트캠프 시작일에 해당하는 세션인지 확인
+			if (bootcamp.getStartedAt() != null && 
+				existingSession.getClassDate().equals(bootcamp.getStartedAt())) {
+				throw new SessionIsBootcampStartDateException(
+					"부트캠프 시작일(" + bootcamp.getStartedAt() + ")에 해당하는 세션은 삭제할 수 없습니다.");
+			}
 		}
 
-		sessionMapper.delete(id);
+		// 모든 세션 삭제
+		for (Long sessionId : request.getSessionIds()) {
+			sessionMapper.delete(sessionId);
+		}
 
 		// 부트캠프의 시작일/종료일 갱신
 		bootcampService.updateBootcampDates(bootcampId);
