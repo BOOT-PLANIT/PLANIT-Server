@@ -11,6 +11,8 @@ import com.planit.planit.domain.session.dto.SessionDeleteRequestDTO;
 import com.planit.planit.domain.session.exception.SessionBeforeBootcampStartException;
 import com.planit.planit.domain.session.exception.SessionIsBootcampStartDateException;
 import com.planit.planit.domain.session.exception.SessionNotFoundException;
+import com.planit.planit.domain.session.exception.SessionEmptyDeleteListException;
+import com.planit.planit.domain.session.exception.SessionDifferentBootcampException;
 import com.planit.planit.domain.session.mapper.SessionMapper;
 import com.planit.planit.domain.unitperiod.dto.UnitPeriodDTO;
 import com.planit.planit.domain.unitperiod.service.UnitPeriodService;
@@ -108,10 +110,18 @@ public class SessionService {
 
 	@Transactional
 	public void deleteSessions(SessionDeleteRequestDTO request) {
-		Long bootcampId = null;
+		// 중복 ID 제거
+		List<Long> uniqueSessionIds = request.getSessionIds().stream()
+			.distinct()
+			.collect(java.util.stream.Collectors.toList());
 		
+		if (uniqueSessionIds.isEmpty()) {
+			throw new SessionEmptyDeleteListException("삭제할 세션이 없습니다.");
+		}
+
 		// 모든 세션이 존재하는지 확인하고 부트캠프 ID 수집
-		for (Long sessionId : request.getSessionIds()) {
+		Long bootcampId = null;
+		for (Long sessionId : uniqueSessionIds) {
 			SessionDTO existingSession = sessionMapper.findById(sessionId);
 			if (existingSession == null) {
 				throw new SessionNotFoundException("ID가 " + sessionId + "인 세션을 찾을 수 없습니다.");
@@ -120,6 +130,14 @@ public class SessionService {
 			// 첫 번째 세션에서 부트캠프 ID 설정
 			if (bootcampId == null) {
 				bootcampId = existingSession.getBootcampId();
+			} else {
+				// 서로 다른 부트캠프의 세션이 섞여있는지 검증
+				if (!bootcampId.equals(existingSession.getBootcampId())) {
+					throw new SessionDifferentBootcampException(
+						"서로 다른 부트캠프의 세션들을 함께 삭제할 수 없습니다. " +
+						"세션 ID " + sessionId + "는 부트캠프 ID " + existingSession.getBootcampId() + 
+						"에 속하지만, 다른 세션들은 부트캠프 ID " + bootcampId + "에 속합니다.");
+				}
 			}
 		}
 
@@ -128,7 +146,7 @@ public class SessionService {
 			bootcampService.getBootcampForUpdate(bootcampId);
 
 		// 각 세션에 대해 부트캠프 시작일 검증
-		for (Long sessionId : request.getSessionIds()) {
+		for (Long sessionId : uniqueSessionIds) {
 			SessionDTO existingSession = sessionMapper.findById(sessionId);
 			
 			// 부트캠프 시작일에 해당하는 세션인지 확인
@@ -140,7 +158,7 @@ public class SessionService {
 		}
 
 		// 모든 세션 삭제
-		for (Long sessionId : request.getSessionIds()) {
+		for (Long sessionId : uniqueSessionIds) {
 			sessionMapper.delete(sessionId);
 		}
 
