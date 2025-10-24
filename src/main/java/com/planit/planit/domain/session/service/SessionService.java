@@ -11,6 +11,7 @@ import com.planit.planit.domain.bootcamp.service.BootcampService;
 import com.planit.planit.domain.session.dto.SessionDTO;
 import com.planit.planit.domain.session.dto.SessionCreateItemDTO;
 import com.planit.planit.domain.session.dto.SessionDeleteRequestDTO;
+import com.planit.planit.domain.session.dto.SessionWithAttendanceDTO;
 import com.planit.planit.domain.session.exception.SessionBeforeBootcampStartException;
 import com.planit.planit.domain.session.exception.SessionIsBootcampStartDateException;
 import com.planit.planit.domain.session.exception.SessionNotFoundException;
@@ -212,6 +213,13 @@ public class SessionService {
 
 		// 부트캠프의 시작일/종료일 갱신
 		bootcampService.updateBootcampDates(bootcampId);
+	}
+
+	public List<SessionWithAttendanceDTO> getSessionsWithAttendance(Long bootcampId, Long userId) {
+		// 부트캠프 존재 여부 검증
+		bootcampService.getBootcamp(bootcampId);
+		
+		return sessionMapper.findSessionsWithAttendanceByBootcampIdAndUserId(bootcampId, userId);
 	}
 
 	/**
