@@ -23,19 +23,7 @@ public class AuthController {
 
 	@PostMapping("/login")
 	public ResponseEntity<ApiResponse<Void>> login(
-		log.warn("[DEBUG] UserAccount loaded from: {}",
-		com.planit.planit.domain.user.model.UserAccount.class
-			.getProtectionDomain()
-        .getCodeSource()
-        .getLocation());
-
-log.warn("[DEBUG] userLevel field type = {}",
-	com.planit.planit.domain.user.model.UserAccount.class
-        .getDeclaredField("userLevel")
-        .getType()
-        .getName());
-
-	@RequestHeader("Authorization") String authorization
+		@RequestHeader("Authorization") String authorization
 	) throws Exception {
 		String idToken = extractBearer(authorization);
 		FirebaseToken token = firebaseAuth.verifyIdToken(idToken);

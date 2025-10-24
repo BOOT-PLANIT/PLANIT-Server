@@ -201,9 +201,13 @@ public class GlobalExceptionHandler {
 
 	/** 로깅 */
 	private void logWarn(Exception e, int code, String msg) {
-		log.warn("Class: {}, Code: {}, Message: {}", e.getClass().getSimpleName(), code, msg, e);
+		Throwable root = org.springframework.core.NestedExceptionUtils.getMostSpecificCause(e);
+		log.warn("Class: {}, Code: {}, Message: {}, RootCause: {}",
+			e.getClass().getSimpleName(), code, msg, root.getMessage(), e);
 	}
 	private void logError(Exception e, int code, String msg) {
-		log.error("Class: {}, Code: {}, Message: {}", e.getClass().getSimpleName(), code, msg, e);
+		Throwable root = org.springframework.core.NestedExceptionUtils.getMostSpecificCause(e);
+		log.error("Class: {}, Code: {}, Message: {}, RootCause: {}",
+			e.getClass().getSimpleName(), code, msg, root.getMessage(), e);
 	}
 }

@@ -44,35 +44,35 @@ public class UnitPeriodService {
 		unitPeriodMapper.insert(unitPeriod);
 	}
 
-	/**
-	 * 단위기간을 찾거나 생성합니다.
-	 *
-	 * @param unitPeriod 단위기간 정보 (bootcampId, unitNo 필수, startDate/endDate 선택)
-	 * @return 생성되거나 찾은 단위기간의 ID
-	 */
-	@Transactional
-	public Long findOrCreateUnitPeriod(UnitPeriodDTO unitPeriod) {
-		// 부트캠프 존재 여부 검증
-		bootcampService.getBootcamp(unitPeriod.getBootcampId());
+  /**
+   * 단위기간을 찾거나 생성합니다 (동시성 제어 포함).
+   * 
+   * @param unitPeriod 단위기간 정보 (bootcampId, unitNo 필수, startDate/endDate 선택)
+   * @return 생성되거나 찾은 단위기간의 ID
+   */
+  @Transactional
+  public Long findOrCreateUnitPeriod(UnitPeriodDTO unitPeriod) {
+    // 부트캠프 존재 여부 검증
+    bootcampService.getBootcamp(unitPeriod.getBootcampId());
 
-		// 기존 단위기간 조회
-		UnitPeriodDTO existingPeriod =
-			unitPeriodMapper.findByBootcampIdAndUnitNo(unitPeriod.getBootcampId(), unitPeriod.getUnitNo());
+    // 기존 단위기간 조회 (비관적 락으로 동시성 제어)
+    UnitPeriodDTO existingPeriod =
+        unitPeriodMapper.findByBootcampIdAndUnitNoForUpdate(unitPeriod.getBootcampId(), unitPeriod.getUnitNo());
 
-		if (existingPeriod != null) {
-			// 기존 단위기간이 있으면 해당 ID 반환
-			return existingPeriod.getId();
-		} else {
-			// 없으면 새로 생성
-			// startDate와 endDate가 제공되지 않으면 오류
-			if (unitPeriod.getStartDate() == null || unitPeriod.getEndDate() == null) {
-				throw new UnitPeriodDatesRequiredException(
-					"새로운 단위기간을 생성하려면 시작일(periodStartDate)과 종료일(periodEndDate)이 필요합니다.");
-			}
-			unitPeriodMapper.insert(unitPeriod);
-			return unitPeriod.getId();
-		}
-	}
+    if (existingPeriod != null) {
+      // 기존 단위기간이 있으면 해당 ID 반환
+      return existingPeriod.getId();
+    } else {
+      // 없으면 새로 생성
+      // startDate와 endDate가 제공되지 않으면 오류
+      if (unitPeriod.getStartDate() == null || unitPeriod.getEndDate() == null) {
+        throw new UnitPeriodDatesRequiredException(
+            "새로운 단위기간을 생성하려면 시작일(periodStartDate)과 종료일(periodEndDate)이 필요합니다.");
+      }
+      unitPeriodMapper.insert(unitPeriod);
+      return unitPeriod.getId();
+    }
+  }
 
 	@Transactional
 	public void updateUnitPeriod(UnitPeriodDTO unitPeriod) {

@@ -25,7 +25,7 @@
       AND s.class_date = #{date}
 </select>
 
-	<!--특정 날짜에 수강정보 조회 -->
+<!--	특정 날짜에 수강정보 조회 -->
 	<select id="getDailySession" resultType="map">
 	    SELECT 
 	        id,
@@ -35,11 +35,44 @@
 	      AND class_date = #{date}
 	</select>
 	
-	<!-- 일일 출결 등록 -->
-  <insert id="regist" parameterType="com.planit.planit.domain.attendance.dto.AttendanceDTO" useGeneratedKeys="true" keyProperty="id">
-  	INSERT INTO attendance (user_id, session_id, period_id, status)
-    VALUES ( #{userId}, #{sessionId}, #{periodId}, #{status})
-  </insert>
+	
+	 <!-- 세션 정보 조회 (bootcamp_id + 날짜 리스트) -->
+	  <select id="getSession" resultType="com.planit.planit.domain.attendance.dto.SessionSimpleDTO">
+	    SELECT id AS sessionId,
+	           period_id AS periodId
+	    FROM sessions
+	    WHERE bootcamp_id = #{bootcampId}
+	      AND class_date IN
+	      <foreach collection="classDates" item="date" open="(" separator="," close=")">
+	        #{date}
+	      </foreach>
+	  </select>
+  
+    <!-- 출결 다중 등록 -->
+	  <insert id="regist"
+	          parameterType="java.util.List"
+	          useGeneratedKeys="true"
+	          keyProperty="id">
+	    INSERT INTO attendance (user_id, session_id, period_id, status)
+	    VALUES
+	    <foreach collection="list" item="item" separator=",">
+	      (#{item.userId}, #{item.sessionId}, #{item.periodId}, #{item.status})
+	    </foreach>
+	    ON DUPLICATE KEY UPDATE status = VALUES(status)
+	  </insert>
+	  
+	   <select id="findAttendanceDates" resultType="string">
+		  SELECT s.class_date
+		  FROM attendance a
+		  JOIN sessions s ON a.session_id = s.id
+		  WHERE a.user_id = #{userId}
+		    AND s.bootcamp_id = #{bootcampId}
+		    AND s.class_date IN
+		    <foreach collection="classDates" item="date" open="(" separator="," close=")">
+		      #{date}
+		    </foreach>
+		</select>
+	
 
 
   <!-- 일일 출결 수정 -->
@@ -52,6 +85,67 @@
       id = #{id}
       AND user_id = #{userId}
   </update>
+  
+  <!--단위 기간 출결 조회-->
+  <select id="getPeriod"
+        parameterType="map"
+        resultType="com.planit.planit.domain.attendance.dto.AttendanceTotalResponseDTO">	    
+	    SELECT 
+		    a.user_id AS userId,
+		    up.unit_no AS unitNo,
+		    COUNT(CASE WHEN a.status = 'present' THEN 1 END) AS presentCount,
+		    COUNT(CASE WHEN a.status = 'absent' THEN 1 END) AS absentCount,
+		    COUNT(CASE WHEN a.status = 'late' THEN 1 END) AS lateCount,
+		    COUNT(CASE WHEN a.status = 'left_early' THEN 1 END) AS leftEarlyCount,
+		    COUNT(CASE WHEN a.status = 'annual' THEN 1 END) AS annualCount,
+		    COUNT(CASE WHEN a.status = 'leave' THEN 1 END) AS leaveCount,
+		    (
+		        SELECT COUNT(*) 
+		        FROM sessions s2
+		        JOIN unit_periods up2 ON s2.period_id = up2.id
+		        WHERE s2.bootcamp_id = s.bootcamp_id
+		          AND up2.unit_no = up.unit_no
+		    ) AS totalSessions
+		FROM attendance a
+		JOIN sessions s ON a.session_id = s.id
+		JOIN unit_periods up ON s.period_id = up.id
+		WHERE a.user_id = #{userId}
+		  AND s.bootcamp_id = #{bootcampId}
+		  AND up.unit_no = #{unitNo}
+		GROUP BY a.user_id, unit_no;
+	</select>
+	
+	<!--부트캠프에 존재하는 단위기간 조회-->
+	<select id="getBootcampUnitno" resultType="int">
+		select unit_no from unit_periods where bootcamp_id = #{bootcampId};
+	</select>
+  
+  <!--오늘까지 전체 출결 조회 (&lt; : <이라는뜻)-->
+  <select id="getTotal"
+        parameterType="map"
+        resultType="com.planit.planit.domain.attendance.dto.AttendanceTotalResponseDTO">	    
+		SELECT 
+		    a.user_id AS userId,
+		    COUNT(CASE WHEN a.status = 'present' THEN 1 END) AS presentCount,
+		    COUNT(CASE WHEN a.status = 'absent' THEN 1 END) AS absentCount,
+		    COUNT(CASE WHEN a.status = 'late' THEN 1 END) AS lateCount,
+		    COUNT(CASE WHEN a.status = 'left_early' THEN 1 END) AS leftEarlyCount,
+		    COUNT(CASE WHEN a.status = 'annual' THEN 1 END) AS annualCount,
+		    COUNT(CASE WHEN a.status = 'leave' THEN 1 END) AS leaveCount,
+		    (
+		        SELECT COUNT(*) 
+		        FROM sessions s2
+		        WHERE s2.bootcamp_id = s.bootcamp_id
+		    ) AS totalSessions
+		FROM attendance a
+		JOIN sessions s ON a.session_id = s.id
+		JOIN unit_periods up ON s.period_id = up.id
+		WHERE a.user_id = #{userId} 
+		  AND s.bootcamp_id = #{bootcampId}
+		  AND s.class_date &lt;= CURDATE()
+		GROUP BY a.user_id;
+	</select>
+	
 </mapper>
 
 

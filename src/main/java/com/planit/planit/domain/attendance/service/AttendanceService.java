@@ -1,26 +1,31 @@
 package com.planit.planit.domain.attendance.service;
 
+import java.time.LocalDate;
+import java.time.format.DateTimeParseException;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import com.planit.planit.domain.attendance.dto.AttendanceDTO;
 import com.planit.planit.domain.attendance.dto.AttendanceDailyResponseDTO;
 import com.planit.planit.domain.attendance.dto.AttendanceRegistRequestDTO;
+import com.planit.planit.domain.attendance.dto.AttendanceTotalResponseDTO;
+import com.planit.planit.domain.attendance.dto.SessionSimpleDTO;
 import com.planit.planit.domain.attendance.mapper.AttendanceMapper;
 import com.planit.planit.global.common.exception.BaseException;
 import com.planit.planit.global.common.exception.ErrorCode;
 import jakarta.validation.constraints.NotNull;
-import lombok.AllArgsConstructor;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 @Service
 @Slf4j
-@AllArgsConstructor
+@RequiredArgsConstructor
 public class AttendanceService {
 
   @NotNull
-  private AttendanceMapper mapper;
-
+  private final AttendanceMapper mapper;
 
   /**
    * 일일 기간 출결 정보 조회
@@ -44,44 +49,75 @@ public class AttendanceService {
   }
 
   /**
-   * 일일 기간 출결 정보 등록
+   * 출결 정보 등록
    * 
-   * @param attendance 출결 정보 (테이블 전체정보)
+   * @param attendance 출결 정보 classDates는 List<String>으로 받음
    */
 
   @Transactional
   public void regist(AttendanceRegistRequestDTO requestDTO) {
     log.info("[출결 등록 시작] attendance={}", requestDTO);
 
-    long bootcampId = requestDTO.getBootcampId();
-    String date = requestDTO.getDate();
-    // 특정 날짜에 강의가 있는지 없는지 체크 sessionId,periodId 받아옴
-    Map<String, Object> result = mapper.getDailySession(bootcampId, date);
+    List<String> classDates = requestDTO.getClassDates();
+    List<String> invalidFormatDates = new ArrayList<>();
 
-    if (result == null) {
-      throw new BaseException(ErrorCode.RESOURCE_NOT_FOUND, "해당 날짜에는 강의가 없습니다.") {};
-
-    } else {
-      AttendanceDTO attendance = new AttendanceDTO();
-      attendance.setUserId(requestDTO.getUserId());
-      attendance.setSessionId(((Number) result.get("id")).longValue());
-      attendance.setPeriodId(((Number) result.get("period_id")).longValue());
-      attendance.setStatus(requestDTO.getStatus());
-
-      // 중복 방지: 기존 출결 존재 여부 확인
-      if (mapper.getDaily(requestDTO.getUserId(), requestDTO.getBootcampId(),
-          requestDTO.getDate()) != null) {
-        throw new BaseException(ErrorCode.CONFLICT, "이미 등록된 출결입니다.") {};
+    for (String dateStr : classDates) {
+      try {
+        LocalDate.parse(dateStr); // 형식이 ISO(yyyy-MM-dd)가 아니면 예외 발생
+      } catch (DateTimeParseException e) {
+        invalidFormatDates.add(dateStr);
       }
-      // 출결 등록
-      mapper.regist(attendance);
     }
 
+    if (!invalidFormatDates.isEmpty()) {
+      throw new BaseException(ErrorCode.FORBIDDEN,
+          "잘못된 날짜 형식이 있습니다. 형식은 YYYY-MM-DD 이어야 합니다: " + invalidFormatDates) {};
+    }
 
+    // 현재 날짜
+    LocalDate today = LocalDate.now();
+
+    // 미래 날짜 필터링
+    List<String> invalidFutureDates = requestDTO.getClassDates().stream()
+        .filter(date -> LocalDate.parse(date).isAfter(today)).toList();
+
+    if (!invalidFutureDates.isEmpty()) {
+      throw new BaseException(ErrorCode.FORBIDDEN,
+          "미래 날짜는 출결 등록이 불가능합니다. 잘못된 날짜: " + invalidFutureDates) {};
+    }
+
+    // ️날짜 기반 세션 + 기간 정보 조회
+    List<SessionSimpleDTO> sessions =
+        mapper.getSession(requestDTO.getBootcampId(), requestDTO.getClassDates());
+
+    if (sessions.isEmpty()) {
+      throw new BaseException(ErrorCode.RESOURCE_NOT_FOUND, "선택한 날짜에 해당하는 강의가 없습니다.") {};
+    }
+
+    if (sessions.size() != requestDTO.getClassDates().size()) {
+      throw new BaseException(ErrorCode.RESOURCE_NOT_FOUND, "선택한 날짜중에 강의가 없는날짜가 포함되어있습니다.") {};
+
+    } else {
+      // AttendanceDTO 리스트 생성
+      List<AttendanceDTO> attendanceList =
+          sessions.stream().map(s -> new AttendanceDTO(requestDTO.getUserId(), s.getSessionId(),
+              s.getPeriodId(), requestDTO.getStatus())).toList();
+
+      // 이미 등록된 출결 확인
+      List<String> existingDates = mapper.findAttendanceDates(requestDTO.getUserId(),
+          requestDTO.getBootcampId(), requestDTO.getClassDates());
+
+      if (!existingDates.isEmpty()) {
+        throw new BaseException(ErrorCode.CONFLICT, "이미 출결이 등록된 날짜가 있습니다: " + existingDates) {};
+      }
+
+      // 출결 등록
+      mapper.regist(attendanceList);
+    }
   }
 
   /**
-   * 일일 기간 출결 정보 등록
+   * 일일 기간 출결 정보 수정
    * 
    * @param attendance 출결 정보 (출결상태값,attendanceId 만 포함)
    */
@@ -90,4 +126,42 @@ public class AttendanceService {
     mapper.update(attendance);
   }
 
+  /**
+   * 단위 기간 출결 정보 조회
+   * 
+   * @param userId 사용자 ID
+   * @param bootcampId 부트캠프 ID
+   * @param unitNo 단위 기간 번호
+   * @return attendance 기간단위 출결 현황 (출석,조퇴,휴가 등등 및 전체 출석일수 카운트)
+   */
+  public AttendanceTotalResponseDTO getPeriod(Long userId, Long bootcampId, Integer unitNo) {
+    List<Integer> unitList = mapper.getBootcampUnitno(bootcampId);
+    if (!unitList.contains(unitNo)) { // 부트캠프에 존재하는 단위기간인지 검사
+      throw new BaseException(ErrorCode.RESOURCE_NOT_FOUND, "해당 부트캠프에 존재하지 않는 단위기간입니다.") {};
+    }
+    AttendanceTotalResponseDTO attendance = mapper.getPeriod(userId, bootcampId, unitNo);
+    if (attendance == null) { // 단위기간은 있지만 단위기간에 아직 등록된 출결이 없음
+      throw new BaseException(ErrorCode.RESOURCE_NOT_FOUND, "해당 단위기간에 등록된 출결이 없습니다.") {};
+    }
+
+    return attendance;
+  }
+
+  /**
+   * 오늘까지 전체출결 정보 조회
+   * 
+   * @param userId 사용자 ID
+   * @param bootcampId 부트캠프 ID
+   * @return attendance 처음부터 오늘까지 전체 출결 현황 (출석,조퇴,휴가 등등 및 전체 출석일수 카운트)
+   */
+  public AttendanceTotalResponseDTO getTotal(Long userId, Long bootcampId) {
+
+
+    AttendanceTotalResponseDTO attendance = mapper.getTotal(userId, bootcampId);
+    if (attendance == null) {
+      throw new BaseException(ErrorCode.RESOURCE_NOT_FOUND, "불러올 출결정보가 없습니다.") {};
+    }
+
+    return attendance;
+  }
 }

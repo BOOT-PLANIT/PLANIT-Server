@@ -1,14 +1,9 @@
 package com.planit.planit.global.config;
 
-import com.google.firebase.auth.FirebaseAuth;
-import com.planit.planit.domain.user.service.FirebaseAccountService;
-import com.planit.planit.global.security.AuthenticationFilter;
-import com.planit.planit.global.security.Json401EntryPoint;
-import com.planit.planit.global.security.Json403AccessDeniedHandler;
-import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.boot.autoconfigure.security.servlet.PathRequest;
-import org.springframework.context.annotation.*;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
 import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
@@ -17,6 +12,12 @@ import org.springframework.security.config.annotation.web.configurers.AbstractHt
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import com.google.firebase.auth.FirebaseAuth;
+import com.planit.planit.domain.user.service.FirebaseAccountService;
+import com.planit.planit.global.security.AuthenticationFilter;
+import com.planit.planit.global.security.Json401EntryPoint;
+import com.planit.planit.global.security.Json403AccessDeniedHandler;
+import lombok.RequiredArgsConstructor;
 
 @RequiredArgsConstructor
 @Configuration
@@ -48,7 +49,6 @@ public class SecurityConfiguration {
 				.accessDeniedHandler(new Json403AccessDeniedHandler())
 			)
 			.addFilterBefore(authenticationFilter, UsernamePasswordAuthenticationFilter.class);
-
 		return http.build();
 	}
 }

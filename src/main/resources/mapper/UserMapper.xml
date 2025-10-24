@@ -10,9 +10,9 @@
 		<result property="email"         column="email"/>
 		<result property="displayName"   column="display_name"/>
 		<result property="photoUrl"      column="photo_url"/>
-		<result property="userLevel"     column="user_level"
-			javaType="com.planit.planit.domain.user.model.UserLevel"
-			typeHandler="org.apache.ibatis.type.EnumTypeHandler"/>
+		<result property="userLevel"
+			column="user_level"
+			javaType="com.planit.planit.domain.user.model.UserLevel"/>
 		<result property="provider"      column="provider"/>
 		<result property="emailVerified" column="email_verified"/>
 		<result property="isDeleted" column="is_deleted"/>
