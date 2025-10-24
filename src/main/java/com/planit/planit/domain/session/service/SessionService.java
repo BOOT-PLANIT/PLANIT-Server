@@ -88,18 +88,9 @@ public class SessionService {
 			throw new SessionDuplicateDateException("요청 내에 중복된 날짜가 있습니다.");
 		}
 
-		// 기존 세션과의 중복 날짜 검증
-		List<SessionDTO> existingSessions = sessionMapper.findByBootcampId(request.getBootcampId());
-		Set<LocalDate> existingDates = existingSessions.stream()
-			.map(SessionDTO::getClassDate)
-			.collect(java.util.stream.Collectors.toSet());
-
-		for (LocalDate requestDate : requestDates) {
-			if (existingDates.contains(requestDate)) {
-				throw new SessionDuplicateDateException(
-					"날짜 " + requestDate + "에 해당하는 세션이 이미 존재합니다.");
-			}
-		}
+		// DB 유니크 제약에 의존 (동시성 문제 해결)
+		// 메모리 내 중복 검사는 TOCTOU 문제로 인해 제거
+		// DB 레벨에서 (bootcamp_id, class_date) 유니크 제약으로 보장
 
 		// 기준일 결정: startedAt이 설정되어 있으면 사용, 없으면 세션들 중 가장 이른 날짜를 기준으로 함
 		LocalDate baseDate = (bootcamp.getStartedAt() != null) 

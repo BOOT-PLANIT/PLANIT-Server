@@ -170,6 +170,15 @@ public class GlobalExceptionHandler {
 	/** 409 - DB/유니크 제약 위반 등 */
 	@ExceptionHandler({DataIntegrityViolationException.class, DuplicateKeyException.class})
 	public ResponseEntity<ApiErrorResponse<ErrorDetail>> handleConflict(Exception e) {
+		// 세션 중복 날짜 특화 처리
+		if (e.getMessage() != null && e.getMessage().contains("sessions") && 
+			(e.getMessage().contains("bootcamp_id") || e.getMessage().contains("class_date"))) {
+			String msg = SESSION_DUPLICATE_DATE.getMessage();
+			logWarn(e, SESSION_DUPLICATE_DATE.getStatus().value(), msg);
+			return ResponseEntity.status(SESSION_DUPLICATE_DATE.getStatus())
+				.body(ApiErrorResponse.of(SESSION_DUPLICATE_DATE.getStatus(), msg));
+		}
+		
 		String msg = CONFLICT.getMessage();
 		logWarn(e, CONFLICT.getStatus().value(), msg);
 		return ResponseEntity.status(CONFLICT.getStatus())
