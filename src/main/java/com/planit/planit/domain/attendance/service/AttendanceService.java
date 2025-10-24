@@ -98,11 +98,6 @@ public class AttendanceService {
       throw new BaseException(ErrorCode.RESOURCE_NOT_FOUND, "선택한 날짜중에 강의가 없는날짜가 포함되어있습니다.") {};
 
     } else {
-      // AttendanceDTO 리스트 생성
-      List<AttendanceDTO> attendanceList =
-          sessions.stream().map(s -> new AttendanceDTO(requestDTO.getUserId(), s.getSessionId(),
-              s.getPeriodId(), requestDTO.getStatus())).toList();
-
       // 이미 등록된 출결 확인
       List<String> existingDates = mapper.findAttendanceDates(requestDTO.getUserId(),
           requestDTO.getBootcampId(), requestDTO.getClassDates());
@@ -110,6 +105,11 @@ public class AttendanceService {
       if (!existingDates.isEmpty()) {
         throw new BaseException(ErrorCode.CONFLICT, "이미 출결이 등록된 날짜가 있습니다: " + existingDates) {};
       }
+
+      // AttendanceDTO 리스트 생성
+      List<AttendanceDTO> attendanceList =
+          sessions.stream().map(s -> new AttendanceDTO(requestDTO.getUserId(), s.getSessionId(),
+              s.getPeriodId(), requestDTO.getStatus())).toList();
 
       // 출결 등록
       mapper.regist(attendanceList);
@@ -132,7 +132,7 @@ public class AttendanceService {
    * @param userId 사용자 ID
    * @param bootcampId 부트캠프 ID
    * @param unitNo 단위 기간 번호
-   * @return attendance 기간단위 출결 현황 (출석,조퇴,휴가 등등 및 전체 출석일수 카운트)
+   * @return attendance 기간단위 출결 현황 (출석,조퇴,휴가 등등 및 전체 출석일수 카운트, 훈련지원금 계산)
    */
   public AttendanceTotalResponseDTO getPeriod(Long userId, Long bootcampId, Integer unitNo) {
     List<Integer> unitList = mapper.getBootcampUnitno(bootcampId);
@@ -143,6 +143,28 @@ public class AttendanceService {
     if (attendance == null) { // 단위기간은 있지만 단위기간에 아직 등록된 출결이 없음
       throw new BaseException(ErrorCode.RESOURCE_NOT_FOUND, "해당 단위기간에 등록된 출결이 없습니다.") {};
     }
+
+    // 출석,지각,조퇴,연차,휴가의 합
+    Integer totalPresentCount = attendance.getPresentCount() + attendance.getLateCount()
+        + attendance.getLeftEarlyCount() + attendance.getAnnualCount() + attendance.getLeaveCount();
+
+    // 지각+조퇴 3회 쌓인거 출석수에 반영
+    totalPresentCount -= (attendance.getLateCount() + attendance.getLeftEarlyCount()) / 3;
+
+    // 실제 총 결석수
+    Integer totalAbsentCount = attendance.getAbsentCount()
+        + (attendance.getLateCount() + attendance.getLeftEarlyCount()) / 3;
+
+    attendance.setTotalPresentCount(totalPresentCount);
+    attendance.setTotalAbsentCount(totalAbsentCount);
+
+    // KDT 여부 확인 (훈련비 단가 결정)
+    Integer subsidy = mapper.Iskdt(bootcampId) ? 15800 : 5800;
+
+    // 단위기간별 훈련비 계산 (최대 20일)
+    int count = Math.min(totalPresentCount, 20);
+    attendance.setTotalSubsidy(count * subsidy);
+
 
     return attendance;
   }
@@ -156,11 +178,77 @@ public class AttendanceService {
    */
   public AttendanceTotalResponseDTO getTotal(Long userId, Long bootcampId) {
 
-
-    AttendanceTotalResponseDTO attendance = mapper.getTotal(userId, bootcampId);
-    if (attendance == null) {
+    // 현재까지 전체 기간 출결 정보 받아오기
+    List<AttendanceTotalResponseDTO> totalAttendance = mapper.getTotal(userId, bootcampId);
+    if (totalAttendance == null || totalAttendance.isEmpty()) {
       throw new BaseException(ErrorCode.RESOURCE_NOT_FOUND, "불러올 출결정보가 없습니다.") {};
     }
+
+    AttendanceTotalResponseDTO attendance = new AttendanceTotalResponseDTO();
+    attendance.setUserId(userId);
+
+    int presentCount = 0;
+    int absentCount = 0;
+    int lateCount = 0;
+    int leftEarlyCount = 0;
+    int annualCount = 0;
+    int leaveCount = 0;
+
+    int totalPresentCount = 0;
+    int totalAbsentCount = 0;
+    int totalSubsidy = 0;
+
+    // KDT 여부 확인 (훈련비 단가 결정)
+    int subsidyPerDay = mapper.Iskdt(bootcampId) ? 15800 : 5800;
+
+    // 각 단위기간별로 출석, 결석, 훈련비 계산
+    for (AttendanceTotalResponseDTO dto : totalAttendance) {
+
+      int periodLate = dto.getLateCount();
+      int periodLeftEarly = dto.getLeftEarlyCount();
+      int periodAbsent = dto.getAbsentCount();
+      int periodPresent = dto.getPresentCount();
+      int periodAnnual = dto.getAnnualCount();
+      int periodLeave = dto.getLeaveCount();
+
+      // 단위기간별 지각/조퇴 3회 = 결석 1회
+      int additionalAbsents = (periodLate + periodLeftEarly) / 3;
+
+      // 단위기간별 실제 출석/결석
+      int periodTotalPresent = periodPresent + periodLate + periodLeftEarly + periodAnnual
+          + periodLeave - additionalAbsents;
+      int periodTotalAbsent = periodAbsent + additionalAbsents;
+
+      // 단위기간별 훈련비 계산 (최대 20일)
+      int count = Math.min(periodTotalPresent, 20);
+      int periodSubsidy = count * subsidyPerDay;
+
+      // 누적합산
+      presentCount += periodPresent;
+      absentCount += periodAbsent;
+      lateCount += periodLate;
+      leftEarlyCount += periodLeftEarly;
+      annualCount += periodAnnual;
+      leaveCount += periodLeave;
+
+      totalPresentCount += periodTotalPresent;
+      totalAbsentCount += periodTotalAbsent;
+      totalSubsidy += periodSubsidy;
+    }
+
+    // 합계 결과 저장
+    attendance.setPresentCount(presentCount);
+    attendance.setAbsentCount(absentCount);
+    attendance.setLateCount(lateCount);
+    attendance.setLeftEarlyCount(leftEarlyCount);
+    attendance.setAnnualCount(annualCount);
+    attendance.setLeaveCount(leaveCount);
+    attendance.setTotalPresentCount(totalPresentCount);
+    attendance.setTotalAbsentCount(totalAbsentCount);
+    attendance.setTotalSubsidy(totalSubsidy);
+
+    // 부트캠프 전체 수강일 저장
+    attendance.setTotalSessions(mapper.bootcampTotalSession(bootcampId));
 
     return attendance;
   }
