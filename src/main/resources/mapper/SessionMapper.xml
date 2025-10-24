@@ -79,7 +79,7 @@
             a.status as "attendanceStatus"
         FROM sessions s
         LEFT JOIN unit_periods up ON s.period_id = up.id
-        LEFT JOIN attendances a ON s.id = a.session_id AND a.user_id = #{userId}
+        LEFT JOIN attendance a ON s.id = a.session_id AND a.user_id = #{userId}
         WHERE s.bootcamp_id = #{bootcampId}
         ORDER BY s.class_date ASC
     </select>
