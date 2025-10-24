@@ -3,10 +3,14 @@ package com.planit.planit.global.security;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseToken;
 import com.planit.planit.domain.user.service.FirebaseAccountService;
-import jakarta.servlet.*;
-import jakarta.servlet.http.*;
+import jakarta.servlet.FilterChain;
+import jakarta.servlet.ServletException;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.ObjectProvider;
+import org.springframework.core.NestedExceptionUtils;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -15,6 +19,7 @@ import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
 
+@Slf4j
 @RequiredArgsConstructor
 public class AuthenticationFilter extends OncePerRequestFilter {
 
@@ -44,13 +49,16 @@ public class AuthenticationFilter extends OncePerRequestFilter {
 					e.getMessage(),
 					(e.getCause() != null ? e.getCause().getMessage() : "n/a")
 				);
-				logger.warn(msg, e);
+				log.warn(msg, e);
 				SecurityContextHolder.clearContext();
 			} catch (Exception e) {
-				logger.warn("[AUTH] verifyIdToken failed (non-Firebase): " + e, e);
+				Throwable root = NestedExceptionUtils.getMostSpecificCause(e);
+				log.warn("[AUTH] failed: {}, root: {}", e.toString(),
+					root.getMessage(), e);
 				SecurityContextHolder.clearContext();
 			}
 		}
+
 		chain.doFilter(req, res);
 	}
 

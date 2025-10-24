@@ -24,27 +24,32 @@ import lombok.RequiredArgsConstructor;
 @EnableMethodSecurity
 public class SecurityConfiguration {
 
-  private final ObjectProvider<FirebaseAccountService> accountServiceProvider;
-  private final FirebaseAuth firebaseAuth;
+	private final ObjectProvider<FirebaseAccountService> accountServiceProvider;
+	private final FirebaseAuth firebaseAuth;
 
-  @Bean
-  SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
-    var authenticationFilter = new AuthenticationFilter(accountServiceProvider, firebaseAuth);
+	@Bean
+	SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+		var authenticationFilter = new AuthenticationFilter(accountServiceProvider, firebaseAuth);
 
-    http.csrf(AbstractHttpConfigurer::disable).cors(Customizer.withDefaults())
-        .sessionManagement(s -> s.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-        .formLogin(AbstractHttpConfigurer::disable).httpBasic(AbstractHttpConfigurer::disable)
-        .authorizeHttpRequests(auth -> auth.requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
-            .requestMatchers("/", "/index.html", "/favicon.ico").permitAll()
-            .requestMatchers(PathRequest.toStaticResources().atCommonLocations()).permitAll()
-            .requestMatchers("/v3/api-docs/**", "/swagger-ui/**").permitAll()
-            .requestMatchers("/api/v1/**").permitAll() // api/v1 하위 모든메소드, 도메인 허용 (추후 변경 해야됨)
-            .requestMatchers(HttpMethod.POST, "/api/v1/users").permitAll() // 회원가입 허용 용도, 추후 변경 가능
-            .anyRequest().authenticated())
-        .exceptionHandling(ex -> ex.authenticationEntryPoint(new Json401EntryPoint())
-            .accessDeniedHandler(new Json403AccessDeniedHandler()))
-        .addFilterBefore(authenticationFilter, UsernamePasswordAuthenticationFilter.class);
-
-    return http.build();
-  }
+		http
+			.csrf(AbstractHttpConfigurer::disable)
+			.cors(Customizer.withDefaults())
+			.sessionManagement(s -> s.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+			.formLogin(AbstractHttpConfigurer::disable)
+			.httpBasic(AbstractHttpConfigurer::disable)
+			.authorizeHttpRequests(auth -> auth
+				.requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
+				.requestMatchers("/", "/index.html", "/favicon.ico").permitAll()
+				.requestMatchers(PathRequest.toStaticResources().atCommonLocations()).permitAll()
+				.requestMatchers("/v3/api-docs/**", "/swagger-ui/**").permitAll()
+				.requestMatchers(HttpMethod.POST, "/api/v1/auth/login").permitAll()
+				.anyRequest().authenticated()
+			)
+			.exceptionHandling(ex -> ex
+				.authenticationEntryPoint(new Json401EntryPoint())
+				.accessDeniedHandler(new Json403AccessDeniedHandler())
+			)
+			.addFilterBefore(authenticationFilter, UsernamePasswordAuthenticationFilter.class);
+		return http.build();
+	}
 }
