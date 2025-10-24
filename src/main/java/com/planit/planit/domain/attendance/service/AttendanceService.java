@@ -1,6 +1,8 @@
 package com.planit.planit.domain.attendance.service;
 
 import java.time.LocalDate;
+import java.time.format.DateTimeParseException;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import org.springframework.stereotype.Service;
@@ -47,14 +49,30 @@ public class AttendanceService {
   }
 
   /**
-   * 일일 기간 출결 정보 등록
+   * 출결 정보 등록
    * 
-   * @param attendance 출결 정보 (테이블 전체정보)
+   * @param attendance 출결 정보 classDates는 List<String>으로 받음
    */
 
   @Transactional
   public void regist(AttendanceRegistRequestDTO requestDTO) {
     log.info("[출결 등록 시작] attendance={}", requestDTO);
+
+    List<String> classDates = requestDTO.getClassDates();
+    List<String> invalidFormatDates = new ArrayList<>();
+
+    for (String dateStr : classDates) {
+      try {
+        LocalDate.parse(dateStr); // 형식이 ISO(yyyy-MM-dd)가 아니면 예외 발생
+      } catch (DateTimeParseException e) {
+        invalidFormatDates.add(dateStr);
+      }
+    }
+
+    if (!invalidFormatDates.isEmpty()) {
+      throw new BaseException(ErrorCode.FORBIDDEN,
+          "잘못된 날짜 형식이 있습니다. 형식은 YYYY-MM-DD 이어야 합니다: " + invalidFormatDates) {};
+    }
 
     // 현재 날짜
     LocalDate today = LocalDate.now();
@@ -73,6 +91,10 @@ public class AttendanceService {
         mapper.getSession(requestDTO.getBootcampId(), requestDTO.getClassDates());
 
     if (sessions.isEmpty()) {
+      throw new BaseException(ErrorCode.RESOURCE_NOT_FOUND, "선택한 날짜에 해당하는 강의가 없습니다.") {};
+    }
+
+    if (sessions.size() != requestDTO.getClassDates().size()) {
       throw new BaseException(ErrorCode.RESOURCE_NOT_FOUND, "선택한 날짜중에 강의가 없는날짜가 포함되어있습니다.") {};
 
     } else {
@@ -95,7 +117,7 @@ public class AttendanceService {
   }
 
   /**
-   * 일일 기간 출결 정보 등록
+   * 일일 기간 출결 정보 수정
    * 
    * @param attendance 출결 정보 (출결상태값,attendanceId 만 포함)
    */

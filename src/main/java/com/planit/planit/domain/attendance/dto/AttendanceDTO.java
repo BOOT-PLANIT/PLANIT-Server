@@ -4,8 +4,10 @@ import java.time.OffsetDateTime;
 import com.planit.planit.domain.attendance.enums.AttendanceStatus;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 @Data
+@NoArgsConstructor
 public class AttendanceDTO {
 
   @Schema(description = "출결 ID", example = "30")
