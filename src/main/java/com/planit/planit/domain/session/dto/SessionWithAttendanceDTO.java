@@ -1,15 +1,14 @@
 package com.planit.planit.domain.session.dto;
 
 import java.time.LocalDate;
-import java.time.OffsetDateTime;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 
 @Data
-@Schema(description = "세션 응답 DTO")
-public class SessionDTO {
+@Schema(description = "세션과 출결 상태 조회 DTO")
+public class SessionWithAttendanceDTO {
   @Schema(description = "세션 ID", example = "1")
-  private Long id;
+  private Long sessionId;
 
   @Schema(description = "부트캠프 ID", example = "1")
   private Long bootcampId;
@@ -20,18 +19,9 @@ public class SessionDTO {
   @Schema(description = "단위기간 번호", example = "1")
   private Integer unitNo;
 
-  @Schema(description = "단위기간 시작일", example = "2025-01-01")
-  private LocalDate periodStartDate;
-
-  @Schema(description = "단위기간 종료일", example = "2025-01-31")
-  private LocalDate periodEndDate;
-
   @Schema(description = "수업 날짜", example = "2025-01-15")
   private LocalDate classDate;
 
-	@Schema(description = "생성일시")
-	private OffsetDateTime createdAt;
-
-	@Schema(description = "수정일시")
-	private OffsetDateTime updatedAt;
+  @Schema(description = "출결 상태", example = "PRESENT", allowableValues = {"PRESENT", "ABSENT", "LATE", "EXCUSED"})
+  private String attendanceStatus;
 }

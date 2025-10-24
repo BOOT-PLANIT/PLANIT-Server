@@ -110,7 +110,6 @@ public class AttendanceService {
           sessions.stream().map(s -> new AttendanceDTO(requestDTO.getUserId(), s.getSessionId(),
               s.getPeriodId(), requestDTO.getStatus())).toList();
 
-
       // 출결 등록
       mapper.regist(attendanceList);
     }
