@@ -179,7 +179,7 @@ public class AttendanceService {
 
     // 현재까지 전체 기간 출결 정보 받아오기
     List<AttendanceTotalResponseDTO> totalAttendance = mapper.getTotal(userId, bootcampId);
-    if (totalAttendance == null) {
+    if (totalAttendance == null || totalAttendance.isEmpty()) {
       throw new BaseException(ErrorCode.RESOURCE_NOT_FOUND, "불러올 출결정보가 없습니다.") {};
     }
 
