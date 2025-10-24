@@ -2,7 +2,9 @@ package com.planit.planit.domain.session.service;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
+import java.util.HashMap;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import com.planit.planit.domain.bootcamp.service.BootcampService;
@@ -130,8 +132,8 @@ public class SessionService {
 
 			sessionMapper.insert(session);
 
-			// 생성된 세션 조회하여 리스트에 추가
-			createdSessions.add(sessionMapper.findById(session.getId()));
+			// 생성된 세션을 리스트에 추가 (재조회 불필요)
+			createdSessions.add(session);
 		}
 
 		// 부트캠프의 시작일/종료일 갱신
@@ -152,6 +154,9 @@ public class SessionService {
 			throw new SessionEmptyDeleteListException("삭제할 세션이 없습니다.");
 		}
 
+		// 세션 조회 캐싱을 위한 Map
+		Map<Long, SessionDTO> sessionCache = new HashMap<>();
+		
 		// 모든 세션이 존재하는지 확인하고 부트캠프 ID 수집
 		Long bootcampId = null;
 		for (Long sessionId : uniqueSessionIds) {
@@ -159,6 +164,9 @@ public class SessionService {
 			if (existingSession == null) {
 				throw new SessionNotFoundException("ID가 " + sessionId + "인 세션을 찾을 수 없습니다.");
 			}
+			
+			// 세션을 캐시에 저장
+			sessionCache.put(sessionId, existingSession);
 			
 			// 첫 번째 세션에서 부트캠프 ID 설정
 			if (bootcampId == null) {
@@ -178,9 +186,9 @@ public class SessionService {
 		com.planit.planit.domain.bootcamp.dto.BootcampDTO bootcamp = 
 			bootcampService.getBootcampForUpdate(bootcampId);
 
-		// 각 세션에 대해 부트캠프 시작일 검증
+		// 각 세션에 대해 부트캠프 시작일 검증 (캐시에서 조회)
 		for (Long sessionId : uniqueSessionIds) {
-			SessionDTO existingSession = sessionMapper.findById(sessionId);
+			SessionDTO existingSession = sessionCache.get(sessionId);
 			
 			// 부트캠프 시작일에 해당하는 세션인지 확인
 			if (bootcamp.getStartedAt() != null && 
