@@ -42,6 +42,7 @@ public class SecurityConfiguration {
 				.requestMatchers("/", "/index.html", "/favicon.ico").permitAll()
 				.requestMatchers(PathRequest.toStaticResources().atCommonLocations()).permitAll()
 				.requestMatchers("/v3/api-docs/**", "/swagger-ui/**").permitAll()
+				.requestMatchers(HttpMethod.POST, "/api/v1/auth/login").permitAll()
 				.anyRequest().authenticated()
 			)
 			.exceptionHandling(ex -> ex
