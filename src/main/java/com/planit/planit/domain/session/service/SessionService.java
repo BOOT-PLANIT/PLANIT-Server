@@ -100,7 +100,7 @@ public class SessionService {
 		
 		int baseDay = unitPeriodCalculator.getBaseDay(baseDate);
 
-		List<SessionDTO> createdSessions = new java.util.ArrayList<>();
+		List<SessionDTO> sessionsToInsert = new java.util.ArrayList<>();
 
 		for (SessionCreateItemDTO sessionItem : request.getSessions()) {
 			// 부트캠프 시작일 이후인지 검증 (엄격한 검증)
@@ -131,16 +131,17 @@ public class SessionService {
 			Long periodId = unitPeriodService.findOrCreateUnitPeriod(unitPeriod);
 			session.setPeriodId(periodId);
 
-			sessionMapper.insert(session);
-
-			// 생성된 세션을 리스트에 추가 (재조회 불필요)
-			createdSessions.add(session);
+			sessionsToInsert.add(session);
 		}
+
+		// 배치 insert 실행 (ID 자동 할당)
+		sessionMapper.insertBatch(sessionsToInsert);
 
 		// 부트캠프의 시작일/종료일 갱신
 		bootcampService.updateBootcampDates(request.getBootcampId());
 
-		return createdSessions;
+		// 생성된 세션들 반환 (ID가 자동으로 할당됨)
+		return sessionsToInsert;
 	}
 
 

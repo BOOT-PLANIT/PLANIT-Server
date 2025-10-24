@@ -49,7 +49,7 @@
     </insert>
 
     <!-- 일괄 추가 -->
-    <insert id="insertBatch" parameterType="java.util.List">
+    <insert id="insertBatch" parameterType="java.util.List" useGeneratedKeys="true" keyProperty="id">
         INSERT INTO sessions (bootcamp_id, period_id, class_date, created_at, updated_at)
         VALUES
         <foreach collection="list" item="session" separator=",">
