@@ -18,6 +18,7 @@ import com.planit.planit.domain.session.exception.SessionEmptyDeleteListExceptio
 import com.planit.planit.domain.session.exception.SessionDifferentBootcampException;
 import com.planit.planit.domain.session.exception.SessionDuplicateDateException;
 import com.planit.planit.domain.session.exception.SessionEmptyCreateListException;
+import com.planit.planit.domain.session.exception.SessionNullClassDateException;
 import com.planit.planit.domain.session.mapper.SessionMapper;
 import com.planit.planit.domain.unitperiod.dto.UnitPeriodDTO;
 import com.planit.planit.domain.unitperiod.service.UnitPeriodService;
@@ -67,7 +68,16 @@ public class SessionService {
 		com.planit.planit.domain.bootcamp.dto.BootcampDTO bootcamp = 
 			bootcampService.getBootcampForUpdate(request.getBootcampId());
 
-		// 요청된 세션 날짜들을 수집하고 중복 검증
+		// 개별 아이템의 classDate null 검증
+		for (int i = 0; i < request.getSessions().size(); i++) {
+			SessionCreateItemDTO sessionItem = request.getSessions().get(i);
+			if (sessionItem.getClassDate() == null) {
+				throw new SessionNullClassDateException(
+					"세션 " + (i + 1) + "번째 항목의 수업 날짜는 필수입니다.");
+			}
+		}
+
+		// 요청된 세션 날짜들을 수집하고 중복 검증 (null 가드 후 안전한 stream 호출)
 		List<LocalDate> requestDates = request.getSessions().stream()
 			.map(SessionCreateItemDTO::getClassDate)
 			.collect(java.util.stream.Collectors.toList());
@@ -145,6 +155,11 @@ public class SessionService {
 
 	@Transactional
 	public void deleteSessions(SessionDeleteRequestDTO request) {
+		// null 가드 추가
+		if (request.getSessionIds() == null || request.getSessionIds().isEmpty()) {
+			throw new SessionEmptyDeleteListException("삭제할 세션이 없습니다.");
+		}
+		
 		// 중복 ID 제거
 		List<Long> uniqueSessionIds = request.getSessionIds().stream()
 			.distinct()
