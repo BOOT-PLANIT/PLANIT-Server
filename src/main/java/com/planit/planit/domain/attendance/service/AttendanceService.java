@@ -12,6 +12,7 @@ import com.planit.planit.domain.attendance.dto.AttendanceDailyResponseDTO;
 import com.planit.planit.domain.attendance.dto.AttendanceRegistRequestDTO;
 import com.planit.planit.domain.attendance.dto.AttendanceTotalResponseDTO;
 import com.planit.planit.domain.attendance.dto.LeaveBalanceResponseDTO;
+import com.planit.planit.domain.attendance.dto.LeaveListResponseDTO;
 import com.planit.planit.domain.attendance.dto.SessionSimpleDTO;
 import com.planit.planit.domain.attendance.mapper.AttendanceMapper;
 import com.planit.planit.global.common.exception.BaseException;
@@ -255,7 +256,7 @@ public class AttendanceService {
   }
 
   /**
-   * 오늘까지 전체출결 정보 조회
+   * 연차 정보 조회
    * 
    * @param userId 사용자 ID
    * @param bootcampId 부트캠프 ID
@@ -263,5 +264,16 @@ public class AttendanceService {
    */
   public LeaveBalanceResponseDTO getBalanceLeave(Long userId, Long bootcampId) {
     return mapper.getBalanceLeave(userId, bootcampId);
+  }
+
+  /**
+   * 오늘까지 사용한 휴가 정보 조회
+   * 
+   * @param userId 사용자 ID
+   * @param bootcampId 부트캠프 ID
+   * @return attendance 사용한 휴가 목록
+   */
+  public List<LeaveListResponseDTO> getLeaveList(Long userId, Long bootcampId) {
+    return mapper.getLeaveList(userId, bootcampId);
   }
 }

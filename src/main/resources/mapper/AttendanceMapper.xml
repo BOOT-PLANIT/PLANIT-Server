@@ -180,6 +180,20 @@
 		      AND p.start_date &lt;= CURDATE()
 		  ) total;
 	  </select>
+	  
+		<!-- 잔여연차,전체연차,남은연차 조회 -->
+	  <select id="getLeaveList" resultType="com.planit.planit.domain.attendance.dto.LeaveListResponseDTO">
+		SELECT status,class_date as classdate,
+				unit_no as unitNo
+		FROM attendance a
+		JOIN sessions s       ON a.session_id = s.id
+		JOIN bootcamps b      ON s.bootcamp_id = b.id
+		JOIN unit_periods p   ON s.period_id = p.id
+		WHERE a.user_id = #{userId} 
+		  AND s.bootcamp_id = #{bootcampId}
+		  AND (a.status = "annual" or a.status = "leave")
+		order by class_date;
+	  </select>
 </mapper>
 
 

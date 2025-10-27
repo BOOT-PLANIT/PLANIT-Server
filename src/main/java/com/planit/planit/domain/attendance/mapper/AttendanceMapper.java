@@ -8,6 +8,7 @@ import com.planit.planit.domain.attendance.dto.AttendanceDTO;
 import com.planit.planit.domain.attendance.dto.AttendanceDailyResponseDTO;
 import com.planit.planit.domain.attendance.dto.AttendanceTotalResponseDTO;
 import com.planit.planit.domain.attendance.dto.LeaveBalanceResponseDTO;
+import com.planit.planit.domain.attendance.dto.LeaveListResponseDTO;
 import com.planit.planit.domain.attendance.dto.SessionSimpleDTO;
 
 @Mapper
@@ -49,4 +50,7 @@ public interface AttendanceMapper {
 
   // 현재까지 월차잔여개수 및 사용개수 조회
   public LeaveBalanceResponseDTO getBalanceLeave(Long userId, Long bootcampId);
+
+  // 현재까지 휴가 사용 목록 조회
+  public List<LeaveListResponseDTO> getLeaveList(Long userId, Long bootcampId);
 }
