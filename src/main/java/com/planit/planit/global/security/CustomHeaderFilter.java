@@ -25,6 +25,10 @@ public class CustomHeaderFilter implements Filter {
 		res.setHeader("X-XSS-Protection", "1; mode=block");
 		res.setHeader("X-Content-Type-Options", "nosniff");
 
+		// firebse popup close 허용
+		res.setHeader("Cross-Origin-Opener-Policy", "same-origin-allow-popups");
+		res.setHeader("Cross-Origin-Embedder-Policy", "unsafe-none");
+
 		chain.doFilter(request, response);
 	}
 }

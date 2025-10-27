@@ -17,7 +17,10 @@ public class WebConfiguration implements WebMvcConfigurer {
 	@Override
 	public void addCorsMappings(CorsRegistry registry) {
 		registry.addMapping("/**")
-			.allowedOrigins("http://localhost:3000") // 배포 시 도메인으로 교체
+			.allowedOrigins(
+				"http://localhost:3000",
+				"https://planit-web-eosin.vercel.app"
+			) // 배포 시 도메인으로 교체
 			.allowedMethods("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS")
 			.allowedHeaders("*")
 			.allowCredentials(true)
