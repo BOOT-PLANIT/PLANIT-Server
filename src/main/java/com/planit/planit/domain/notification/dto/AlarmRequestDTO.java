@@ -5,6 +5,6 @@ import lombok.Setter;
 
 @Getter
 @Setter
-public class TokenRequestDTO {
-	private String fcmToken;
+public class AlarmRequestDTO {
+	private boolean alarmOn;
 }
