@@ -301,7 +301,7 @@ public class AttendanceService {
    */
   public List<LeaveListResponseDTO> getLeaveList(Long userId, Long bootcampId) {
     List<LeaveListResponseDTO> leaveList = mapper.getLeaveList(userId, bootcampId);
-    if (leaveList.isEmpty()) {
+    if (leaveList == null || leaveList.isEmpty()) {
       throw new BaseException(ErrorCode.RESOURCE_NOT_FOUND, "불러올 휴가 목록이 없습니다.") {};
     }
     return leaveList;
