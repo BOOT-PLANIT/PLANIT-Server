@@ -4,6 +4,7 @@ import com.google.firebase.auth.FirebaseToken;
 import com.planit.planit.domain.user.mapper.UserMapper;
 import com.planit.planit.domain.user.model.UserAccount;
 import com.planit.planit.domain.user.model.UserLevel;
+import java.time.LocalDateTime;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
@@ -52,6 +53,8 @@ public class FirebaseAccountService {
 				.provider(provider)
 				.userLevel(level)
 				.emailVerified(emailVerified)
+				.createdAt(LocalDateTime.now())
+				.lastLoginAt(LocalDateTime.now())
 				.build();
 			mapper.insertUser(userAccount);
 		} else {

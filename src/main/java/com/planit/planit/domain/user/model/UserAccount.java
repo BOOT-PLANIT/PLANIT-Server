@@ -16,6 +16,8 @@ public class UserAccount {
 	private boolean emailVerified;
 	private boolean isDeleted;
 	private LocalDateTime deletedAt;
-	private LocalDateTime createdAt;  // DB Default
-	private LocalDateTime lastLoginAt;   // DB Default
+	private LocalDateTime createdAt;
+	private LocalDateTime lastLoginAt;
+	private String fcmToken; // 푸시 알림용 토큰
+	private boolean alarmOn;
 }

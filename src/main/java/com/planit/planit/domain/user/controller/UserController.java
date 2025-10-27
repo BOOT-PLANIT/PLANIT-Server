@@ -1,6 +1,8 @@
 package com.planit.planit.domain.user.controller;
 
 import com.google.firebase.auth.FirebaseAuth;
+import com.planit.planit.domain.notification.dto.AlarmRequestDTO;
+import com.planit.planit.domain.notification.dto.TokenRequestDTO;
 import com.planit.planit.domain.user.mapper.UserMapper;
 import com.planit.planit.domain.user.model.UserAccount;
 import com.planit.planit.global.common.response.ApiResponse;
@@ -148,5 +150,27 @@ public class UserController {
 		firebaseAuth.deleteUser(uid);
 
 		return ResponseEntity.noContent().build(); // 204
+	}
+
+	// 알람 on/off 설정
+	@PatchMapping("/me/alarm")
+	public void updateAlarm(@RequestBody AlarmRequestDTO req, Authentication auth) {
+		String uid = auth.getName();
+		userMapper.updateAlarmSettingByUid(uid, req.isAlarmOn());
+	}
+
+	// FCM 토큰 등록
+	@PostMapping("/me/token")
+	public ResponseEntity<ApiResponse<Void>> updateFcmToken(
+		@RequestBody TokenRequestDTO req, Authentication auth) {
+		String uid = auth.getName();
+		String token = (req.getFcmToken() == null || req.getFcmToken().isBlank())
+			? null : req.getFcmToken();
+		userMapper.updateTokenByUid(uid, token);
+		// 토큰이 없으면 알람도 자동 OFF
+		if (token == null) {
+			userMapper.updateAlarmSettingByUid(uid, false);
+		}
+		return ResponseEntity.ok(ApiResponse.success("FCM 토큰 갱신 완료", null));
 	}
 }
