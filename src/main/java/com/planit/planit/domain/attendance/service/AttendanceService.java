@@ -99,23 +99,32 @@ public class AttendanceService {
     if (sessions.size() != requestDTO.getClassDates().size()) {
       throw new BaseException(ErrorCode.RESOURCE_NOT_FOUND, "선택한 날짜중에 강의가 없는날짜가 포함되어있습니다.") {};
 
-    } else {
-      // 이미 등록된 출결 확인
-      List<String> existingDates = mapper.findAttendanceDates(requestDTO.getUserId(),
-          requestDTO.getBootcampId(), requestDTO.getClassDates());
-
-      if (!existingDates.isEmpty()) {
-        throw new BaseException(ErrorCode.CONFLICT, "이미 출결이 등록된 날짜가 있습니다: " + existingDates) {};
-      }
-
-      // AttendanceDTO 리스트 생성
-      List<AttendanceDTO> attendanceList =
-          sessions.stream().map(s -> new AttendanceDTO(requestDTO.getUserId(), s.getSessionId(),
-              s.getPeriodId(), requestDTO.getStatus())).toList();
-
-      // 출결 등록
-      mapper.regist(attendanceList);
     }
+
+    // 남은연차개수 체크
+    LeaveBalanceResponseDTO leavebalance =
+        mapper.getBalanceLeave(requestDTO.getUserId(), requestDTO.getBootcampId());
+    if (leavebalance.getRemainingAnnual() < requestDTO.getClassDates().size()) {
+      throw new BaseException(ErrorCode.RESOURCE_NOT_FOUND,
+          "남은 연차보다 더 많이 등록하셨습니다. 남은연차 " + leavebalance.getRemainingAnnual()) {};
+    }
+
+    // 이미 등록된 출결 확인
+    List<String> existingDates = mapper.findAttendanceDates(requestDTO.getUserId(),
+        requestDTO.getBootcampId(), requestDTO.getClassDates());
+
+    if (!existingDates.isEmpty()) {
+      throw new BaseException(ErrorCode.CONFLICT, "이미 출결이 등록된 날짜가 있습니다: " + existingDates) {};
+    }
+
+    // AttendanceDTO 리스트 생성
+    List<AttendanceDTO> attendanceList =
+        sessions.stream().map(s -> new AttendanceDTO(requestDTO.getUserId(), s.getSessionId(),
+            s.getPeriodId(), requestDTO.getStatus())).toList();
+
+    // 출결 등록
+    mapper.regist(attendanceList);
+
   }
 
   /**
