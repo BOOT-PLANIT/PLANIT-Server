@@ -61,6 +61,7 @@
 	    ON DUPLICATE KEY UPDATE status = VALUES(status)
 	  </insert>
 	  
+	  <!--해당날짜에 출결등록이 됬는지 확인-->
 	   <select id="findAttendanceDates" resultType="string">
 		  SELECT s.class_date
 		  FROM attendance a
@@ -154,6 +155,31 @@
 		FROM sessions
 		WHERE bootcamp_id = #{bootcampId};
 	</select>
+	
+		<!-- 잔여연차,전체연차,남은연차 조회 -->
+	  <select id="getBalanceLeave" resultType="com.planit.planit.domain.attendance.dto.LeaveBalanceResponseDTO">
+		SELECT 
+		  used.used_annual_count AS usedAnnual,
+		  total.total_annual_count AS totalAnnual,
+		  (total.total_annual_count - used.used_annual_count) AS remainingAnnual
+		FROM
+		  (
+		    <!-- 사용한 월차 개수-->
+		    SELECT COUNT(*) AS used_annual_count
+		    FROM attendance a
+		    JOIN sessions s ON a.session_id = s.id
+		    WHERE a.user_id = #{userId} 
+		      AND s.bootcamp_id = #{bootcampId}
+		      AND a.status = 'annual'
+		  ) used,
+		  (
+		    <!-- 오늘까지 받을 수 있었던 월차 개수-->
+		    SELECT COUNT(*) AS total_annual_count
+		    FROM unit_periods p
+		    WHERE p.bootcamp_id = #{bootcampId}
+		      AND p.start_date &lt;= CURDATE()
+		  ) total;
+	  </select>
 </mapper>
 
 

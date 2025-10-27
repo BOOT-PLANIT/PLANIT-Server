@@ -11,6 +11,7 @@ import com.planit.planit.domain.attendance.dto.AttendanceDTO;
 import com.planit.planit.domain.attendance.dto.AttendanceDailyResponseDTO;
 import com.planit.planit.domain.attendance.dto.AttendanceRegistRequestDTO;
 import com.planit.planit.domain.attendance.dto.AttendanceTotalResponseDTO;
+import com.planit.planit.domain.attendance.dto.LeaveBalanceResponseDTO;
 import com.planit.planit.domain.attendance.dto.SessionSimpleDTO;
 import com.planit.planit.domain.attendance.mapper.AttendanceMapper;
 import com.planit.planit.global.common.exception.BaseException;
@@ -251,5 +252,16 @@ public class AttendanceService {
     attendance.setTotalSessions(mapper.bootcampTotalSession(bootcampId));
 
     return attendance;
+  }
+
+  /**
+   * 오늘까지 전체출결 정보 조회
+   * 
+   * @param userId 사용자 ID
+   * @param bootcampId 부트캠프 ID
+   * @return attendance 사용연차,남은연차,총 받은연차의 갯수
+   */
+  public LeaveBalanceResponseDTO getBalanceLeave(Long userId, Long bootcampId) {
+    return mapper.getBalanceLeave(userId, bootcampId);
   }
 }

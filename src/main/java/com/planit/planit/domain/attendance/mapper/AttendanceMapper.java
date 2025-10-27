@@ -7,6 +7,7 @@ import org.apache.ibatis.annotations.Param;
 import com.planit.planit.domain.attendance.dto.AttendanceDTO;
 import com.planit.planit.domain.attendance.dto.AttendanceDailyResponseDTO;
 import com.planit.planit.domain.attendance.dto.AttendanceTotalResponseDTO;
+import com.planit.planit.domain.attendance.dto.LeaveBalanceResponseDTO;
 import com.planit.planit.domain.attendance.dto.SessionSimpleDTO;
 
 @Mapper
@@ -45,4 +46,7 @@ public interface AttendanceMapper {
 
   // 특정 부트캠프의 전체 수강일 조회
   public Integer bootcampTotalSession(Long bootcampId);
+
+  // 현재까지 월차잔여개수 및 사용개수 조회
+  public LeaveBalanceResponseDTO getBalanceLeave(Long userId, Long bootcampId);
 }
