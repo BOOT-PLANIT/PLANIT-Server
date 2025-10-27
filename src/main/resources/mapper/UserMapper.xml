@@ -2,53 +2,101 @@
 <!DOCTYPE mapper
 	PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
 	"https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
 <mapper namespace="com.planit.planit.domain.user.mapper.UserMapper">
 
 	<resultMap id="UserMap" type="com.planit.planit.domain.user.model.UserAccount">
-		<id     property="id"           column="id"/>
-		<result property="uid"          column="uid"/>
-		<result property="email"        column="email"/>
-		<result property="displayName"  column="display_name"/>
-		<result property="photoUrl"     column="photo_url"/>
-		<result property="userLevel"     column="user_level" javaType="com.planit.planit.domain.user.model.UserLevel"/>
-		<result property="provider"     column="provider"/>
+		<id     property="id"            column="id"/>
+		<result property="uid"           column="uid"/>
+		<result property="email"         column="email"/>
+		<result property="displayName"   column="display_name"/>
+		<result property="photoUrl"      column="photo_url"/>
+		<result property="userLevel"
+			column="user_level"
+			javaType="com.planit.planit.domain.user.model.UserLevel"/>
+		<result property="provider"      column="provider"/>
 		<result property="emailVerified" column="email_verified"/>
-		<result property="createdAt"    column="created_at"/>
-		<result property="lastLoginAt"  column="last_login_at"/>
+		<result property="isDeleted"     column="is_deleted"/>
+		<result property="deletedAt"     column="deleted_at"/>
+		<result property="createdAt"     column="created_at"/>
+		<result property="lastLoginAt"   column="last_login_at"/>
+		<result property="fcmToken"      column="fcm_token"/>
+		<result property="alarmOn"       column="alarm_on"/>
 	</resultMap>
 
+	<!-- 유저 조회 -->
 	<select id="findByUid" parameterType="string" resultMap="UserMap">
-		SELECT id, uid, email, display_name, photo_url,
-	         user_level, provider, email_verified,
-	         created_at, last_login_at
-	  FROM users
-	  WHERE uid = #{uid}
+		SELECT *
+		FROM users
+		WHERE uid = #{uid}
+		AND is_deleted = FALSE
+		LIMIT 1
 	</select>
 
-	<insert id="insertUser" parameterType="com.planit.planit.domain.user.model.UserAccount" useGeneratedKeys="true" keyProperty="id">
-		INSERT INTO users(
-			uid, email, display_name, photo_url, user_level, provider, email_verified
-	  )
-	  VALUES (
-			#{uid},
-	    #{email},
-	    #{displayName},
-	    #{photoUrl},
-	    #{userLevel, typeHandler=org.apache.ibatis.type.EnumTypeHandler},
-	    #{provider},
-	    #{emailVerified}
-	  )
+	<!-- 신규 유저 등록 -->
+	<insert id="insertUser"
+		parameterType="com.planit.planit.domain.user.model.UserAccount"
+		useGeneratedKeys="true"
+		keyProperty="id">
+		INSERT INTO users (
+		uid, email, display_name, photo_url,
+		user_level, provider, email_verified,
+		is_deleted, created_at, last_login_at, alarm_on
+		) VALUES (
+		#{uid},
+		#{email},
+		#{displayName},
+		#{photoUrl},
+		#{userLevel, typeHandler=org.apache.ibatis.type.EnumTypeHandler},
+		#{provider},
+		#{emailVerified},
+		FALSE,
+		NOW(),
+		NOW(),
+		TRUE
+		)
 	</insert>
 
+	<!-- 마지막 로그인 시간 업데이트 -->
 	<update id="updateLastLogin" parameterType="string">
-		UPDATE users SET last_login_at = NOW() WHERE uid = #{uid}
+		UPDATE users
+		SET last_login_at = NOW()
+		WHERE uid = #{uid}
+		AND is_deleted = FALSE
 	</update>
 
-	<!-- 개발자용 레벨 변경 -->
+	<!-- 유저 소프트 삭제 -->
+	<update id="softDeleteUser" parameterType="string">
+		UPDATE users
+		SET is_deleted = TRUE,
+		deleted_at = NOW(),
+		email = CONCAT(email, '_deleted_', UNIX_TIMESTAMP())
+		WHERE uid = #{uid}
+		AND is_deleted = FALSE;
+	</update>
+
+	<!-- 개발자용 유저 등급 변경 -->
 	<update id="updateUserLevel" parameterType="map">
 		UPDATE users
-		SET user_level = #{userLevel}
+		SET user_level = #{userLevel, typeHandler=org.apache.ibatis.type.EnumTypeHandler}
 		WHERE uid = #{uid}
+		AND is_deleted = FALSE
+	</update>
+
+	<!-- 알람 ON + 유효한 FCM 토큰 보유 사용자 조회 -->
+	<select id="findUsersWithAlarmOn" resultMap="UserMap">
+		SELECT *
+		FROM users
+		WHERE alarm_on = TRUE
+		AND fcm_token IS NOT NULL
+		AND is_deleted = FALSE
+	</select>
+
+	<!-- 만료된 FCM 토큰 삭제 -->
+	<update id="deleteFcmToken" parameterType="string">
+		UPDATE users
+		SET fcm_token = NULL
+		WHERE fcm_token = #{token}
 	</update>
 
 </mapper>

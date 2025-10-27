@@ -27,23 +27,27 @@ public class FirebaseConfiguration {
 
 	@Bean
 	public FirebaseApp firebaseApp() throws IOException {
-		if (FirebaseApp.getApps().isEmpty()) {
-			log.info("[Firebase] initializing...");
-			GoogleCredentials credentials;
-			try (InputStream in = firebaseSdkKey.getInputStream()) {
-				credentials = GoogleCredentials.fromStream(in);
+		synchronized (FirebaseConfiguration.class) {
+			if (FirebaseApp.getApps().isEmpty()) {
+				log.info("[Firebase] initializing...");
+				GoogleCredentials credentials;
+				try (InputStream in = firebaseSdkKey.getInputStream()) {
+					credentials = GoogleCredentials.fromStream(in);
+				}
+
+				FirebaseOptions.Builder builder = FirebaseOptions.builder().setCredentials(credentials);
+				if (firebaseProjectId != null && !firebaseProjectId.isBlank()) {
+					builder.setProjectId(firebaseProjectId);
+				}
+
+				FirebaseApp app = FirebaseApp.initializeApp(builder.build());
+				log.info("[Firebase] initialized: {}", app.getName());
+				return app;
+			} else {
+				log.info("[Firebase] already initialized. Using existing app.");
+				return FirebaseApp.getInstance();
 			}
-			FirebaseOptions.Builder builder = FirebaseOptions.builder()
-				.setCredentials(credentials);
-			if (firebaseProjectId != null && !firebaseProjectId.isBlank()) {
-				builder.setProjectId(firebaseProjectId);
-			}
-			FirebaseOptions options = builder.build();
-			FirebaseApp app = FirebaseApp.initializeApp(options);
-			log.info("[Firebase] initialized: {}", app.getName());
-			return app;
 		}
-		return FirebaseApp.getInstance();
 	}
 
 	@Bean
