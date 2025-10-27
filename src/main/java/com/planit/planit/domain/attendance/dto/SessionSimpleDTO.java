@@ -6,5 +6,6 @@ import lombok.Data;
 public class SessionSimpleDTO {
   private Long sessionId;
   private Long periodId;
+  private String classDate;
 
 }

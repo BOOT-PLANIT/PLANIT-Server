@@ -31,7 +31,7 @@ public interface AttendanceMapper {
   public void regist(List<AttendanceDTO> dto);
 
   // 출결 수정
-  public void updateStatus(List<AttendanceDTO> dto);
+  public void updateStatus(@Param("list") List<AttendanceDTO> dto);
 
   // 일단위 출결 수정
   public void update(AttendanceDTO dto);

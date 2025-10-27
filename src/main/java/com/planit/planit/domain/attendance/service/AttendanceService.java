@@ -97,7 +97,7 @@ public class AttendanceService {
     }
 
     if (sessions.size() != classDates.size()) {
-      throw new BaseException(ErrorCode.RESOURCE_NOT_FOUND, "선택한 날짜중에 강의가 없는날짜가 포함되어있습니다.") {};
+      throw new BaseException(ErrorCode.RESOURCE_NOT_FOUND, "선택한 날짜중에 강의가 없거나 중복된 날짜가 선택되었습니다.") {};
 
     }
 
@@ -125,13 +125,17 @@ public class AttendanceService {
 
     // 등록용 세션 DTO 생성
     List<AttendanceDTO> insertList =
-        sessions.stream().map(s -> new AttendanceDTO(requestDTO.getUserId(), s.getSessionId(),
-            s.getPeriodId(), requestDTO.getStatus())).toList();
+        sessions.stream().filter(s -> newDates.contains(s.getClassDate()))
+            .map(s -> new AttendanceDTO(requestDTO.getUserId(), s.getSessionId(), s.getPeriodId(),
+                requestDTO.getStatus()))
+            .toList();
 
     // 수정용 세션 DTO 생성
     List<AttendanceDTO> updateList =
-        sessions.stream().map(s -> new AttendanceDTO(requestDTO.getUserId(), s.getSessionId(),
-            s.getPeriodId(), requestDTO.getStatus())).toList();
+        sessions.stream().filter(s -> updateDates.contains(s.getClassDate()))
+            .map(s -> new AttendanceDTO(requestDTO.getUserId(), s.getSessionId(), s.getPeriodId(),
+                requestDTO.getStatus()))
+            .toList();
 
     if (!insertList.isEmpty())
       mapper.regist(insertList);

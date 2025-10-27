@@ -4,14 +4,12 @@ package com.planit.planit.domain.attendance.controller;
 import java.util.List;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
-import com.planit.planit.domain.attendance.dto.AttendanceDTO;
 import com.planit.planit.domain.attendance.dto.AttendanceDailyResponseDTO;
 import com.planit.planit.domain.attendance.dto.AttendanceRegistRequestDTO;
 import com.planit.planit.domain.attendance.dto.AttendanceTotalResponseDTO;
@@ -66,15 +64,15 @@ public class AttendanceController {
     return ApiResponse.success("출결 등록 성공");
   }
 
-  @Operation(summary = "일단위 출결 수정", description = "선택한 일자의 출결 정보를 수정합니다..",
-      responses = {@io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200",
-          description = "출결 수정 성공")})
-  @PatchMapping
-  public ApiResponse<String> AttendanceUpdate(
-      @RequestBody @Schema(implementation = AttendanceDTO.class) AttendanceDTO attendance) {
-    service.update(attendance);
-    return ApiResponse.success("출결 수정 성공");
-  }
+  // @Operation(summary = "일단위 출결 수정", description = "선택한 일자의 출결 정보를 수정합니다..",
+  // responses = {@io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200",
+  // description = "출결 수정 성공")})
+  // @PatchMapping
+  // public ApiResponse<String> AttendanceUpdate(
+  // @RequestBody @Schema(implementation = AttendanceDTO.class) AttendanceDTO attendance) {
+  // service.update(attendance);
+  // return ApiResponse.success("출결 수정 성공");
+  // }
 
   @Operation(summary = "단위 기간 출결 조회", description = "단위 기간 출결 정보를 조회합니다. ",
       responses = {@io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200",
