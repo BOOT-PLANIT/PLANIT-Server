@@ -14,6 +14,7 @@ import com.planit.planit.domain.attendance.dto.AttendanceTotalResponseDTO;
 import com.planit.planit.domain.attendance.dto.LeaveBalanceResponseDTO;
 import com.planit.planit.domain.attendance.dto.LeaveListResponseDTO;
 import com.planit.planit.domain.attendance.dto.SessionSimpleDTO;
+import com.planit.planit.domain.attendance.enums.AttendanceStatus;
 import com.planit.planit.domain.attendance.mapper.AttendanceMapper;
 import com.planit.planit.global.common.exception.BaseException;
 import com.planit.planit.global.common.exception.ErrorCode;
@@ -89,14 +90,13 @@ public class AttendanceService {
     }
 
     // ️날짜 기반 세션 + 기간 정보 조회
-    List<SessionSimpleDTO> sessions =
-        mapper.getSession(requestDTO.getBootcampId(), requestDTO.getClassDates());
+    List<SessionSimpleDTO> sessions = mapper.getSession(requestDTO.getBootcampId(), classDates);
 
     if (sessions.isEmpty()) {
       throw new BaseException(ErrorCode.RESOURCE_NOT_FOUND, "선택한 날짜에 해당하는 강의가 없습니다.") {};
     }
 
-    if (sessions.size() != requestDTO.getClassDates().size()) {
+    if (sessions.size() != classDates.size()) {
       throw new BaseException(ErrorCode.RESOURCE_NOT_FOUND, "선택한 날짜중에 강의가 없는날짜가 포함되어있습니다.") {};
 
     }
@@ -104,14 +104,15 @@ public class AttendanceService {
     // 남은연차개수 체크
     LeaveBalanceResponseDTO leavebalance =
         mapper.getBalanceLeave(requestDTO.getUserId(), requestDTO.getBootcampId());
-    if (leavebalance.getRemainingAnnual() < requestDTO.getClassDates().size()) {
+    if (requestDTO.getStatus() == AttendanceStatus.annual
+        && leavebalance.getRemainingAnnual() < classDates.size()) {
       throw new BaseException(ErrorCode.RESOURCE_NOT_FOUND,
           "남은 연차보다 더 많이 등록하셨습니다. 남은연차 " + leavebalance.getRemainingAnnual()) {};
     }
 
     // 이미 등록된 출결 확인
-    List<String> existingDates = mapper.findAttendanceDates(requestDTO.getUserId(),
-        requestDTO.getBootcampId(), requestDTO.getClassDates());
+    List<String> existingDates =
+        mapper.findAttendanceDates(requestDTO.getUserId(), requestDTO.getBootcampId(), classDates);
 
     if (!existingDates.isEmpty()) {
       throw new BaseException(ErrorCode.CONFLICT, "이미 출결이 등록된 날짜가 있습니다: " + existingDates) {};
