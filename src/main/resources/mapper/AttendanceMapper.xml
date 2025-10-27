@@ -61,6 +61,23 @@
 	    ON DUPLICATE KEY UPDATE status = VALUES(status)
 	  </insert>
 	  
+	  <!--출결 수정-->
+		<update id="updateStatus">
+		  UPDATE attendance a
+		  JOIN sessions s ON a.session_id = s.id
+		  SET a.status = CASE s.id
+		    <foreach collection="list" item="item">
+		      WHEN #{item.sessionId} THEN #{item.status}
+		    </foreach>
+		  END,
+		  a.updated_at = NOW()
+		  WHERE a.user_id = #{list[0].userId}
+		    AND s.id IN
+		    <foreach collection="list" item="item" open="(" separator="," close=")">
+		      #{item.sessionId}
+		    </foreach>
+		</update>
+	  
 	  <!--해당날짜에 출결등록이 됬는지 확인-->
 	   <select id="findAttendanceDates" resultType="string">
 		  SELECT s.class_date

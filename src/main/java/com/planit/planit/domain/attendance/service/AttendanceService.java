@@ -114,17 +114,29 @@ public class AttendanceService {
     List<String> existingDates =
         mapper.findAttendanceDates(requestDTO.getUserId(), requestDTO.getBootcampId(), classDates);
 
-    if (!existingDates.isEmpty()) {
-      throw new BaseException(ErrorCode.CONFLICT, "이미 출결이 등록된 날짜가 있습니다: " + existingDates) {};
-    }
 
-    // AttendanceDTO 리스트 생성
-    List<AttendanceDTO> attendanceList =
+    // 등록용 / 수정용 날짜 분리
+    List<String> newDates =
+        classDates.stream().filter(date -> !existingDates.contains(date)).toList();
+
+    List<String> updateDates = classDates.stream().filter(existingDates::contains).toList();
+
+    log.info("신규 등록일={}, 수정일={}", newDates, updateDates);
+
+    // 등록용 세션 DTO 생성
+    List<AttendanceDTO> insertList =
         sessions.stream().map(s -> new AttendanceDTO(requestDTO.getUserId(), s.getSessionId(),
             s.getPeriodId(), requestDTO.getStatus())).toList();
 
-    // 출결 등록
-    mapper.regist(attendanceList);
+    // 수정용 세션 DTO 생성
+    List<AttendanceDTO> updateList =
+        sessions.stream().map(s -> new AttendanceDTO(requestDTO.getUserId(), s.getSessionId(),
+            s.getPeriodId(), requestDTO.getStatus())).toList();
+
+    if (!insertList.isEmpty())
+      mapper.regist(insertList);
+    if (!updateList.isEmpty())
+      mapper.updateStatus(updateList);
 
   }
 
