@@ -54,7 +54,9 @@ public class AttendanceController {
     return ApiResponse.success(daily);
   }
 
-  @Operation(summary = "출결 등록 및 수정", description = "선택한 여러 일자의 출결 정보를 한번에 등록합니다.",
+  @Operation(summary = "출결 등록 및 수정",
+      description = "선택한 여러 일자의 출결 정보를 한번에 등록합니다.\r\n" + "present // 출석\r\n" + "absent // 결석\r\n"
+          + "late // 지각\r\n" + "left_early // 조퇴\r\n" + "annual // 연차\r\n" + "leave // 공가\r\n",
       responses = {@io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200",
           description = "출결 등록 성공")})
   @PostMapping

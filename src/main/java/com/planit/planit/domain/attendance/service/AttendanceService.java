@@ -300,6 +300,10 @@ public class AttendanceService {
    * @return attendance 사용한 휴가 목록
    */
   public List<LeaveListResponseDTO> getLeaveList(Long userId, Long bootcampId) {
-    return mapper.getLeaveList(userId, bootcampId);
+    List<LeaveListResponseDTO> leaveList = mapper.getLeaveList(userId, bootcampId);
+    if (leaveList.isEmpty()) {
+      throw new BaseException(ErrorCode.RESOURCE_NOT_FOUND, "불러올 휴가 목록이 없습니다.") {};
+    }
+    return leaveList;
   }
 }
