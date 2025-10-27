@@ -39,7 +39,8 @@
 	 <!-- 세션 정보 조회 (bootcamp_id + 날짜 리스트) -->
 	  <select id="getSession" resultType="com.planit.planit.domain.attendance.dto.SessionSimpleDTO">
 	    SELECT id AS sessionId,
-	           period_id AS periodId
+	           period_id AS periodId,
+	           class_date AS classDate
 	    FROM sessions
 	    WHERE bootcamp_id = #{bootcampId}
 	      AND class_date IN
@@ -61,6 +62,24 @@
 	    ON DUPLICATE KEY UPDATE status = VALUES(status)
 	  </insert>
 	  
+	  <!--출결 수정-->
+		<update id="updateStatus">
+		  UPDATE attendance a
+		  JOIN sessions s ON a.session_id = s.id
+		  SET a.status = CASE s.id
+		    <foreach collection="list" item="item">
+		      WHEN #{item.sessionId} THEN #{item.status}
+		    </foreach>
+		  END,
+		  a.updated_at = NOW()
+		  WHERE a.user_id = #{list[0].userId}
+		    AND s.id IN
+		    <foreach collection="list" item="item" open="(" separator="," close=")">
+		      #{item.sessionId}
+		    </foreach>
+		</update>
+	  
+	  <!--해당날짜에 출결등록이 됬는지 확인-->
 	   <select id="findAttendanceDates" resultType="string">
 		  SELECT s.class_date
 		  FROM attendance a
@@ -154,6 +173,45 @@
 		FROM sessions
 		WHERE bootcamp_id = #{bootcampId};
 	</select>
+	
+		<!-- 잔여연차,전체연차,남은연차 조회 -->
+	  <select id="getBalanceLeave" resultType="com.planit.planit.domain.attendance.dto.LeaveBalanceResponseDTO">
+		SELECT 
+		  used.used_annual_count AS usedAnnual,
+		  total.total_annual_count AS totalAnnual,
+		  (total.total_annual_count - used.used_annual_count) AS remainingAnnual
+		FROM
+		  (
+		    <!-- 사용한 월차 개수-->
+		    SELECT COUNT(*) AS used_annual_count
+		    FROM attendance a
+		    JOIN sessions s ON a.session_id = s.id
+		    WHERE a.user_id = #{userId} 
+		      AND s.bootcamp_id = #{bootcampId}
+		      AND a.status = 'annual'
+		  ) used,
+		  (
+		    <!-- 오늘까지 받을 수 있었던 월차 개수-->
+		    SELECT COUNT(*) AS total_annual_count
+		    FROM unit_periods p
+		    WHERE p.bootcamp_id = #{bootcampId}
+		      AND p.start_date &lt;= CURDATE()
+		  ) total;
+	  </select>
+	  
+		<!-- 잔여연차,전체연차,남은연차 조회 -->
+	  <select id="getLeaveList" resultType="com.planit.planit.domain.attendance.dto.LeaveListResponseDTO">
+		SELECT status,class_date as classdate,
+				unit_no as unitNo
+		FROM attendance a
+		JOIN sessions s       ON a.session_id = s.id
+		JOIN bootcamps b      ON s.bootcamp_id = b.id
+		JOIN unit_periods p   ON s.period_id = p.id
+		WHERE a.user_id = #{userId} 
+		  AND s.bootcamp_id = #{bootcampId}
+		  AND (a.status = "annual" or a.status = "leave")
+		order by class_date;
+	  </select>
 </mapper>
 
 

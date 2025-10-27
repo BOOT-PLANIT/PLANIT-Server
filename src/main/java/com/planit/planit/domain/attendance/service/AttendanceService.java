@@ -11,7 +11,10 @@ import com.planit.planit.domain.attendance.dto.AttendanceDTO;
 import com.planit.planit.domain.attendance.dto.AttendanceDailyResponseDTO;
 import com.planit.planit.domain.attendance.dto.AttendanceRegistRequestDTO;
 import com.planit.planit.domain.attendance.dto.AttendanceTotalResponseDTO;
+import com.planit.planit.domain.attendance.dto.LeaveBalanceResponseDTO;
+import com.planit.planit.domain.attendance.dto.LeaveListResponseDTO;
 import com.planit.planit.domain.attendance.dto.SessionSimpleDTO;
+import com.planit.planit.domain.attendance.enums.AttendanceStatus;
 import com.planit.planit.domain.attendance.mapper.AttendanceMapper;
 import com.planit.planit.global.common.exception.BaseException;
 import com.planit.planit.global.common.exception.ErrorCode;
@@ -87,33 +90,58 @@ public class AttendanceService {
     }
 
     // ️날짜 기반 세션 + 기간 정보 조회
-    List<SessionSimpleDTO> sessions =
-        mapper.getSession(requestDTO.getBootcampId(), requestDTO.getClassDates());
+    List<SessionSimpleDTO> sessions = mapper.getSession(requestDTO.getBootcampId(), classDates);
 
     if (sessions.isEmpty()) {
       throw new BaseException(ErrorCode.RESOURCE_NOT_FOUND, "선택한 날짜에 해당하는 강의가 없습니다.") {};
     }
 
-    if (sessions.size() != requestDTO.getClassDates().size()) {
-      throw new BaseException(ErrorCode.RESOURCE_NOT_FOUND, "선택한 날짜중에 강의가 없는날짜가 포함되어있습니다.") {};
+    if (sessions.size() != classDates.size()) {
+      throw new BaseException(ErrorCode.RESOURCE_NOT_FOUND, "선택한 날짜중에 강의가 없거나 중복된 날짜가 선택되었습니다.") {};
 
-    } else {
-      // 이미 등록된 출결 확인
-      List<String> existingDates = mapper.findAttendanceDates(requestDTO.getUserId(),
-          requestDTO.getBootcampId(), requestDTO.getClassDates());
-
-      if (!existingDates.isEmpty()) {
-        throw new BaseException(ErrorCode.CONFLICT, "이미 출결이 등록된 날짜가 있습니다: " + existingDates) {};
-      }
-
-      // AttendanceDTO 리스트 생성
-      List<AttendanceDTO> attendanceList =
-          sessions.stream().map(s -> new AttendanceDTO(requestDTO.getUserId(), s.getSessionId(),
-              s.getPeriodId(), requestDTO.getStatus())).toList();
-
-      // 출결 등록
-      mapper.regist(attendanceList);
     }
+
+    // 남은연차개수 체크
+    LeaveBalanceResponseDTO leavebalance =
+        mapper.getBalanceLeave(requestDTO.getUserId(), requestDTO.getBootcampId());
+    if (requestDTO.getStatus() == AttendanceStatus.annual
+        && leavebalance.getRemainingAnnual() < classDates.size()) {
+      throw new BaseException(ErrorCode.RESOURCE_NOT_FOUND,
+          "남은 연차보다 더 많이 등록하셨습니다. 남은연차 " + leavebalance.getRemainingAnnual()) {};
+    }
+
+    // 이미 등록된 출결 확인
+    List<String> existingDates =
+        mapper.findAttendanceDates(requestDTO.getUserId(), requestDTO.getBootcampId(), classDates);
+
+
+    // 등록용 / 수정용 날짜 분리
+    List<String> newDates =
+        classDates.stream().filter(date -> !existingDates.contains(date)).toList();
+
+    List<String> updateDates = classDates.stream().filter(existingDates::contains).toList();
+
+    log.info("신규 등록일={}, 수정일={}", newDates, updateDates);
+
+    // 등록용 세션 DTO 생성
+    List<AttendanceDTO> insertList =
+        sessions.stream().filter(s -> newDates.contains(s.getClassDate()))
+            .map(s -> new AttendanceDTO(requestDTO.getUserId(), s.getSessionId(), s.getPeriodId(),
+                requestDTO.getStatus()))
+            .toList();
+
+    // 수정용 세션 DTO 생성
+    List<AttendanceDTO> updateList =
+        sessions.stream().filter(s -> updateDates.contains(s.getClassDate()))
+            .map(s -> new AttendanceDTO(requestDTO.getUserId(), s.getSessionId(), s.getPeriodId(),
+                requestDTO.getStatus()))
+            .toList();
+
+    if (!insertList.isEmpty())
+      mapper.regist(insertList);
+    if (!updateList.isEmpty())
+      mapper.updateStatus(updateList);
+
   }
 
   /**
@@ -251,5 +279,27 @@ public class AttendanceService {
     attendance.setTotalSessions(mapper.bootcampTotalSession(bootcampId));
 
     return attendance;
+  }
+
+  /**
+   * 연차 정보 조회
+   * 
+   * @param userId 사용자 ID
+   * @param bootcampId 부트캠프 ID
+   * @return attendance 사용연차,남은연차,총 받은연차의 갯수
+   */
+  public LeaveBalanceResponseDTO getBalanceLeave(Long userId, Long bootcampId) {
+    return mapper.getBalanceLeave(userId, bootcampId);
+  }
+
+  /**
+   * 오늘까지 사용한 휴가 정보 조회
+   * 
+   * @param userId 사용자 ID
+   * @param bootcampId 부트캠프 ID
+   * @return attendance 사용한 휴가 목록
+   */
+  public List<LeaveListResponseDTO> getLeaveList(Long userId, Long bootcampId) {
+    return mapper.getLeaveList(userId, bootcampId);
   }
 }
