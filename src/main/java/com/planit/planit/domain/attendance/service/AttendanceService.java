@@ -9,6 +9,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import com.planit.planit.domain.attendance.dto.AttendanceDTO;
 import com.planit.planit.domain.attendance.dto.AttendanceDailyResponseDTO;
+import com.planit.planit.domain.attendance.dto.AttendancePeriodResponseDTO;
 import com.planit.planit.domain.attendance.dto.AttendanceRegistRequestDTO;
 import com.planit.planit.domain.attendance.dto.AttendanceTotalResponseDTO;
 import com.planit.planit.domain.attendance.dto.LeaveBalanceResponseDTO;
@@ -39,13 +40,14 @@ public class AttendanceService {
   public AttendanceDailyResponseDTO getDaily(Long userId, Long bootcampId, String date) {
     AttendanceDailyResponseDTO daily = mapper.getDaily(userId, bootcampId, date);
     if (daily == null) {
+      daily = new AttendanceDailyResponseDTO();
       // 특정 날짜에 강의가 있는지 없는지 체크 sessionId,periodId 받아옴
       Map<String, Object> result = mapper.getDailySession(bootcampId, date);
 
       if (result == null) { // 해당 날짜에 강의 일정이 없음
-        throw new BaseException(ErrorCode.RESOURCE_NOT_FOUND, "해당 날짜에는 강의가 없습니다.") {};
+        daily.setStatus(AttendanceStatus.valueOf("no_session"));
       } else { // 해당 날짜에 강의는 있지만 출석등록을 아직 하지않음
-        throw new BaseException(ErrorCode.PARAMETER_NOT_FOUND, "출결 등록이 필요합니다.") {};
+        daily.setStatus(AttendanceStatus.valueOf("no_attendance"));
       }
     }
     return daily;
@@ -162,12 +164,12 @@ public class AttendanceService {
    * @param unitNo 단위 기간 번호
    * @return attendance 기간단위 출결 현황 (출석,조퇴,휴가 등등 및 전체 출석일수 카운트, 훈련지원금 계산)
    */
-  public AttendanceTotalResponseDTO getPeriod(Long userId, Long bootcampId, Integer unitNo) {
+  public AttendancePeriodResponseDTO getPeriod(Long userId, Long bootcampId, Integer unitNo) {
     List<Integer> unitList = mapper.getBootcampUnitno(bootcampId);
     if (!unitList.contains(unitNo)) { // 부트캠프에 존재하는 단위기간인지 검사
       throw new BaseException(ErrorCode.RESOURCE_NOT_FOUND, "해당 부트캠프에 존재하지 않는 단위기간입니다.") {};
     }
-    AttendanceTotalResponseDTO attendance = mapper.getPeriod(userId, bootcampId, unitNo);
+    AttendancePeriodResponseDTO attendance = mapper.getPeriod(userId, bootcampId, unitNo);
     if (attendance == null) { // 단위기간은 있지만 단위기간에 아직 등록된 출결이 없음
       throw new BaseException(ErrorCode.RESOURCE_NOT_FOUND, "해당 단위기간에 등록된 출결이 없습니다.") {};
     }
@@ -195,6 +197,56 @@ public class AttendanceService {
 
 
     return attendance;
+  }
+
+  /**
+   * 오늘까지 완료된 단위 기간별 출결 리스트 조회
+   * 
+   * @param userId 사용자 ID
+   * @param bootcampId 부트캠프 ID
+   * @return attendance 기간단위 리스트 출결 현황 (출석,조퇴,휴가 등등 및 전체 출석일수 카운트, 훈련지원금 계산)
+   */
+  public List<AttendancePeriodResponseDTO> getPeriodList(Long userId, Long bootcampId) {
+
+    List<AttendancePeriodResponseDTO> periodListAttendance =
+        mapper.getPeriodList(userId, bootcampId);
+
+    if (periodListAttendance == null || periodListAttendance.isEmpty()) {
+      throw new BaseException(ErrorCode.RESOURCE_NOT_FOUND, "불러올 출결정보가 없습니다.") {};
+    }
+
+    // KDT 여부 확인 (훈련비 단가 결정)
+    int subsidyPerDay = mapper.Iskdt(bootcampId) ? 15800 : 5800;
+
+    // 각 단위기간별로 출석, 결석, 훈련비 계산
+    for (AttendancePeriodResponseDTO dto : periodListAttendance) {
+
+      int periodLate = dto.getLateCount();
+      int periodLeftEarly = dto.getLeftEarlyCount();
+      int periodAbsent = dto.getAbsentCount();
+      int periodPresent = dto.getPresentCount();
+      int periodAnnual = dto.getAnnualCount();
+      int periodLeave = dto.getLeaveCount();
+
+      // 단위기간별 지각/조퇴 3회 = 결석 1회
+      int additionalAbsents = (periodLate + periodLeftEarly) / 3;
+
+      // 단위기간별 실제 출석/결석
+      int periodTotalPresent = periodPresent + periodLate + periodLeftEarly + periodAnnual
+          + periodLeave - additionalAbsents;
+      int periodTotalAbsent = periodAbsent + additionalAbsents;
+
+      // 단위기간별 훈련비 계산 (최대 20일)
+      int count = Math.min(periodTotalPresent, 20);
+      int periodSubsidy = count * subsidyPerDay;
+
+      dto.setTotalPresentCount(periodTotalPresent);
+      dto.setTotalAbsentCount(periodTotalAbsent);
+      dto.setTotalSubsidy(periodSubsidy);
+
+    }
+
+    return periodListAttendance;
   }
 
   /**
@@ -301,9 +353,6 @@ public class AttendanceService {
    */
   public List<LeaveListResponseDTO> getLeaveList(Long userId, Long bootcampId) {
     List<LeaveListResponseDTO> leaveList = mapper.getLeaveList(userId, bootcampId);
-    if (leaveList == null || leaveList.isEmpty()) {
-      throw new BaseException(ErrorCode.RESOURCE_NOT_FOUND, "불러올 휴가 목록이 없습니다.") {};
-    }
     return leaveList;
   }
 }

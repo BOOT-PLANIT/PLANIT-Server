@@ -6,5 +6,7 @@ public enum AttendanceStatus {
   late, // 지각
   left_early, // 조퇴
   annual, // 연차
-  leave // 공가
+  leave, // 공가
+  no_session, // 강의없음
+  no_attendance // 미출결
 }

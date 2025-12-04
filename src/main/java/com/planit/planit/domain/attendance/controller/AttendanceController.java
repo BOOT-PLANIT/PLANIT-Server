@@ -11,6 +11,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import com.planit.planit.domain.attendance.dto.AttendanceDailyResponseDTO;
+import com.planit.planit.domain.attendance.dto.AttendancePeriodResponseDTO;
 import com.planit.planit.domain.attendance.dto.AttendanceRegistRequestDTO;
 import com.planit.planit.domain.attendance.dto.AttendanceTotalResponseDTO;
 import com.planit.planit.domain.attendance.dto.LeaveBalanceResponseDTO;
@@ -97,7 +98,22 @@ public class AttendanceController {
       @Parameter(description = "조회할 기간단위 번호",
           example = "1") @RequestParam(value = "unitNo") Integer unitNo) {
 
-    AttendanceTotalResponseDTO attendance = service.getPeriod(userId, bootcampId, unitNo);
+    AttendancePeriodResponseDTO attendance = service.getPeriod(userId, bootcampId, unitNo);
+    return ApiResponse.success(attendance);
+  }
+
+  @Operation(summary = "현재까지 완료된 단위 기간 출결 리스트 조회", description = "현재까지 완료된 단위 기간 출결 리스트 조회 ",
+      responses = {@io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200",
+          description = "완료 단위 기간 출결 리스트 조회 성공",
+          content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
+              schema = @Schema(implementation = AttendanceTotalResponseDTO.class)))})
+  @GetMapping("/periodList/{userId}")
+  public ApiResponse<?> getPeriodListAttendance(
+      @Parameter(description = "조회할 사용자 ID", example = "1") @PathVariable("userId") Long userId,
+      @Parameter(description = "조회할 부트캠프 ID",
+          example = "1") @RequestParam(value = "bootcampId") Long bootcampId) {
+
+    List<AttendancePeriodResponseDTO> attendance = service.getPeriodList(userId, bootcampId);
     return ApiResponse.success(attendance);
   }
 
