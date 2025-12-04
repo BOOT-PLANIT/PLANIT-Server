@@ -89,7 +89,7 @@ public class AttendanceController {
       responses = {@io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200",
           description = "단위 기간 출결 조회 성공",
           content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
-              schema = @Schema(implementation = AttendanceTotalResponseDTO.class)))})
+              schema = @Schema(implementation = AttendancePeriodResponseDTO.class)))})
   @GetMapping("/period/{userId}")
   public ApiResponse<?> getPeriodAttendance(
       @Parameter(description = "조회할 사용자 ID", example = "1") @PathVariable("userId") Long userId,
@@ -106,7 +106,7 @@ public class AttendanceController {
       responses = {@io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200",
           description = "완료 단위 기간 출결 리스트 조회 성공",
           content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
-              schema = @Schema(implementation = AttendanceTotalResponseDTO.class)))})
+              schema = @Schema(implementation = AttendancePeriodResponseDTO.class)))})
   @GetMapping("/periodList/{userId}")
   public ApiResponse<?> getPeriodListAttendance(
       @Parameter(description = "조회할 사용자 ID", example = "1") @PathVariable("userId") Long userId,

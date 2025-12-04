@@ -234,7 +234,7 @@
 	  
 		<!-- 휴가조회 -->
 	  <select id="getLeaveList" resultType="com.planit.planit.domain.attendance.dto.LeaveListResponseDTO">
-		SELECT status,class_date as classdate,
+		SELECT status,class_date as classDate,
 				unit_no as unitNo
 		FROM attendance a
 		JOIN sessions s       ON a.session_id = s.id
