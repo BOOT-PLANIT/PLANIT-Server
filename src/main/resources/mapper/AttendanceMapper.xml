@@ -14,8 +14,8 @@
         s.id            AS sessionId,
         s.class_date    AS classDate,
         p.unit_no       AS unitNo,
-        p.start_date    AS startDate,
-        p.end_date      AS endDate
+        b.started_at    AS startDate,
+        b.ended_at      AS endDate
     FROM attendance a
     JOIN sessions s       ON a.session_id = s.id
     JOIN bootcamps b      ON s.bootcamp_id = b.id
@@ -108,10 +108,12 @@
   <!--단위 기간 출결 조회-->
   <select id="getPeriod"
         parameterType="map"
-        resultType="com.planit.planit.domain.attendance.dto.AttendanceTotalResponseDTO">	    
+        resultType="com.planit.planit.domain.attendance.dto.AttendancePeriodResponseDTO">	    
 	    SELECT 
 		    a.user_id AS userId,
 		    up.unit_no AS unitNo,
+		    up.start_date AS startDate,
+			up.end_date AS endDate,
 		    COUNT(CASE WHEN a.status = 'present' THEN 1 END) AS presentCount,
 		    COUNT(CASE WHEN a.status = 'absent' THEN 1 END) AS absentCount,
 		    COUNT(CASE WHEN a.status = 'late' THEN 1 END) AS lateCount,
@@ -131,7 +133,38 @@
 		WHERE a.user_id = #{userId}
 		  AND s.bootcamp_id = #{bootcampId}
 		  AND up.unit_no = #{unitNo}
-		GROUP BY a.user_id, unit_no;
+		GROUP BY a.user_id, unit_no, up.start_date, up.end_date;
+	</select>
+	
+  <!--오늘까지 완료된 단위 기간 출결 리스트 조회-->
+  <select id="getPeriodList"
+        parameterType="map"
+        resultType="com.planit.planit.domain.attendance.dto.AttendancePeriodResponseDTO">	    
+	    SELECT 
+		    a.user_id AS userId,
+		    up.unit_no AS unitNo,
+			up.start_date AS startDate,
+			up.end_date AS endDate,
+		    COUNT(CASE WHEN a.status = 'present' THEN 1 END) AS presentCount,
+		    COUNT(CASE WHEN a.status = 'absent' THEN 1 END) AS absentCount,
+		    COUNT(CASE WHEN a.status = 'late' THEN 1 END) AS lateCount,
+		    COUNT(CASE WHEN a.status = 'left_early' THEN 1 END) AS leftEarlyCount,
+		    COUNT(CASE WHEN a.status = 'annual' THEN 1 END) AS annualCount,
+		    COUNT(CASE WHEN a.status = 'leave' THEN 1 END) AS leaveCount,
+		    (
+		        SELECT COUNT(*) 
+		        FROM sessions s2
+		        JOIN unit_periods up2 ON s2.period_id = up2.id
+		        WHERE s2.bootcamp_id = s.bootcamp_id
+		          AND up2.unit_no = up.unit_no
+		    ) AS totalSessions
+		FROM attendance a
+		JOIN sessions s ON a.session_id = s.id
+		JOIN unit_periods up ON s.period_id = up.id
+		WHERE a.user_id = #{userId}
+		  AND s.bootcamp_id = #{bootcampId}
+		  AND up.end_date &lt;= CURDATE()
+		GROUP BY a.user_id,up.unit_no,up.start_date,up.end_date;
 	</select>
 	
 	<!--부트캠프에 존재하는 단위기간 조회-->
@@ -199,9 +232,9 @@
 		  ) total;
 	  </select>
 	  
-		<!-- 잔여연차,전체연차,남은연차 조회 -->
+		<!-- 휴가조회 -->
 	  <select id="getLeaveList" resultType="com.planit.planit.domain.attendance.dto.LeaveListResponseDTO">
-		SELECT status,class_date as classdate,
+		SELECT status,class_date as classDate,
 				unit_no as unitNo
 		FROM attendance a
 		JOIN sessions s       ON a.session_id = s.id

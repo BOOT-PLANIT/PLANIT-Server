@@ -6,6 +6,7 @@ import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 import com.planit.planit.domain.attendance.dto.AttendanceDTO;
 import com.planit.planit.domain.attendance.dto.AttendanceDailyResponseDTO;
+import com.planit.planit.domain.attendance.dto.AttendancePeriodResponseDTO;
 import com.planit.planit.domain.attendance.dto.AttendanceTotalResponseDTO;
 import com.planit.planit.domain.attendance.dto.LeaveBalanceResponseDTO;
 import com.planit.planit.domain.attendance.dto.LeaveListResponseDTO;
@@ -37,7 +38,10 @@ public interface AttendanceMapper {
   public void update(AttendanceDTO dto);
 
   // 단위기간 출결 조회
-  public AttendanceTotalResponseDTO getPeriod(Long userId, Long bootcampId, Integer unitNo);
+  public AttendancePeriodResponseDTO getPeriod(Long userId, Long bootcampId, Integer unitNo);
+
+  // 오늘까지의 완료된 단위기간 출결 리스트 조회
+  public List<AttendancePeriodResponseDTO> getPeriodList(Long userId, Long bootcampId);
 
   // 특정 부트캠프에 단위기간 조회
   public List<Integer> getBootcampUnitno(Long bootcampId);
