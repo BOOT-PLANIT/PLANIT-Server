@@ -48,21 +48,50 @@ public class BootcampService {
 		return response;
 	}
 
-	public List<BootcampResponseDTO> getAllBootcampsWithPagination(int page, int size) {
-    if (page < 1) {
-        page = 1;
-    }
-    int maxSize = 50; 
-    if (size < 1) {
-        size = 10;
-    } else if (size > maxSize) {
-        size = maxSize;
-    }
+	/**
+	 * 페이지네이션 정보를 담는 record
+	 */
+	private record PaginationInfo(int page, int size, int offset) {
+	}
 
-    int offset = (page - 1) * size;
-    List<BootcampDTO> bootcamps = bootcampMapper.findAllWithPagination(offset, size);
-    return bootcamps.stream().map(this::toResponseDTO).collect(Collectors.toList());
-}
+	/**
+	 * 페이지네이션 파라미터를 검증하고 offset을 계산합니다.
+	 * 
+	 * @param page 페이지 번호
+	 * @param size 페이지당 개수
+	 * @return 검증된 페이지네이션 정보
+	 */
+	private PaginationInfo validateAndCalculatePagination(int page, int size) {
+		if (page < 1) {
+			page = 1;
+		}
+		int maxSize = 50;
+		if (size < 1) {
+			size = 10;
+		} else if (size > maxSize) {
+			size = maxSize;
+		}
+		int offset = (page - 1) * size;
+		return new PaginationInfo(page, size, offset);
+	}
+
+	public List<BootcampResponseDTO> getAllBootcampsWithPagination(int page, int size) {
+		PaginationInfo pagination = validateAndCalculatePagination(page, size);
+
+		List<BootcampDTO> bootcamps = bootcampMapper.findAllWithPagination(pagination.offset(), pagination.size());
+		return bootcamps.stream().map(this::toResponseDTO).collect(Collectors.toList());
+	}
+
+	public List<BootcampResponseDTO> searchBootcamps(String keyword, int page, int size) {
+		if (keyword == null || keyword.trim().isEmpty()) {
+			return getAllBootcampsWithPagination(page, size);
+		}
+
+		PaginationInfo pagination = validateAndCalculatePagination(page, size);
+
+		List<BootcampDTO> bootcamps = bootcampMapper.search(keyword.trim(), pagination.offset(), pagination.size());
+		return bootcamps.stream().map(this::toResponseDTO).collect(Collectors.toList());
+	}
 
 	public BootcampResponseDTO getBootcamp(Long id) {
 		BootcampDTO bootcamp = bootcampMapper.findById(id);

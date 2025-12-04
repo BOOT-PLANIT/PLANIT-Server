@@ -14,6 +14,12 @@ public interface BootcampMapper {
   List<BootcampDTO> findAllWithPagination(@Param("offset") int offset,
                                         @Param("limit") int limit);
 
+  List<BootcampDTO> search(@Param("keyword") String keyword,
+                          @Param("offset") int offset,
+                          @Param("limit") int limit);
+
+  Long countSearch(@Param("keyword") String keyword);
+
   Long countAll();
 
   Long countActive();

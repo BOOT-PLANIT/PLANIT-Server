@@ -75,6 +75,28 @@ public class BootcampController {
 		return ResponseEntity.ok(ApiResponse.success("부트캠프 목록 조회 성공", bootcamps));
 	}
 
+	@Operation(summary = "부트캠프 검색", description = "부트캠프 이름 또는 기관명으로 검색합니다. 페이지네이션을 지원합니다.",
+		responses = {
+			@io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200",
+				description = "검색 성공",
+				content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
+					schema = @Schema(implementation = BootcampListResponseSchema.class))),
+			@io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "500",
+				description = "서버 에러",
+				content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
+					schema = @Schema(implementation = ApiErrorResponseSchema.class)))})
+	@GetMapping("/search")
+	public ResponseEntity<ApiResponse<List<BootcampResponseDTO>>> search(
+		@Parameter(description = "검색 키워드 (부트캠프 이름 또는 기관명)", example = "LG")
+		@RequestParam(value = "keyword") String keyword,
+		@Parameter(description = "페이지 번호 (기본값: 1)", example = "1")
+		@RequestParam(value = "page", defaultValue = "1") int page,
+		@Parameter(description = "페이지당 표시할 개수 (기본값: 10)", example = "10")
+		@RequestParam(value = "size", defaultValue = "10") int size) {
+		List<BootcampResponseDTO> bootcamps = bootcampService.searchBootcamps(keyword, page, size);
+		return ResponseEntity.ok(ApiResponse.success("부트캠프 검색 성공", bootcamps));
+	}
+
 	@Operation(summary = "부트캠프 단건 조회", description = "ID로 특정 부트캠프를 조회합니다.",
 		responses = {
 			@io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200",
