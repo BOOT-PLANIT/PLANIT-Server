@@ -9,6 +9,8 @@ import com.planit.planit.domain.bootcamp.dto.BootcampDTO;
 public interface BootcampMapper {
   List<BootcampDTO> findAll();
 
+  List<BootcampDTO> findAllWithPagination(int offset, int limit);
+
   BootcampDTO findById(Long id);
 
   BootcampDTO findByIdForUpdate(Long id);

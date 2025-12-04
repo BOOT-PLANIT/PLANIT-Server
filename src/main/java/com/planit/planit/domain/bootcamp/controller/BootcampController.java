@@ -11,6 +11,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import com.planit.planit.domain.bootcamp.dto.BootcampParseRequestDTO;
 import com.planit.planit.domain.bootcamp.dto.BootcampParseResponseDTO;
@@ -20,6 +21,7 @@ import com.planit.planit.domain.bootcamp.service.BootcampService;
 import com.planit.planit.global.common.response.ApiResponse;
 import com.planit.planit.global.common.response.ErrorDetail;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -36,7 +38,7 @@ public class BootcampController {
 		this.bootcampService = bootcampService;
 	}
 
-	@Operation(summary = "부트캠프 전체 목록 조회", description = "등록된 모든 부트캠프 목록을 조회합니다.",
+	@Operation(summary = "부트캠프 전체 목록 조회", description = "등록된 모든 부트캠프 목록을 조회합니다. 페이지네이션을 지원합니다.",
 		responses = {
 			@io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200",
 				description = "조회 성공",
@@ -47,8 +49,12 @@ public class BootcampController {
 				content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
 					schema = @Schema(implementation = ApiErrorResponseSchema.class)))})
 	@GetMapping
-	public ResponseEntity<ApiResponse<List<BootcampResponseDTO>>> getAll() {
-		List<BootcampResponseDTO> bootcamps = bootcampService.getAllBootcamps();
+	public ResponseEntity<ApiResponse<List<BootcampResponseDTO>>> getAll(
+		@Parameter(description = "페이지 번호 (기본값: 1)", example = "1")
+		@RequestParam(value = "page", defaultValue = "1") int page,
+		@Parameter(description = "페이지당 표시할 개수 (기본값: 10)", example = "10")
+		@RequestParam(value = "size", defaultValue = "10") int size) {
+		List<BootcampResponseDTO> bootcamps = bootcampService.getAllBootcampsWithPagination(page, size);
 		return ResponseEntity.ok(ApiResponse.success("부트캠프 목록 조회 성공", bootcamps));
 	}
 

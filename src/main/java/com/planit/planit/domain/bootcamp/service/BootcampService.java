@@ -41,6 +41,12 @@ public class BootcampService {
 		return bootcamps.stream().map(this::toResponseDTO).collect(Collectors.toList());
 	}
 
+	public List<BootcampResponseDTO> getAllBootcampsWithPagination(int page, int size) {
+		int offset = (page - 1) * size;
+		List<BootcampDTO> bootcamps = bootcampMapper.findAllWithPagination(offset, size);
+		return bootcamps.stream().map(this::toResponseDTO).collect(Collectors.toList());
+	}
+
 	public BootcampResponseDTO getBootcamp(Long id) {
 		BootcampDTO bootcamp = bootcampMapper.findById(id);
 		if (bootcamp == null) {
