@@ -7,6 +7,7 @@ import java.util.stream.Collectors;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import com.planit.planit.domain.bootcamp.dto.BootcampDTO;
+import com.planit.planit.domain.bootcamp.dto.BootcampListSummaryResponseDTO;
 import com.planit.planit.domain.bootcamp.dto.BootcampRequestDTO;
 import com.planit.planit.domain.bootcamp.dto.BootcampResponseDTO;
 import com.planit.planit.domain.bootcamp.exception.BootcampInvalidClassDatesException;
@@ -36,10 +37,32 @@ public class BootcampService {
 		this.unitPeriodCalculator = unitPeriodCalculator;
 	}
 
-	public List<BootcampResponseDTO> getAllBootcamps() {
-		List<BootcampDTO> bootcamps = bootcampMapper.findAll();
-		return bootcamps.stream().map(this::toResponseDTO).collect(Collectors.toList());
+	public BootcampListSummaryResponseDTO getAllBootcamps() {
+		Long totalCount = bootcampMapper.countAll();
+		Long activeCount = bootcampMapper.countActive();
+		
+		BootcampListSummaryResponseDTO response = new BootcampListSummaryResponseDTO();
+		response.setTotalCount(totalCount);
+		response.setActiveCount(activeCount);
+		
+		return response;
 	}
+
+	public List<BootcampResponseDTO> getAllBootcampsWithPagination(int page, int size) {
+    if (page < 1) {
+        page = 1;
+    }
+    int maxSize = 50; 
+    if (size < 1) {
+        size = 10;
+    } else if (size > maxSize) {
+        size = maxSize;
+    }
+
+    int offset = (page - 1) * size;
+    List<BootcampDTO> bootcamps = bootcampMapper.findAllWithPagination(offset, size);
+    return bootcamps.stream().map(this::toResponseDTO).collect(Collectors.toList());
+}
 
 	public BootcampResponseDTO getBootcamp(Long id) {
 		BootcampDTO bootcamp = bootcampMapper.findById(id);
@@ -296,6 +319,13 @@ public class BootcampService {
 		response.setClassDates(dto.getClassDates());
 		response.setCreatedAt(dto.getCreatedAt());
 		response.setUpdatedAt(dto.getUpdatedAt());
+		
+		if (dto.getEndedAt() != null) {
+			response.setIsEnded(dto.getEndedAt().isBefore(LocalDate.now()));
+		} else {
+			response.setIsEnded(false);
+		}
+		
 		return response;
 	}
 
