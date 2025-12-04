@@ -14,6 +14,10 @@ public interface BootcampMapper {
   List<BootcampDTO> findAllWithPagination(@Param("offset") int offset,
                                         @Param("limit") int limit);
 
+  Long countAll();
+
+  Long countActive();
+
   BootcampDTO findById(Long id);
 
   BootcampDTO findByIdForUpdate(Long id);

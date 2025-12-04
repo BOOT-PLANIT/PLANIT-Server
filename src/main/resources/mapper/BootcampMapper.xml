@@ -22,6 +22,17 @@
 		LIMIT #{limit} OFFSET #{offset}
 	</select>
 
+	<!-- 전체 부트캠프 개수 조회 -->
+	<select id="countAll" resultType="long">
+		SELECT COUNT(*) FROM bootcamps
+	</select>
+
+	<!-- 종료되지 않은 부트캠프 개수 조회 -->
+	<select id="countActive" resultType="long">
+		SELECT COUNT(*) FROM bootcamps
+		WHERE ended_at IS NULL OR ended_at >= CURDATE()
+	</select>
+
 	<!-- 단일 조회 -->
 	<select id="findById" parameterType="long" resultType="com.planit.planit.domain.bootcamp.dto.BootcampDTO">
 		SELECT id, name, organizer, is_kdt as "isKdt", started_at as "startedAt", ended_at as "endedAt",

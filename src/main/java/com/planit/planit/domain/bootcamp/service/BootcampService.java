@@ -7,6 +7,7 @@ import java.util.stream.Collectors;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import com.planit.planit.domain.bootcamp.dto.BootcampDTO;
+import com.planit.planit.domain.bootcamp.dto.BootcampListSummaryResponseDTO;
 import com.planit.planit.domain.bootcamp.dto.BootcampRequestDTO;
 import com.planit.planit.domain.bootcamp.dto.BootcampResponseDTO;
 import com.planit.planit.domain.bootcamp.exception.BootcampInvalidClassDatesException;
@@ -36,9 +37,21 @@ public class BootcampService {
 		this.unitPeriodCalculator = unitPeriodCalculator;
 	}
 
-	public List<BootcampResponseDTO> getAllBootcamps() {
+	public BootcampListSummaryResponseDTO getAllBootcamps() {
 		List<BootcampDTO> bootcamps = bootcampMapper.findAll();
-		return bootcamps.stream().map(this::toResponseDTO).collect(Collectors.toList());
+		List<BootcampResponseDTO> bootcampResponses = bootcamps.stream()
+			.map(this::toResponseDTO)
+			.collect(Collectors.toList());
+		
+		Long totalCount = bootcampMapper.countAll();
+		Long activeCount = bootcampMapper.countActive();
+		
+		BootcampListSummaryResponseDTO response = new BootcampListSummaryResponseDTO();
+		response.setTotalCount(totalCount);
+		response.setActiveCount(activeCount);
+		response.setBootcamps(bootcampResponses);
+		
+		return response;
 	}
 
 	public List<BootcampResponseDTO> getAllBootcampsWithPagination(int page, int size) {

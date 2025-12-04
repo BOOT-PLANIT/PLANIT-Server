@@ -13,6 +13,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import com.planit.planit.domain.bootcamp.dto.BootcampListSummaryResponseDTO;
 import com.planit.planit.domain.bootcamp.dto.BootcampParseRequestDTO;
 import com.planit.planit.domain.bootcamp.dto.BootcampParseResponseDTO;
 import com.planit.planit.domain.bootcamp.dto.BootcampRequestDTO;
@@ -38,7 +39,23 @@ public class BootcampController {
 		this.bootcampService = bootcampService;
 	}
 
-	@Operation(summary = "부트캠프 전체 목록 조회", description = "등록된 모든 부트캠프 목록을 조회합니다. 페이지네이션을 지원합니다.",
+	@Operation(summary = "부트캠프 전체 목록 조회 (요약)", description = "등록된 모든 부트캠프 목록과 개수 정보를 조회합니다.",
+		responses = {
+			@io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200",
+				description = "조회 성공",
+				content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
+					schema = @Schema(implementation = BootcampListSummaryResponseSchema.class))),
+			@io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "500",
+				description = "서버 에러",
+				content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
+					schema = @Schema(implementation = ApiErrorResponseSchema.class)))})
+	@GetMapping("/summary")
+	public ResponseEntity<ApiResponse<BootcampListSummaryResponseDTO>> getAllSummary() {
+		BootcampListSummaryResponseDTO summary = bootcampService.getAllBootcamps();
+		return ResponseEntity.ok(ApiResponse.success("부트캠프 목록 조회 성공", summary));
+	}
+
+	@Operation(summary = "부트캠프 목록 조회 (페이지네이션)", description = "등록된 부트캠프 목록을 페이지네이션으로 조회합니다.",
 		responses = {
 			@io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200",
 				description = "조회 성공",
@@ -179,6 +196,15 @@ public class BootcampController {
 		@Schema(example = "부트캠프 목록 조회 성공")
 		public String message;
 		public List<BootcampResponseDTO> data;
+	}
+
+	@Schema(name = "BootcampListSummaryResponse", description = "부트캠프 목록 요약 응답")
+	static class BootcampListSummaryResponseSchema {
+		@Schema(example = "200")
+		public int code;
+		@Schema(example = "부트캠프 목록 조회 성공")
+		public String message;
+		public BootcampListSummaryResponseDTO data;
 	}
 
 	@Schema(name = "BootcampOneResponse", description = "부트캠프 단건 응답")
