@@ -38,18 +38,12 @@ public class BootcampService {
 	}
 
 	public BootcampListSummaryResponseDTO getAllBootcamps() {
-		List<BootcampDTO> bootcamps = bootcampMapper.findAll();
-		List<BootcampResponseDTO> bootcampResponses = bootcamps.stream()
-			.map(this::toResponseDTO)
-			.collect(Collectors.toList());
-		
 		Long totalCount = bootcampMapper.countAll();
 		Long activeCount = bootcampMapper.countActive();
 		
 		BootcampListSummaryResponseDTO response = new BootcampListSummaryResponseDTO();
 		response.setTotalCount(totalCount);
 		response.setActiveCount(activeCount);
-		response.setBootcamps(bootcampResponses);
 		
 		return response;
 	}
