@@ -3,13 +3,16 @@ package com.planit.planit.domain.bootcamp.mapper;
 import java.time.LocalDate;
 import java.util.List;
 import org.apache.ibatis.annotations.Mapper;
+import org.apache.ibatis.annotations.Param;
+
 import com.planit.planit.domain.bootcamp.dto.BootcampDTO;
 
 @Mapper
 public interface BootcampMapper {
   List<BootcampDTO> findAll();
 
-  List<BootcampDTO> findAllWithPagination(int offset, int limit);
+  List<BootcampDTO> findAllWithPagination(@Param("offset") int offset,
+                                        @Param("limit") int limit);
 
   BootcampDTO findById(Long id);
 

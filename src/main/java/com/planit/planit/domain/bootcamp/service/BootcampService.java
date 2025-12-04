@@ -42,10 +42,20 @@ public class BootcampService {
 	}
 
 	public List<BootcampResponseDTO> getAllBootcampsWithPagination(int page, int size) {
-		int offset = (page - 1) * size;
-		List<BootcampDTO> bootcamps = bootcampMapper.findAllWithPagination(offset, size);
-		return bootcamps.stream().map(this::toResponseDTO).collect(Collectors.toList());
-	}
+    if (page < 1) {
+        page = 1;
+    }
+    int maxSize = 50; 
+    if (size < 1) {
+        size = 10;
+    } else if (size > maxSize) {
+        size = maxSize;
+    }
+
+    int offset = (page - 1) * size;
+    List<BootcampDTO> bootcamps = bootcampMapper.findAllWithPagination(offset, size);
+    return bootcamps.stream().map(this::toResponseDTO).collect(Collectors.toList());
+}
 
 	public BootcampResponseDTO getBootcamp(Long id) {
 		BootcampDTO bootcamp = bootcampMapper.findById(id);
@@ -302,6 +312,13 @@ public class BootcampService {
 		response.setClassDates(dto.getClassDates());
 		response.setCreatedAt(dto.getCreatedAt());
 		response.setUpdatedAt(dto.getUpdatedAt());
+		
+		if (dto.getEndedAt() != null) {
+			response.setIsEnded(dto.getEndedAt().isBefore(LocalDate.now()));
+		} else {
+			response.setIsEnded(false);
+		}
+		
 		return response;
 	}
 
