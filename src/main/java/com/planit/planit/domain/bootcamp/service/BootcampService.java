@@ -64,6 +64,26 @@ public class BootcampService {
     return bootcamps.stream().map(this::toResponseDTO).collect(Collectors.toList());
 }
 
+	public List<BootcampResponseDTO> searchBootcamps(String keyword, int page, int size) {
+		if (keyword == null || keyword.trim().isEmpty()) {
+			return getAllBootcampsWithPagination(page, size);
+		}
+
+		if (page < 1) {
+			page = 1;
+		}
+		int maxSize = 50;
+		if (size < 1) {
+			size = 10;
+		} else if (size > maxSize) {
+			size = maxSize;
+		}
+
+		int offset = (page - 1) * size;
+		List<BootcampDTO> bootcamps = bootcampMapper.search(keyword.trim(), offset, size);
+		return bootcamps.stream().map(this::toResponseDTO).collect(Collectors.toList());
+	}
+
 	public BootcampResponseDTO getBootcamp(Long id) {
 		BootcampDTO bootcamp = bootcampMapper.findById(id);
 		if (bootcamp == null) {

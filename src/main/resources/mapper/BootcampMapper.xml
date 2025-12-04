@@ -22,6 +22,24 @@
 		LIMIT #{limit} OFFSET #{offset}
 	</select>
 
+	<!-- 검색 (이름 또는 기관명에서 키워드 검색) -->
+	<select id="search" resultType="com.planit.planit.domain.bootcamp.dto.BootcampDTO">
+		SELECT id, name, organizer, is_kdt as "isKdt", started_at as "startedAt", ended_at as "endedAt",
+			   created_at as "createdAt", updated_at as "updatedAt"
+		FROM bootcamps
+		WHERE name LIKE CONCAT('%', #{keyword}, '%')
+		   OR organizer LIKE CONCAT('%', #{keyword}, '%')
+		ORDER BY created_at DESC
+		LIMIT #{limit} OFFSET #{offset}
+	</select>
+
+	<!-- 검색 결과 개수 조회 -->
+	<select id="countSearch" resultType="long">
+		SELECT COUNT(*) FROM bootcamps
+		WHERE name LIKE CONCAT('%', #{keyword}, '%')
+		   OR organizer LIKE CONCAT('%', #{keyword}, '%')
+	</select>
+
 	<!-- 전체 부트캠프 개수 조회 -->
 	<select id="countAll" resultType="long">
 		SELECT COUNT(*) FROM bootcamps
