@@ -2,6 +2,7 @@ package com.planit.planit.domain.auth.controller;
 
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseToken;
+import com.planit.planit.domain.auth.dto.LoginResponseDTO;
 import com.planit.planit.domain.user.service.FirebaseAccountService;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.http.ResponseEntity;
@@ -22,14 +23,15 @@ public class AuthController {
 	private final FirebaseAccountService accountService;
 
 	@PostMapping("/login")
-	public ResponseEntity<ApiResponse<Void>> login(
+	public ResponseEntity<ApiResponse<LoginResponseDTO>> login(
 		@RequestHeader("Authorization") String authorization
 	) throws Exception {
 		String idToken = extractBearer(authorization);
 		FirebaseToken token = firebaseAuth.verifyIdToken(idToken);
-		accountService.ensureAndLoad(token);
 
-		return ResponseEntity.ok(ApiResponse.success("로그인 성공", null));
+		LoginResponseDTO response = accountService.loginAndLoad(token);
+
+		return ResponseEntity.ok(ApiResponse.success("로그인 성공", response));
 	}
 
 	private String extractBearer(String header) {
@@ -39,4 +41,6 @@ public class AuthController {
 		return header.substring(7);
 	}
 }
+
+
 
