@@ -3,11 +3,26 @@ package com.planit.planit.domain.bootcamp.mapper;
 import java.time.LocalDate;
 import java.util.List;
 import org.apache.ibatis.annotations.Mapper;
+import org.apache.ibatis.annotations.Param;
+
 import com.planit.planit.domain.bootcamp.dto.BootcampDTO;
 
 @Mapper
 public interface BootcampMapper {
   List<BootcampDTO> findAll();
+
+  List<BootcampDTO> findAllWithPagination(@Param("offset") int offset,
+                                        @Param("limit") int limit);
+
+  List<BootcampDTO> search(@Param("keyword") String keyword,
+                          @Param("offset") int offset,
+                          @Param("limit") int limit);
+
+  Long countSearch(@Param("keyword") String keyword);
+
+  Long countAll();
+
+  Long countActive();
 
   BootcampDTO findById(Long id);
 
