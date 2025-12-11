@@ -19,7 +19,6 @@ public class AttendanceRegistRequestDTO {
   private Long bootcampId;
 
   @Schema(description = "출결 상태", example = "present")
-  @NotNull(message = "출결 상태는 필수입니다")
   private AttendanceStatus status;
 
 
