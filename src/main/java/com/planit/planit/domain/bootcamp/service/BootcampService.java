@@ -371,19 +371,6 @@ public class BootcampService {
 	}
 
 	/**
-	 * Response DTO에 세션에서 추출한 classDates를 채웁니다. (단건 조회용)
-	 */
-	private BootcampResponseDTO enrichWithClassDates(BootcampResponseDTO response) {
-		List<SessionDTO> sessions = sessionMapper.findByBootcampId(response.getId());
-		if (sessions != null && !sessions.isEmpty()) {
-			List<LocalDate> classDates =
-				sessions.stream().map(SessionDTO::getClassDate).sorted().collect(Collectors.toList());
-			response.setClassDates(classDates);
-		}
-		return response;
-	}
-
-	/**
 	 * 여러 부트캠프의 Response DTO에 세션에서 추출한 classDates를 배치로 채웁니다.
 	 * N+1 쿼리 문제를 해결하기 위해 한 번의 쿼리로 모든 세션을 조회합니다.
 	 */
