@@ -2,7 +2,9 @@ package com.planit.planit.domain.bootcamp.service;
 
 import java.time.LocalDate;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -79,10 +81,12 @@ public class BootcampService {
 		PaginationInfo pagination = validateAndCalculatePagination(page, size);
 
 		List<BootcampDTO> bootcamps = bootcampMapper.findAllWithPagination(pagination.offset(), pagination.size());
-		return bootcamps.stream()
+		List<BootcampResponseDTO> responses = bootcamps.stream()
 			.map(this::toResponseDTO)
-			.map(this::enrichWithClassDates)
 			.collect(Collectors.toList());
+		
+		enrichWithClassDatesBatch(responses);
+		return responses;
 	}
 
 	public List<BootcampResponseDTO> searchBootcamps(String keyword, int page, int size) {
@@ -93,10 +97,12 @@ public class BootcampService {
 		PaginationInfo pagination = validateAndCalculatePagination(page, size);
 
 		List<BootcampDTO> bootcamps = bootcampMapper.search(keyword.trim(), pagination.offset(), pagination.size());
-		return bootcamps.stream()
+		List<BootcampResponseDTO> responses = bootcamps.stream()
 			.map(this::toResponseDTO)
-			.map(this::enrichWithClassDates)
 			.collect(Collectors.toList());
+		
+		enrichWithClassDatesBatch(responses);
+		return responses;
 	}
 
 	public BootcampResponseDTO getBootcamp(Long id) {
@@ -365,7 +371,7 @@ public class BootcampService {
 	}
 
 	/**
-	 * Response DTO에 세션에서 추출한 classDates를 채웁니다.
+	 * Response DTO에 세션에서 추출한 classDates를 채웁니다. (단건 조회용)
 	 */
 	private BootcampResponseDTO enrichWithClassDates(BootcampResponseDTO response) {
 		List<SessionDTO> sessions = sessionMapper.findByBootcampId(response.getId());
@@ -375,6 +381,44 @@ public class BootcampService {
 			response.setClassDates(classDates);
 		}
 		return response;
+	}
+
+	/**
+	 * 여러 부트캠프의 Response DTO에 세션에서 추출한 classDates를 배치로 채웁니다.
+	 * N+1 쿼리 문제를 해결하기 위해 한 번의 쿼리로 모든 세션을 조회합니다.
+	 */
+	private void enrichWithClassDatesBatch(List<BootcampResponseDTO> responses) {
+		if (responses == null || responses.isEmpty()) {
+			return;
+		}
+
+		// 부트캠프 ID 리스트 추출
+		List<Long> bootcampIds = responses.stream()
+			.map(BootcampResponseDTO::getId)
+			.collect(Collectors.toList());
+
+		if (bootcampIds.isEmpty()) {
+			return;
+		}
+
+		// 한 번의 쿼리로 모든 세션 조회
+		List<SessionDTO> allSessions = sessionMapper.findByBootcampIds(bootcampIds);
+
+		// 부트캠프 ID별로 세션을 그룹화
+		Map<Long, List<SessionDTO>> sessionsByBootcampId = allSessions.stream()
+			.collect(Collectors.groupingBy(SessionDTO::getBootcampId));
+
+		// 각 부트캠프에 해당하는 세션의 classDate를 추출하여 설정
+		for (BootcampResponseDTO response : responses) {
+			List<SessionDTO> sessions = sessionsByBootcampId.getOrDefault(response.getId(), Collections.emptyList());
+			if (!sessions.isEmpty()) {
+				List<LocalDate> classDates = sessions.stream()
+					.map(SessionDTO::getClassDate)
+					.sorted()
+					.collect(Collectors.toList());
+				response.setClassDates(classDates);
+			}
+		}
 	}
 
 	/**

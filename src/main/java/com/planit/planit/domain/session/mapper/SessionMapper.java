@@ -12,6 +12,8 @@ public interface SessionMapper {
 
     List<SessionDTO> findByBootcampId(Long bootcampId);
 
+    List<SessionDTO> findByBootcampIds(@Param("bootcampIds") List<Long> bootcampIds);
+
     SessionDTO findById(Long id);
 
     void insert(SessionDTO session);
