@@ -75,7 +75,7 @@ public class BootcampController {
 		return ResponseEntity.ok(ApiResponse.success("부트캠프 목록 조회 성공", bootcamps));
 	}
 
-	@Operation(summary = "부트캠프 검색", description = "부트캠프 이름 또는 기관명으로 검색합니다. 페이지네이션을 지원합니다.",
+	@Operation(summary = "부트캠프 검색", description = "부트캠프 이름 또는 기관명으로 검색합니다. 페이지네이션을 지원합니다. keyword가 없으면 전체 목록을 반환합니다.",
 		responses = {
 			@io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200",
 				description = "검색 성공",
@@ -87,8 +87,8 @@ public class BootcampController {
 					schema = @Schema(implementation = ApiErrorResponseSchema.class)))})
 	@GetMapping("/search")
 	public ResponseEntity<ApiResponse<List<BootcampResponseDTO>>> search(
-		@Parameter(description = "검색 키워드 (부트캠프 이름 또는 기관명)", example = "LG")
-		@RequestParam(value = "keyword") String keyword,
+		@Parameter(description = "검색 키워드 (부트캠프 이름 또는 기관명, 선택사항)", example = "LG")
+		@RequestParam(value = "keyword", required = false) String keyword,
 		@Parameter(description = "페이지 번호 (기본값: 1)", example = "1")
 		@RequestParam(value = "page", defaultValue = "1") int page,
 		@Parameter(description = "페이지당 표시할 개수 (기본값: 10)", example = "10")

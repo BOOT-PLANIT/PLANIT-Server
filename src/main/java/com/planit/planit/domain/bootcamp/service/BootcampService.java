@@ -79,7 +79,10 @@ public class BootcampService {
 		PaginationInfo pagination = validateAndCalculatePagination(page, size);
 
 		List<BootcampDTO> bootcamps = bootcampMapper.findAllWithPagination(pagination.offset(), pagination.size());
-		return bootcamps.stream().map(this::toResponseDTO).collect(Collectors.toList());
+		return bootcamps.stream()
+			.map(this::toResponseDTO)
+			.map(this::enrichWithClassDates)
+			.collect(Collectors.toList());
 	}
 
 	public List<BootcampResponseDTO> searchBootcamps(String keyword, int page, int size) {
@@ -90,7 +93,10 @@ public class BootcampService {
 		PaginationInfo pagination = validateAndCalculatePagination(page, size);
 
 		List<BootcampDTO> bootcamps = bootcampMapper.search(keyword.trim(), pagination.offset(), pagination.size());
-		return bootcamps.stream().map(this::toResponseDTO).collect(Collectors.toList());
+		return bootcamps.stream()
+			.map(this::toResponseDTO)
+			.map(this::enrichWithClassDates)
+			.collect(Collectors.toList());
 	}
 
 	public BootcampResponseDTO getBootcamp(Long id) {
@@ -355,6 +361,19 @@ public class BootcampService {
 			response.setIsEnded(false);
 		}
 		
+		return response;
+	}
+
+	/**
+	 * Response DTO에 세션에서 추출한 classDates를 채웁니다.
+	 */
+	private BootcampResponseDTO enrichWithClassDates(BootcampResponseDTO response) {
+		List<SessionDTO> sessions = sessionMapper.findByBootcampId(response.getId());
+		if (sessions != null && !sessions.isEmpty()) {
+			List<LocalDate> classDates =
+				sessions.stream().map(SessionDTO::getClassDate).sorted().collect(Collectors.toList());
+			response.setClassDates(classDates);
+		}
 		return response;
 	}
 
