@@ -30,6 +30,22 @@
         ORDER BY s.class_date ASC
     </select>
 
+    <!-- 부트캠프 ID 리스트로 배치 조회 -->
+    <select id="findByBootcampIds" resultType="com.planit.planit.domain.session.dto.SessionDTO">
+        SELECT s.id, s.bootcamp_id as "bootcampId", s.period_id as "periodId",
+               up.unit_no as "unitNo",
+               up.start_date as "periodStartDate",
+               up.end_date as "periodEndDate",
+               s.class_date as "classDate", s.created_at as "createdAt", s.updated_at as "updatedAt"
+        FROM sessions s
+        LEFT JOIN unit_periods up ON s.period_id = up.id
+        WHERE s.bootcamp_id IN
+        <foreach collection="bootcampIds" item="bootcampId" open="(" separator="," close=")">
+            #{bootcampId}
+        </foreach>
+        ORDER BY s.bootcamp_id ASC, s.class_date ASC
+    </select>
+
     <!-- 단일 조회 -->
     <select id="findById" parameterType="long" resultType="com.planit.planit.domain.session.dto.SessionDTO">
         SELECT s.id, s.bootcamp_id as "bootcampId", s.period_id as "periodId",
