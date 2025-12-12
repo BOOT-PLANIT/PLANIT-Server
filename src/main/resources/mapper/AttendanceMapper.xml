@@ -62,6 +62,15 @@
 	    ON DUPLICATE KEY UPDATE status = VALUES(status)
 	  </insert>
 	  
+	  <!--출결 삭제-->
+	  <delete id="delete" parameterType="java.util.List">
+		  DELETE FROM attendance
+		  WHERE (user_id, session_id) IN
+		  <foreach collection="list" item="item" separator="," open="(" close=")">
+		    (#{item.userId}, #{item.sessionId})
+		  </foreach>
+	</delete>
+	  
 	  <!--출결 수정-->
 		<update id="updateStatus">
 		  UPDATE attendance a

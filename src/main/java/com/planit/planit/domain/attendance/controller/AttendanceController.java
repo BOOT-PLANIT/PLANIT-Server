@@ -3,6 +3,7 @@ package com.planit.planit.domain.attendance.controller;
 
 import java.util.List;
 import org.springframework.http.MediaType;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -73,6 +74,16 @@ public class AttendanceController {
       implementation = AttendanceRegistRequestDTO.class) AttendanceRegistRequestDTO attendance) {
     service.regist(attendance);
     return ApiResponse.success("출결 등록 성공");
+  }
+
+  @Operation(summary = "출결 삭제", description = "선택한 날짜의 출결정보를 삭제합니다.",
+      responses = {@io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200",
+          description = "출결 삭제 성공")})
+  @DeleteMapping
+  public ApiResponse<String> AttendanceDelete(@Valid @RequestBody @Schema(
+      implementation = AttendanceRegistRequestDTO.class) AttendanceRegistRequestDTO attendance) {
+    service.delete(attendance);
+    return ApiResponse.success("출결 삭제 성공");
   }
 
   // @Operation(summary = "일단위 출결 수정", description = "선택한 일자의 출결 정보를 수정합니다..",
