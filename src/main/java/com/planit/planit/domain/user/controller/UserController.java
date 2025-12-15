@@ -10,6 +10,7 @@ import io.swagger.v3.oas.annotations.media.ExampleObject;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import java.util.Map;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ProblemDetail;
@@ -148,5 +149,40 @@ public class UserController {
 		firebaseAuth.deleteUser(uid);
 
 		return ResponseEntity.noContent().build(); // 204
+	}
+
+	@Operation(
+		summary = "FCM 토큰 저장/갱신",
+		security = { @SecurityRequirement(name = "BearerAuth") },
+		responses = {
+			@io.swagger.v3.oas.annotations.responses.ApiResponse(
+				responseCode = "200",
+				description = "토큰 저장 성공",
+				content = @Content
+			),
+			@io.swagger.v3.oas.annotations.responses.ApiResponse(
+				responseCode = "401",
+				description = "인증 필요",
+				content = @Content
+			),
+			@io.swagger.v3.oas.annotations.responses.ApiResponse(
+				responseCode = "404",
+				description = "사용자 없음",
+				content = @Content
+			)
+		}
+	)
+	@PostMapping("/me/token")
+	public ResponseEntity<Void> saveFcmToken(
+		Authentication auth,
+		@RequestBody Map<String, String> body) {
+
+		String uid = auth.getName();
+		String fcmToken = body.get("fcmToken");
+
+		// DB 업데이트
+		userMapper.updateFcmToken(uid, fcmToken);
+
+		return ResponseEntity.ok().build();
 	}
 }

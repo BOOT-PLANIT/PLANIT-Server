@@ -13,4 +13,6 @@ public interface UserMapper {
 	int updateLastLogin(@Param("uid") String uid);
 	int updateUserLevel(@Param("uid") String uid, @Param("userLevel") UserLevel userLevel);
 	int softDeleteUser(@Param("uid") String uid);
+	int updateFcmToken(@Param("uid") String uid, @Param("fcmToken") String fcmToken);
+	String findFcmTokenByUid(@Param("uid") String uid);
 }

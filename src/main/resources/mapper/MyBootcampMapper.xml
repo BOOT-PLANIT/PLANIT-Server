@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+	PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+	"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.planit.planit.domain.enrollment.mapper.MyBootcampMapper">
+
+	<!-- 중복 등록 확인 -->
+	<select id="countEnrollment" resultType="int">
+		SELECT COUNT(*)
+		FROM enrollments
+		WHERE user_id = #{userId} AND bootcamp_id = #{bootcampId}
+	</select>
+
+	<!-- 등록 -->
+	<insert id="insertEnrollment">
+		INSERT INTO enrollments (user_id, bootcamp_id, status, started_at, created_at)
+		VALUES (#{userId}, #{bootcampId}, 'ongoing', CURDATE(), NOW())
+	</insert>
+
+	<!-- 내 부트캠프 목록 조회 -->
+	<select id="selectMyBootcamps" resultType="com.planit.planit.domain.enrollment.dto.MyBootcampDto">
+		SELECT e.id AS id,
+					 e.user_id AS userId,
+					 e.bootcamp_id AS bootcampId,
+					 b.name,
+					 b.organizer,
+					 b.is_kdt AS isKdt,
+					 e.started_at AS startedAt,
+					 b.ended_at AS endedAt
+		FROM enrollments e
+					 JOIN bootcamps b ON e.bootcamp_id = b.id
+		WHERE e.user_id = #{userId}
+		ORDER BY e.created_at DESC
+	</select>
+
+	<!-- 삭제 -->
+	<delete id="deleteEnrollment">
+		DELETE FROM enrollments
+		WHERE id = #{enrollmentId} AND user_id = #{userId}
+	</delete>
+
+	<!-- 마지막 등록 부트캠프 조회 -->
+	<select id="findLatestEnrollment" resultType="com.planit.planit.domain.enrollment.dto.EnrollmentResponseDTO">
+		SELECT id,
+					 user_id AS userId,
+					 bootcamp_id AS bootcampId,
+					 started_at AS enrolledAt
+		FROM enrollments
+		WHERE user_id = #{userId}
+		ORDER BY created_at DESC
+			LIMIT 1
+	</select>
+
+	<select id="existsById" resultType="boolean">
+		SELECT EXISTS (
+			SELECT 1 FROM bootcamps WHERE id = #{bootcampId}
+		)
+	</select>
+
+</mapper>

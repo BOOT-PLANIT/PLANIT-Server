@@ -41,9 +41,10 @@ public class SecurityConfiguration {
 				.requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
 				.requestMatchers("/", "/index.html", "/favicon.ico").permitAll()
 				.requestMatchers(PathRequest.toStaticResources().atCommonLocations()).permitAll()
-				.requestMatchers("/v3/api-docs/**", "/swagger-ui/**").permitAll()
+				.requestMatchers("/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html").permitAll()
 				.requestMatchers(HttpMethod.POST, "/api/v1/auth/login").permitAll()
-				.anyRequest().authenticated()
+				.requestMatchers("/api/**").authenticated() // API 요청은 인증 처리
+				.anyRequest().permitAll() // 나머지 요청 허용
 			)
 			.exceptionHandling(ex -> ex
 				.authenticationEntryPoint(new Json401EntryPoint())

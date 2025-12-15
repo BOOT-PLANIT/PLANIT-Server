@@ -2,6 +2,7 @@ package com.planit.planit.domain.auth.controller;
 
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseToken;
+import com.planit.planit.domain.auth.dto.LoginResponseDTO;
 import com.planit.planit.domain.user.service.FirebaseAccountService;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.http.ResponseEntity;
@@ -22,14 +23,27 @@ public class AuthController {
 	private final FirebaseAccountService accountService;
 
 	@PostMapping("/login")
-	public ResponseEntity<ApiResponse<Void>> login(
+	public ResponseEntity<ApiResponse<LoginResponseDTO>> login(
 		@RequestHeader("Authorization") String authorization
 	) throws Exception {
 		String idToken = extractBearer(authorization);
 		FirebaseToken token = firebaseAuth.verifyIdToken(idToken);
-		accountService.ensureAndLoad(token);
 
-		return ResponseEntity.ok(ApiResponse.success("로그인 성공", null));
+		// 기존 UserDetails 반환 유지
+		var userDetails = accountService.ensureAndLoad(token);
+
+		// uid -> userId 변환
+		Long userId = accountService.findUserIdByUid(userDetails.getUsername());
+
+		// 최근 부트캠프 ID 조회
+		Long recentBootcampId = accountService.findRecentBootcampId(userId);
+
+		LoginResponseDTO response = LoginResponseDTO.builder()
+			.userId(userId)
+			.recentBootcampId(recentBootcampId)
+			.build();
+
+		return ResponseEntity.ok(ApiResponse.success("로그인 성공", response));
 	}
 
 	private String extractBearer(String header) {

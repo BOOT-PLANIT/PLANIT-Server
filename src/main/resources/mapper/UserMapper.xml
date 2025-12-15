@@ -72,4 +72,19 @@
 		WHERE uid = #{uid} AND is_deleted = 0
 	</update>
 
+	<!-- FCM 토큰 저장/갱신 -->
+	<update id="updateFcmToken" parameterType="map">
+		UPDATE users
+		SET fcm_token = #{fcmToken}
+		WHERE uid = #{uid} AND is_deleted = 0
+	</update>
+
+	<!-- uid 기준 FCM 토큰 조회 -->
+	<select id="findFcmTokenByUid" parameterType="string" resultType="string">
+		SELECT fcm_token
+		FROM users
+		WHERE uid = #{uid} AND is_deleted = 0
+	</select>
+
+
 </mapper>
