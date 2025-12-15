@@ -3,11 +3,12 @@ package com.planit.planit.domain.enrollment.service;
 import com.planit.planit.domain.enrollment.dto.EnrollmentResponseDTO;
 import com.planit.planit.domain.enrollment.dto.MyBootcampDTO;
 import com.planit.planit.domain.enrollment.mapper.MyBootcampMapper;
-import com.planit.planit.domain.user.mapper.UserMapper;
+import com.planit.planit.domain.user.service.FirebaseAccountService;
+import com.planit.planit.global.common.exception.ErrorCode;
 import lombok.RequiredArgsConstructor;
-import org.springframework.dao.DuplicateKeyException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
 
@@ -16,47 +17,47 @@ import java.util.List;
 public class MyBootcampService {
 
 	private final MyBootcampMapper bootcampMapper;
-	private final UserMapper userMapper;
-
-	/** UID → UserId 변환 헬퍼 */
-	private Long resolveUserId(String uid) {
-		return userMapper.findByUid(uid)
-			.orElseThrow(() -> new IllegalArgumentException("사용자를 찾을 수 없습니다."))
-			.getId();
-	}
+	private final FirebaseAccountService firebaseAccountService;
 
 	/** 부트캠프 등록 */
 	@Transactional
 	public EnrollmentResponseDTO enrollBootcamp(String uid, Long bootcampId) {
-		Long userId = resolveUserId(uid);
+		Long userId = firebaseAccountService.findUserIdByUid(uid);
 
 		if (!bootcampMapper.existsById(bootcampId)) {
-			throw new IllegalArgumentException("존재하지 않는 부트캠프입니다.");
+			throw new ResponseStatusException(
+				ErrorCode.BOOTCAMP_NOT_FOUND.getStatus(),
+				"존재하지 않는 부트캠프입니다."
+			);
 		}
 
-		try {
-			bootcampMapper.insertEnrollment(userId, bootcampId);
-		} catch (DuplicateKeyException e) {
-			// DB Unique Constraint 위반 시 처리
-			throw new IllegalArgumentException("이미 등록된 부트캠프입니다.", e);
+		if (bootcampMapper.countEnrollment(userId, bootcampId) > 0) {
+			throw new ResponseStatusException(
+				ErrorCode.CONFLICT.getStatus(),
+				"이미 등록된 부트캠프입니다."
+			);
 		}
 
+		bootcampMapper.insertEnrollment(userId, bootcampId);
 		return bootcampMapper.findLatestEnrollment(userId);
 	}
 
 	/** 내 부트캠프 목록 조회 */
 	public List<MyBootcampDTO> getMyBootcampsByUid(String uid) {
-		Long userId = resolveUserId(uid);
+		Long userId = firebaseAccountService.findUserIdByUid(uid);
 		return bootcampMapper.selectMyBootcamps(userId);
 	}
 
 	/** 내 부트캠프 삭제 */
 	@Transactional
 	public void deleteMyBootcampByUid(Long enrollmentId, String uid) {
-		Long userId = resolveUserId(uid);
+		Long userId = firebaseAccountService.findUserIdByUid(uid);
 		int result = bootcampMapper.deleteEnrollment(enrollmentId, userId);
 		if (result == 0) {
-			throw new IllegalArgumentException("등록 정보를 찾을 수 없습니다.");
+			throw new ResponseStatusException(
+				ErrorCode.RESOURCE_NOT_FOUND.getStatus(),
+				"등록 정보를 찾을 수 없습니다."
+			);
 		}
 	}
 }

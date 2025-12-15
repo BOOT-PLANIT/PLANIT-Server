@@ -1,6 +1,7 @@
 package com.planit.planit.domain.user.controller;
 
 import com.google.firebase.auth.FirebaseAuth;
+import com.planit.planit.domain.user.dto.SaveFcmTokenRequestDTO;
 import com.planit.planit.domain.user.mapper.UserMapper;
 import com.planit.planit.domain.user.model.UserAccount;
 import com.planit.planit.global.common.response.ApiResponse;

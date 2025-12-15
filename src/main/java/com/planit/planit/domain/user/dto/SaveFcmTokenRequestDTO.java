@@ -1,4 +1,4 @@
-package com.planit.planit.domain.user.controller;
+package com.planit.planit.domain.user.dto;
 
 import jakarta.validation.constraints.NotBlank;
 import lombok.Getter;
