@@ -1,7 +1,7 @@
 package com.planit.planit.domain.enrollment.controller;
 
 import com.planit.planit.domain.enrollment.dto.EnrollmentResponseDTO;
-import com.planit.planit.domain.enrollment.dto.MyBootcampDto;
+import com.planit.planit.domain.enrollment.dto.MyBootcampDTO;
 import com.planit.planit.domain.enrollment.service.MyBootcampService;
 import com.planit.planit.global.common.response.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -33,11 +33,11 @@ public class MyBootcampController {
 
 	/** 내 부트캠프 목록 */
 	@GetMapping("/my")
-	public ResponseEntity<ApiResponse<List<MyBootcampDto>>> getMyBootcamps(
+	public ResponseEntity<ApiResponse<List<MyBootcampDTO>>> getMyBootcamps(
 		Authentication auth
 	) {
 		String uid = auth.getName();
-		List<MyBootcampDto> bootcamps = myBootcampService.getMyBootcampsByUid(uid);
+		List<MyBootcampDTO> bootcamps = myBootcampService.getMyBootcampsByUid(uid);
 
 		return ResponseEntity.ok(ApiResponse.success("내 부트캠프 목록 조회 성공", bootcamps));
 	}

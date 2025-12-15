@@ -1,7 +1,7 @@
 package com.planit.planit.domain.enrollment.mapper;
 
 import com.planit.planit.domain.enrollment.dto.EnrollmentResponseDTO;
-import com.planit.planit.domain.enrollment.dto.MyBootcampDto;
+import com.planit.planit.domain.enrollment.dto.MyBootcampDTO;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 
@@ -14,7 +14,7 @@ public interface MyBootcampMapper {
 
 	int insertEnrollment(@Param("userId") Long userId, @Param("bootcampId") Long bootcampId);
 
-	List<MyBootcampDto> selectMyBootcamps(@Param("userId") Long userId);
+	List<MyBootcampDTO> selectMyBootcamps(@Param("userId") Long userId);
 
 	int deleteEnrollment(@Param("enrollmentId") Long enrollmentId, @Param("userId") Long userId);
 

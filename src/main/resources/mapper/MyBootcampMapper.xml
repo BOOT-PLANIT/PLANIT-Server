@@ -19,7 +19,7 @@
 	</insert>
 
 	<!-- 내 부트캠프 목록 조회 -->
-	<select id="selectMyBootcamps" resultType="com.planit.planit.domain.enrollment.dto.MyBootcampDto">
+	<select id="selectMyBootcamps" resultType="com.planit.planit.domain.enrollment.dto.MyBootcampDTO">
 		SELECT e.id AS id,
 					 e.user_id AS userId,
 					 e.bootcamp_id AS bootcampId,

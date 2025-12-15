@@ -4,7 +4,7 @@ import lombok.Data;
 import java.time.LocalDate;
 
 @Data
-public class MyBootcampDto {
+public class MyBootcampDTO {
 	private Long id;
 	private Long userId;
 	private Long bootcampId;

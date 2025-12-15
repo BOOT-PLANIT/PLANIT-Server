@@ -1,7 +1,7 @@
 package com.planit.planit.domain.enrollment.service;
 
 import com.planit.planit.domain.enrollment.dto.EnrollmentResponseDTO;
-import com.planit.planit.domain.enrollment.dto.MyBootcampDto;
+import com.planit.planit.domain.enrollment.dto.MyBootcampDTO;
 import com.planit.planit.domain.enrollment.mapper.MyBootcampMapper;
 import com.planit.planit.domain.user.mapper.UserMapper;
 import lombok.RequiredArgsConstructor;
@@ -45,7 +45,7 @@ public class MyBootcampService {
 	}
 
 	/** 내 부트캠프 목록 조회 */
-	public List<MyBootcampDto> getMyBootcampsByUid(String uid) {
+	public List<MyBootcampDTO> getMyBootcampsByUid(String uid) {
 		Long userId = resolveUserId(uid);
 		return bootcampMapper.selectMyBootcamps(userId);
 	}

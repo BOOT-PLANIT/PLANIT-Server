@@ -10,7 +10,7 @@ import io.swagger.v3.oas.annotations.media.ExampleObject;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import java.util.Map;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ProblemDetail;
@@ -155,33 +155,26 @@ public class UserController {
 		summary = "FCM 토큰 저장/갱신",
 		security = { @SecurityRequirement(name = "BearerAuth") },
 		responses = {
-			@io.swagger.v3.oas.annotations.responses.ApiResponse(
-				responseCode = "200",
-				description = "토큰 저장 성공",
-				content = @Content
-			),
-			@io.swagger.v3.oas.annotations.responses.ApiResponse(
-				responseCode = "401",
-				description = "인증 필요",
-				content = @Content
-			),
-			@io.swagger.v3.oas.annotations.responses.ApiResponse(
-				responseCode = "404",
-				description = "사용자 없음",
-				content = @Content
-			)
+			@io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "토큰 저장 성공"),
+			@io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "fcmToken 누락 또는 잘못된 값"),
+			@io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "401", description = "인증 필요"),
+			@io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "사용자 없음")
 		}
 	)
 	@PostMapping("/me/token")
 	public ResponseEntity<Void> saveFcmToken(
 		Authentication auth,
-		@RequestBody Map<String, String> body) {
+		@Valid @RequestBody SaveFcmTokenRequestDTO request) {
 
 		String uid = auth.getName();
-		String fcmToken = body.get("fcmToken");
+		String fcmToken = request.getFcmToken();
 
 		// DB 업데이트
-		userMapper.updateFcmToken(uid, fcmToken);
+		int updated = userMapper.updateFcmToken(uid, fcmToken);
+
+		if (updated == 0) {
+			throw new ResponseStatusException(HttpStatus.NOT_FOUND, "사용자를 찾을 수 없습니다.");
+		}
 
 		return ResponseEntity.ok().build();
 	}
