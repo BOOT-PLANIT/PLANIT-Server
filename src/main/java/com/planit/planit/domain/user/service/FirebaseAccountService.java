@@ -1,6 +1,7 @@
 package com.planit.planit.domain.user.service;
 
 import com.google.firebase.auth.FirebaseToken;
+import com.planit.planit.domain.enrollment.mapper.MyBootcampMapper;
 import com.planit.planit.domain.user.mapper.UserMapper;
 import com.planit.planit.domain.user.model.UserAccount;
 import com.planit.planit.domain.user.model.UserLevel;
@@ -18,6 +19,7 @@ import java.util.*;
 public class FirebaseAccountService {
 
 	private final UserMapper mapper;
+	private final MyBootcampMapper bootcampMapper;
 
 	private static final Set<String> ADMIN_UIDS   = Set.of(/* "admin-uid-1" */);
 	private static final Set<String> ADMIN_EMAILS = Set.of(/* "admin@example.com" */);
@@ -70,5 +72,18 @@ public class FirebaseAccountService {
 			.password("N/A")
 			.authorities(authorities)
 			.build();
+	}
+
+	/** userId 조회 */
+	public Long findUserIdByUid(String uid) {
+		return mapper.findByUid(uid)
+			.map(UserAccount::getId)
+			.orElseThrow(() -> new RuntimeException("사용자를 찾을 수 없습니다."));
+	}
+
+	/** 최근 부트캠프 ID 조회 */
+	public Long findRecentBootcampId(Long userId) {
+		var latest = bootcampMapper.findLatestEnrollment(userId); // userId만 받도록 Mapper 수정 필요
+		return latest != null ? latest.getBootcampId() : null;
 	}
 }

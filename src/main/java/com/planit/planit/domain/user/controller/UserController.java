@@ -1,6 +1,7 @@
 package com.planit.planit.domain.user.controller;
 
 import com.google.firebase.auth.FirebaseAuth;
+import com.planit.planit.domain.user.dto.SaveFcmTokenRequestDTO;
 import com.planit.planit.domain.user.mapper.UserMapper;
 import com.planit.planit.domain.user.model.UserAccount;
 import com.planit.planit.global.common.response.ApiResponse;
@@ -10,6 +11,7 @@ import io.swagger.v3.oas.annotations.media.ExampleObject;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ProblemDetail;
@@ -148,5 +150,34 @@ public class UserController {
 		firebaseAuth.deleteUser(uid);
 
 		return ResponseEntity.noContent().build(); // 204
+	}
+
+	@Operation(
+		summary = "FCM 토큰 저장/갱신",
+		security = { @SecurityRequirement(name = "BearerAuth") },
+		responses = {
+			@io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "토큰 저장 성공"),
+			@io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "fcmToken 누락 또는 잘못된 값"),
+			@io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "401", description = "인증 필요"),
+			@io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "사용자 없음")
+		}
+	)
+	@Transactional
+	@PostMapping("/me/token")
+	public ResponseEntity<Void> saveFcmToken(
+		Authentication auth,
+		@Valid @RequestBody SaveFcmTokenRequestDTO request) {
+
+		String uid = auth.getName();
+		String fcmToken = request.getFcmToken();
+
+		// DB 업데이트
+		int updated = userMapper.updateFcmToken(uid, fcmToken);
+
+		if (updated == 0) {
+			throw new ResponseStatusException(HttpStatus.NOT_FOUND, "사용자를 찾을 수 없습니다.");
+		}
+
+		return ResponseEntity.ok().build();
 	}
 }
