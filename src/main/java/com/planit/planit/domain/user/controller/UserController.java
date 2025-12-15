@@ -162,6 +162,7 @@ public class UserController {
 			@io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "사용자 없음")
 		}
 	)
+	@Transactional
 	@PostMapping("/me/token")
 	public ResponseEntity<Void> saveFcmToken(
 		Authentication auth,
