@@ -122,6 +122,13 @@
 			<version>RELEASE</version>
 			<scope>compile</scope>
 		</dependency>
+
+		<!-- .env 파일 지원 -->
+		<dependency>
+			<groupId>me.paulschwarz</groupId>
+			<artifactId>spring-dotenv</artifactId>
+			<version>4.0.0</version>
+		</dependency>
 	</dependencies>
 
 	<build>
