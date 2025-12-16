@@ -1,5 +1,6 @@
 package com.planit.planit.global.config;
 
+import java.util.List;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.boot.autoconfigure.security.servlet.PathRequest;
 import org.springframework.context.annotation.Bean;
@@ -18,6 +19,9 @@ import com.planit.planit.global.security.AuthenticationFilter;
 import com.planit.planit.global.security.Json401EntryPoint;
 import com.planit.planit.global.security.Json403AccessDeniedHandler;
 import lombok.RequiredArgsConstructor;
+import org.springframework.web.cors.CorsConfiguration;
+import org.springframework.web.cors.CorsConfigurationSource;
+import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
 @RequiredArgsConstructor
 @Configuration
@@ -28,12 +32,40 @@ public class SecurityConfiguration {
 	private final FirebaseAuth firebaseAuth;
 
 	@Bean
+	CorsConfigurationSource corsConfigurationSource() {
+		CorsConfiguration config = new CorsConfiguration();
+		config.setAllowedOrigins(List.of(
+			"http://localhost:3000",
+			"https://planit-tau-seven.vercel.app"
+		));
+		config.setAllowedMethods(List.of(
+			"GET","POST","PUT","PATCH","DELETE","OPTIONS"
+		));
+		config.setAllowedHeaders(List.of("*"));
+		config.setAllowCredentials(true);
+		config.setMaxAge(3600L);
+
+		UrlBasedCorsConfigurationSource source =
+			new UrlBasedCorsConfigurationSource();
+		source.registerCorsConfiguration("/**", config);
+		return source;
+	}
+
+	@Bean
 	SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
 		var authenticationFilter = new AuthenticationFilter(accountServiceProvider, firebaseAuth);
 
 		http
 			.csrf(AbstractHttpConfigurer::disable)
 			.cors(Customizer.withDefaults())
+			.headers(headers -> headers
+				.addHeaderWriter((request, response) -> {
+					response.setHeader(
+						"Cross-Origin-Opener-Policy",
+						"unsafe-none"
+					);
+				})
+			)
 			.sessionManagement(s -> s.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
 			.formLogin(AbstractHttpConfigurer::disable)
 			.httpBasic(AbstractHttpConfigurer::disable)
