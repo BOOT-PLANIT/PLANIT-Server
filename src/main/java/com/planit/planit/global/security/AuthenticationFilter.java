@@ -50,7 +50,7 @@ public class AuthenticationFilter extends OncePerRequestFilter {
 
 		try {
 			// Session Cookie 검증
-			FirebaseToken decoded = firebaseAuth.verifySessionCookie(sessionCookie);
+			FirebaseToken decoded = firebaseAuth.verifySessionCookie(sessionCookie, true);
 
 			// UserDetails 로드
 			FirebaseAccountService accountService = accountServiceProvider.getObject();

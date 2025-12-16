@@ -1,6 +1,7 @@
 package com.planit.planit.domain.auth.controller;
 
 import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseAuthException;
 import com.google.firebase.auth.FirebaseToken;
 import com.google.firebase.auth.SessionCookieOptions;
 import com.planit.planit.domain.auth.dto.LoginResponseDTO;
@@ -13,6 +14,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseCookie;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.CookieValue;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -31,7 +33,7 @@ public class AuthController {
 	public ResponseEntity<ApiResponse<LoginResponseDTO>> login(
 		@RequestHeader("Authorization") String authorization,
 		HttpServletResponse httpServletResponse
-	) throws Exception {
+	) throws FirebaseAuthException {
 
 		// Bearer 토큰 추출
 		String idToken = extractBearer(authorization);
@@ -113,8 +115,14 @@ public class AuthController {
 	}
 
 	@PostMapping("/logout")
-	public ResponseEntity<ApiResponse<Void>> logout(HttpServletResponse response) {
-
+	public ResponseEntity<ApiResponse<Void>> logout(
+		@CookieValue(name = "planit_session", required = false) String sessionCookie,
+		HttpServletResponse response
+	) throws Exception {
+		if (sessionCookie != null) {
+			FirebaseToken decoded = firebaseAuth.verifySessionCookie(sessionCookie);
+			firebaseAuth.revokeRefreshTokens(decoded.getUid());
+		}
 		// planit_session 쿠키 만료
 		ResponseCookie cookie = ResponseCookie.from("planit_session", "")
 			.httpOnly(true)
