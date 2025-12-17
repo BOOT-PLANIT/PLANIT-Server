@@ -85,6 +85,7 @@ public class AuthenticationFilter extends OncePerRequestFilter {
 				e
 			);
 			SecurityContextHolder.clearContext();
+			expireCookie(res);
 		}
 
 		chain.doFilter(req, res);
@@ -112,7 +113,7 @@ public class AuthenticationFilter extends OncePerRequestFilter {
 			.path("/")
 			.maxAge(0)
 			.httpOnly(true)
-			.secure(true) // prod
+			.secure(false) // 배포 시에는 true
 			.sameSite("Lax")
 			.build();
 

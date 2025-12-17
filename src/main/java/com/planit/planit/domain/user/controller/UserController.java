@@ -62,7 +62,7 @@ public class UserController {
                         "emailVerified": true,
                         "createdAt": "2025-10-24T14:40:33",
                         "lastLoginAt": "2025-10-24T14:40:33",
-                        "recenBootcampId": 1
+                        "recentBootcampId": 1
                       }
                     }
                     """
