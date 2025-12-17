@@ -4,7 +4,6 @@ import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseAuthException;
 import com.google.firebase.auth.FirebaseToken;
 import com.google.firebase.auth.SessionCookieOptions;
-import com.planit.planit.domain.auth.dto.LoginResponseDTO;
 import com.planit.planit.domain.user.service.FirebaseAccountService;
 import com.planit.planit.global.common.response.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -30,7 +29,7 @@ public class AuthController {
 	private final FirebaseAccountService accountService;
 
 	@PostMapping("/login")
-	public ResponseEntity<ApiResponse<LoginResponseDTO>> login(
+	public ResponseEntity<ApiResponse> login(
 		@RequestHeader("Authorization") String authorization,
 		HttpServletResponse httpServletResponse
 	) throws FirebaseAuthException {
@@ -71,20 +70,8 @@ public class AuthController {
 
 		httpServletResponse.addHeader(HttpHeaders.SET_COOKIE, cookie.toString());
 
-		// uid → userId 변환
-		Long userId = accountService.findUserIdByUid(userDetails.getUsername());
-
-		// 최근 부트캠프 ID 조회
-		Long recentBootcampId = accountService.findRecentBootcampId(userId);
-
-		// 응답 DTO 생성
-		LoginResponseDTO loginResponse = LoginResponseDTO.builder()
-			.userId(userId)
-			.recentBootcampId(recentBootcampId)
-			.build();
-
 		return ResponseEntity.ok(
-			ApiResponse.success("로그인 성공", loginResponse)
+			ApiResponse.success("로그인 성공")
 		);
 	}
 

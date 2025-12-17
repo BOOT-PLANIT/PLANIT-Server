@@ -1,9 +1,12 @@
 package com.planit.planit.domain.user.controller;
 
 import com.google.firebase.auth.FirebaseAuth;
+import com.planit.planit.domain.user.dto.MeResponseDTO;
 import com.planit.planit.domain.user.dto.SaveFcmTokenRequestDTO;
 import com.planit.planit.domain.user.mapper.UserMapper;
 import com.planit.planit.domain.user.model.UserAccount;
+import com.planit.planit.domain.user.model.UserLevel;
+import com.planit.planit.domain.user.service.FirebaseAccountService;
 import com.planit.planit.global.common.response.ApiResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -12,6 +15,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
+import java.time.LocalDateTime;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ProblemDetail;
@@ -29,6 +33,7 @@ public class UserController {
 
 	private final FirebaseAuth firebaseAuth;
 	private final UserMapper userMapper;
+	private final FirebaseAccountService firebaseAccountService;
 
 	@Operation(
 		summary = "내 정보 조회",
@@ -100,11 +105,26 @@ public class UserController {
 		}
 	)
 	@GetMapping("/me")
-	public ResponseEntity<ApiResponse<UserAccount>> me(Authentication auth) {
+	public ResponseEntity<ApiResponse<MeResponseDTO>> me(Authentication auth) {
 		String uid = auth.getName();
 		var user = userMapper.findByUid(uid)
 			.orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "사용자를 찾을 수 없습니다."));
-		return ResponseEntity.ok(ApiResponse.success("내 정보", user));
+		Long recentBootcampId = firebaseAccountService.findRecentBootcampId(user.getId());
+
+		MeResponseDTO meResponseDTO = MeResponseDTO.builder()
+			.id(user.getId())
+			.uid(user.getUid())
+			.email(user.getEmail())
+			.displayName(user.getDisplayName())
+			.photoUrl(user.getPhotoUrl())
+			.userLevel(user.getUserLevel())
+			.provider(user.getProvider())
+			.emailVerified(user.isEmailVerified())
+			.createdAt(user.getCreatedAt())
+			.lastLoginAt(user.getLastLoginAt())
+			.recentBootcampId(recentBootcampId)
+			.build();
+		return ResponseEntity.ok(ApiResponse.success("내 정보", meResponseDTO));
 	}
 
 	@Operation(
