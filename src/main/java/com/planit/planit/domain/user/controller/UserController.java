@@ -44,7 +44,7 @@ public class UserController {
 				description = "조회 성공",
 				content = @Content(
 					mediaType = "application/json",
-					schema = @Schema(implementation = UserAccount.class),
+					schema = @Schema(implementation = MeResponseDTO.class),
 					examples = @ExampleObject(
 						name = "success",
 						value = """
@@ -61,7 +61,8 @@ public class UserController {
                         "provider": "google.com",
                         "emailVerified": true,
                         "createdAt": "2025-10-24T14:40:33",
-                        "lastLoginAt": "2025-10-24T14:40:33"
+                        "lastLoginAt": "2025-10-24T14:40:33",
+                        "recenBootcampId": 1
                       }
                     }
                     """

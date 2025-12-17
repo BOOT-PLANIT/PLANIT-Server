@@ -29,7 +29,7 @@ public class AuthController {
 	private final FirebaseAccountService accountService;
 
 	@PostMapping("/login")
-	public ResponseEntity<ApiResponse> login(
+	public ResponseEntity<ApiResponse<Void>> login(
 		@RequestHeader("Authorization") String authorization,
 		HttpServletResponse httpServletResponse
 	) throws FirebaseAuthException {
@@ -71,7 +71,7 @@ public class AuthController {
 		httpServletResponse.addHeader(HttpHeaders.SET_COOKIE, cookie.toString());
 
 		return ResponseEntity.ok(
-			ApiResponse.success("로그인 성공")
+			ApiResponse.success("로그인 성공",null)
 		);
 	}
 
