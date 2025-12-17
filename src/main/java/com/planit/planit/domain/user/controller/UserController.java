@@ -107,6 +107,9 @@ public class UserController {
 	)
 	@GetMapping("/me")
 	public ResponseEntity<ApiResponse<MeResponseDTO>> me(Authentication auth) {
+		if (auth == null) {
+			throw new ResponseStatusException(HttpStatus.UNAUTHORIZED);
+		}
 		String uid = auth.getName();
 		var user = userMapper.findByUid(uid)
 			.orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "사용자를 찾을 수 없습니다."));

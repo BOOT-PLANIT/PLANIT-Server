@@ -12,6 +12,8 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.core.NestedExceptionUtils;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.ResponseCookie;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -50,7 +52,7 @@ public class AuthenticationFilter extends OncePerRequestFilter {
 
 		try {
 			// Session Cookie 검증
-			FirebaseToken decoded = firebaseAuth.verifySessionCookie(sessionCookie, true);
+			FirebaseToken decoded = firebaseAuth.verifySessionCookie(sessionCookie, false);
 
 			// UserDetails 로드
 			FirebaseAccountService accountService = accountServiceProvider.getObject();
@@ -73,7 +75,7 @@ public class AuthenticationFilter extends OncePerRequestFilter {
 				e
 			);
 			SecurityContextHolder.clearContext();
-
+			expireCookie(res);
 		} catch (Exception e) {
 			Throwable root = NestedExceptionUtils.getMostSpecificCause(e);
 			log.warn(
@@ -103,6 +105,18 @@ public class AuthenticationFilter extends OncePerRequestFilter {
 		}
 
 		return null;
+	}
+
+	private void expireCookie(HttpServletResponse response) {
+		ResponseCookie cookie = ResponseCookie.from("planit_session", "")
+			.path("/")
+			.maxAge(0)
+			.httpOnly(true)
+			.secure(true) // prod
+			.sameSite("Lax")
+			.build();
+
+		response.addHeader(HttpHeaders.SET_COOKIE, cookie.toString());
 	}
 }
 

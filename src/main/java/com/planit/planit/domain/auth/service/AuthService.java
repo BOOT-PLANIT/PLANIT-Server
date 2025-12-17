@@ -56,12 +56,8 @@ public class AuthService {
 	 * - Session Cookie 검증
 	 * - 글로벌 세션에는 영향 없음
 	 */
-	public void logout(String sessionCookie) {
-		try {
-			firebaseAuth.verifySessionCookie(sessionCookie);
-		} catch (FirebaseAuthException e) {
-			log.debug("[AUTH] invalid session cookie on logout");
-		}
+	public void logout() {
+  // no-op
 	}
 
 	/**

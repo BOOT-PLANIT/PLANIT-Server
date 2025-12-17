@@ -46,14 +46,7 @@ public class AuthController {
 	}
 
 	@PostMapping("/logout")
-	public ResponseEntity<ApiResponse<Void>> logout(
-		@CookieValue(name = "planit_session", required = false) String sessionCookie,
-		HttpServletResponse response
-	) {
-		if (sessionCookie != null) {
-			authService.logout(sessionCookie);
-		}
-
+	public ResponseEntity<ApiResponse<Void>> logout(HttpServletResponse response) {
 		ResponseCookie cookie = ResponseCookie.from("planit_session", "")
 			.httpOnly(true)
 			.secure(false) // 배포 시 true
