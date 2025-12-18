@@ -60,8 +60,12 @@ public class SecurityConfiguration {
             .requestMatchers(PathRequest.toStaticResources().atCommonLocations()).permitAll()
             .requestMatchers("/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html").permitAll()
             .requestMatchers(HttpMethod.POST, "/api/v1/auth/login").permitAll()
+<<<<<<< HEAD
             .requestMatchers(HttpMethod.POST, "/api/v1/auth/logout").permitAll()// logout api는 인증
                                                                                 // 안해도 가능하게
+=======
+            .requestMatchers("/api/v1/auth/logout").permitAll()// logout api는 인증 안해도 가능하게
+>>>>>>> 0f851171d6ec4738e7ca0f2e3a7fe2a3956c9d98
             .requestMatchers("/api/**").authenticated() // API 요청은 인증 처리
             .anyRequest().permitAll() // 나머지 요청 허용
         )
