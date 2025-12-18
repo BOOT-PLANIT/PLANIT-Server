@@ -31,6 +31,18 @@
 		WHERE uid = #{uid} AND is_deleted = 0
 		LIMIT 1
 	</select>
+<!--	전체유저 조회 탈퇴포함-->
+		<select id="findByUidIncludingDeleted"
+        parameterType="string"
+        resultMap="UserMap">
+		  SELECT id, uid, email, display_name, photo_url,
+		         user_level, provider, email_verified,
+		         is_deleted, deleted_at,
+		         created_at, last_login_at
+		  FROM users
+		  WHERE uid = #{uid}
+		  LIMIT 1
+		</select>
 
 	<!-- 새 레코드 생성 -->
 	<insert id="insertUser"
