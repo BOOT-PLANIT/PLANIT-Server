@@ -114,7 +114,7 @@ public class AuthenticationFilter extends OncePerRequestFilter {
 			.maxAge(0)
 			.httpOnly(true)
 			.secure(false) // 배포 시에는 true
-			.sameSite("Lax")
+			.sameSite("None")
 			.build();
 
 		response.addHeader(HttpHeaders.SET_COOKIE, cookie.toString());
