@@ -1,13 +1,15 @@
 package com.planit.planit.domain.auth.controller;
 
-import com.google.firebase.auth.FirebaseAuth;
-import com.google.firebase.auth.FirebaseToken;
-import com.planit.planit.domain.auth.dto.LoginResponseDTO;
-import com.planit.planit.domain.user.service.FirebaseAccountService;
-import io.swagger.v3.oas.annotations.tags.Tag;
-import org.springframework.http.ResponseEntity;
+import com.planit.planit.domain.auth.service.AuthService;
 import com.planit.planit.global.common.response.ApiResponse;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.servlet.http.HttpServletResponse;
+import java.time.Duration;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.ResponseCookie;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.CookieValue;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -16,36 +18,51 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 @RequestMapping("/api/v1/auth")
 @RequiredArgsConstructor
-@Tag(name = "Auth", description = "로그인 API는 프론트에서 진행해야 합니다")
+@Tag(name = "Auth", description = "로그인/로그아웃 API")
 public class AuthController {
 
-	private final FirebaseAuth firebaseAuth;
-	private final FirebaseAccountService accountService;
+	private final AuthService authService;
 
 	@PostMapping("/login")
-	public ResponseEntity<ApiResponse<LoginResponseDTO>> login(
-		@RequestHeader("Authorization") String authorization
-	) throws Exception {
+	public ResponseEntity<ApiResponse<Void>> login(
+		@RequestHeader("Authorization") String authorization,
+		HttpServletResponse response
+	) {
 		String idToken = extractBearer(authorization);
-		FirebaseToken token = firebaseAuth.verifyIdToken(idToken);
 
-		// 기존 UserDetails 반환 유지
-		var userDetails = accountService.ensureAndLoad(token);
+		String sessionCookie = authService.login(idToken);
 
-		// uid -> userId 변환
-		Long userId = accountService.findUserIdByUid(userDetails.getUsername());
-
-		// 최근 부트캠프 ID 조회
-		Long recentBootcampId = accountService.findRecentBootcampId(userId);
-
-		LoginResponseDTO response = LoginResponseDTO.builder()
-			.userId(userId)
-			.recentBootcampId(recentBootcampId)
+		ResponseCookie cookie = ResponseCookie.from("planit_session", sessionCookie)
+			.httpOnly(true)
+			.secure(false) // 배포 시 true
+			.sameSite("Lax")
+			.path("/")
+			.maxAge(Duration.ofDays(1))
 			.build();
 
-		return ResponseEntity.ok(ApiResponse.success("로그인 성공", response));
+		response.addHeader(HttpHeaders.SET_COOKIE, cookie.toString());
+
+		return ResponseEntity.ok(ApiResponse.success("로그인 성공", null));
 	}
 
+	@PostMapping("/logout")
+	public ResponseEntity<ApiResponse<Void>> logout(HttpServletResponse response) {
+		ResponseCookie cookie = ResponseCookie.from("planit_session", "")
+			.httpOnly(true)
+			.secure(false) // 배포 시 true
+			.sameSite("Lax")
+			.path("/")
+			.maxAge(0)
+			.build();
+
+		response.addHeader(HttpHeaders.SET_COOKIE, cookie.toString());
+
+		return ResponseEntity.ok(ApiResponse.success("로그아웃 성공", null));
+	}
+
+	/**
+	 * Authorization 헤더에서 Bearer 토큰 추출
+	 */
 	private String extractBearer(String header) {
 		if (header == null || !header.startsWith("Bearer ")) {
 			throw new IllegalArgumentException("Authorization 헤더가 유효하지 않아요");
@@ -53,4 +70,3 @@ public class AuthController {
 		return header.substring(7);
 	}
 }
-
