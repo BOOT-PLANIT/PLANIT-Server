@@ -35,7 +35,7 @@ public class AuthController {
 		ResponseCookie cookie = ResponseCookie.from("planit_session", sessionCookie)
 			.httpOnly(true)
 			.secure(false) // 배포 시 true
-			.sameSite("Lax")
+			.sameSite("None")
 			.path("/")
 			.maxAge(Duration.ofDays(1))
 			.build();
@@ -50,7 +50,7 @@ public class AuthController {
 		ResponseCookie cookie = ResponseCookie.from("planit_session", "")
 			.httpOnly(true)
 			.secure(false) // 배포 시 true
-			.sameSite("Lax")
+			.sameSite("None")
 			.path("/")
 			.maxAge(0)
 			.build();
