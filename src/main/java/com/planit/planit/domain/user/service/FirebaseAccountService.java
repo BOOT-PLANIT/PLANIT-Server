@@ -61,20 +61,6 @@ public class FirebaseAccountService {
               .provider(provider).userLevel(level).emailVerified(emailVerified).build();
       mapper.insertUser(userAccount);
     }
-    // if (found.isEmpty()) {
-    // var userAccount = UserAccount.builder()
-    // .uid(uid)
-    // .email(email)
-    // .displayName(displayName)
-    // .photoUrl(photoUrl)
-    // .provider(provider)
-    // .userLevel(level)
-    // .emailVerified(emailVerified)
-    // .build();
-    // mapper.insertUser(userAccount);
-    // } else {
-    // mapper.updateLastLogin(uid);
-    // }
 
     // 권한 설정
     List<GrantedAuthority> authorities = new ArrayList<>();

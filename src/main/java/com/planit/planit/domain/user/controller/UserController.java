@@ -1,7 +1,6 @@
 package com.planit.planit.domain.user.controller;
 
 import org.springframework.http.HttpStatus;
-import org.springframework.http.ProblemDetail;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.transaction.annotation.Transactional;
@@ -114,16 +113,15 @@ public class UserController {
   @Transactional
   public ResponseEntity<Void> deleteMe(Authentication auth) throws Exception {
     String uid = auth.getName();
-    // 토큰 무효화 후 계정 삭제
-    firebaseAuth.revokeRefreshTokens(uid);
-    firebaseAuth.deleteUser(uid);
 
     int updated = userMapper.softDeleteUser(uid);
     if (updated == 0) {
-      ProblemDetail body =
-          ProblemDetail.forStatusAndDetail(HttpStatus.NOT_FOUND, "이미 탈퇴했거나 존재하지 않는 사용자입니다.");
       return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
     }
+
+    // 토큰 무효화 후 계정 삭제
+    firebaseAuth.revokeRefreshTokens(uid);
+    firebaseAuth.deleteUser(uid);
 
 
     return ResponseEntity.noContent().build(); // 204
