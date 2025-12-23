@@ -91,13 +91,20 @@ public class AttendanceService {
 
     }
 
-    // 남은연차개수 체크
+    // 남은월차/병가 개수 체크
     LeaveBalanceResponseDTO leavebalance =
         mapper.getBalanceLeave(requestDTO.getUserId(), requestDTO.getBootcampId());
+
     if (requestDTO.getStatus() == AttendanceStatus.annual
         && leavebalance.getRemainingAnnual() < classDates.size()) {
       throw new BaseException(ErrorCode.RESOURCE_NOT_FOUND,
-          "남은 연차보다 더 많이 등록하셨습니다. 남은연차 " + leavebalance.getRemainingAnnual()) {};
+          "남은 월차보다 더 많이 등록하셨습니다. 남은월차 " + leavebalance.getRemainingAnnual()) {};
+    }
+
+    if (requestDTO.getStatus() == AttendanceStatus.sick_leave
+        && leavebalance.getRemainingSickLeave() < classDates.size()) {
+      throw new BaseException(ErrorCode.RESOURCE_NOT_FOUND,
+          "남은 병가보다 더 많이 등록하셨습니다. 남은병가 " + leavebalance.getRemainingSickLeave()) {};
     }
 
     // 이미 등록된 출결 확인
@@ -211,26 +218,39 @@ public class AttendanceService {
       throw new BaseException(ErrorCode.RESOURCE_NOT_FOUND, "해당 단위기간에 등록된 출결이 없습니다.") {};
     }
 
-    // 출석,지각,조퇴,연차,휴가의 합
+    // 출석,지각,조퇴,월차,공가,외출,병가의 합
     Integer totalPresentCount = attendance.getPresentCount() + attendance.getLateCount()
-        + attendance.getLeftEarlyCount() + attendance.getAnnualCount() + attendance.getLeaveCount();
+        + attendance.getLeftEarlyCount() + attendance.getAnnualCount() + attendance.getLeaveCount()
+        + attendance.getOutingCount() + attendance.getSickLeaveCount();
 
     // 지각+조퇴 3회 쌓인거 출석수에 반영
-    totalPresentCount -= (attendance.getLateCount() + attendance.getLeftEarlyCount()) / 3;
+    totalPresentCount -=
+        (attendance.getLateCount() + attendance.getLeftEarlyCount() + attendance.getOutingCount())
+            / 3;
 
     // 실제 총 결석수
     Integer totalAbsentCount = attendance.getAbsentCount()
-        + (attendance.getLateCount() + attendance.getLeftEarlyCount()) / 3;
+        + (attendance.getLateCount() + attendance.getLeftEarlyCount() + attendance.getOutingCount())
+            / 3;
 
     attendance.setTotalPresentCount(totalPresentCount);
     attendance.setTotalAbsentCount(totalAbsentCount);
 
-    // KDT 여부 확인 (훈련비 단가 결정)
-    Integer subsidy = mapper.Iskdt(bootcampId) ? 15800 : 5800;
+    Integer totalSessionsCount = attendance.getTotalSessions();
+    // 출석률 계산 (총 결석으로 계산)
+    double rate = ((double) totalAbsentCount / totalSessionsCount) * 100;
+    int roundedRate = (int) Math.round(rate);
 
-    // 단위기간별 훈련비 계산 (최대 20일)
-    int count = Math.min(totalPresentCount, 20);
-    attendance.setTotalSubsidy(count * subsidy);
+    if (roundedRate <= 20) {
+      // KDT 여부 확인 (훈련비 단가 결정)
+      Integer subsidy = mapper.Iskdt(bootcampId) ? 15800 : 5800;
+
+      // 단위기간별 훈련비 계산 (최대 20일)
+      int count = Math.min(totalPresentCount, 20);
+      attendance.setTotalSubsidy(count * subsidy);
+    } else {
+      attendance.setTotalSubsidy(0);
+    }
 
 
     return attendance;
@@ -264,23 +284,33 @@ public class AttendanceService {
       int periodPresent = dto.getPresentCount();
       int periodAnnual = dto.getAnnualCount();
       int periodLeave = dto.getLeaveCount();
+      int periodOuting = dto.getOutingCount();
+      int periodSickLeave = dto.getSickLeaveCount();
 
-      // 단위기간별 지각/조퇴 3회 = 결석 1회
-      int additionalAbsents = (periodLate + periodLeftEarly) / 3;
+
+      // 단위기간별 지각/조퇴/외출 3회 = 결석 1회
+      int additionalAbsents = (periodLate + periodLeftEarly + periodOuting) / 3;
 
       // 단위기간별 실제 출석/결석
       int periodTotalPresent = periodPresent + periodLate + periodLeftEarly + periodAnnual
-          + periodLeave - additionalAbsents;
+          + periodLeave + periodOuting + periodSickLeave - additionalAbsents;
       int periodTotalAbsent = periodAbsent + additionalAbsents;
 
-      // 단위기간별 훈련비 계산 (최대 20일)
-      int count = Math.min(periodTotalPresent, 20);
-      int periodSubsidy = count * subsidyPerDay;
+      Integer totalSessionsCount = dto.getTotalSessions();
+      // 출석률 계산 (총 결석으로 계산)
+      double rate = ((double) periodTotalAbsent / totalSessionsCount) * 100;
+      int roundedRate = (int) Math.round(rate);
+
+      int periodSubsidy = 0;
+      if (roundedRate <= 20) {
+        // 단위기간별 훈련비 계산 (최대 20일)
+        int count = Math.min(periodTotalPresent, 20);
+        periodSubsidy = count * subsidyPerDay;
+      }
 
       dto.setTotalPresentCount(periodTotalPresent);
       dto.setTotalAbsentCount(periodTotalAbsent);
       dto.setTotalSubsidy(periodSubsidy);
-
     }
 
     return periodListAttendance;
@@ -310,6 +340,8 @@ public class AttendanceService {
     int leftEarlyCount = 0;
     int annualCount = 0;
     int leaveCount = 0;
+    int outingCount = 0;
+    int sickLeaveCount = 0;
 
     int totalPresentCount = 0;
     int totalAbsentCount = 0;
@@ -327,18 +359,28 @@ public class AttendanceService {
       int periodPresent = dto.getPresentCount();
       int periodAnnual = dto.getAnnualCount();
       int periodLeave = dto.getLeaveCount();
+      int periodOuting = dto.getOutingCount();
+      int periodSickLeave = dto.getSickLeaveCount();
 
       // 단위기간별 지각/조퇴 3회 = 결석 1회
-      int additionalAbsents = (periodLate + periodLeftEarly) / 3;
+      int additionalAbsents = (periodLate + periodLeftEarly + periodOuting) / 3;
 
       // 단위기간별 실제 출석/결석
       int periodTotalPresent = periodPresent + periodLate + periodLeftEarly + periodAnnual
-          + periodLeave - additionalAbsents;
+          + periodLeave + periodOuting + periodSickLeave - additionalAbsents;
       int periodTotalAbsent = periodAbsent + additionalAbsents;
 
-      // 단위기간별 훈련비 계산 (최대 20일)
-      int count = Math.min(periodTotalPresent, 20);
-      int periodSubsidy = count * subsidyPerDay;
+      Integer totalSessionsCount = dto.getTotalSessions();
+      // 출석률 계산 (총 결석으로 계산)
+      double rate = ((double) periodTotalAbsent / totalSessionsCount) * 100;
+      int roundedRate = (int) Math.round(rate);
+
+      int periodSubsidy = 0;
+      if (roundedRate <= 20) {
+        // 단위기간별 훈련비 계산 (최대 20일)
+        int count = Math.min(periodTotalPresent, 20);
+        periodSubsidy = count * subsidyPerDay;
+      }
 
       // 누적합산
       presentCount += periodPresent;
@@ -347,6 +389,8 @@ public class AttendanceService {
       leftEarlyCount += periodLeftEarly;
       annualCount += periodAnnual;
       leaveCount += periodLeave;
+      outingCount += periodOuting;
+      sickLeaveCount += periodSickLeave;
 
       totalPresentCount += periodTotalPresent;
       totalAbsentCount += periodTotalAbsent;
@@ -360,6 +404,9 @@ public class AttendanceService {
     attendance.setLeftEarlyCount(leftEarlyCount);
     attendance.setAnnualCount(annualCount);
     attendance.setLeaveCount(leaveCount);
+    attendance.setOutingCount(outingCount);
+    attendance.setSickLeaveCount(sickLeaveCount);
+
     attendance.setTotalPresentCount(totalPresentCount);
     attendance.setTotalAbsentCount(totalAbsentCount);
     attendance.setTotalSubsidy(totalSubsidy);
