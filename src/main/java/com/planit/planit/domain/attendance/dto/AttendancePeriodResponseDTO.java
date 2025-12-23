@@ -15,8 +15,10 @@ public class AttendancePeriodResponseDTO {
   private Integer absentCount;
   private Integer lateCount;
   private Integer leftEarlyCount;
+  private Integer outingCount;
   private Integer annualCount;
   private Integer leaveCount;
+  private Integer sickLeaveCount;
 
   private Integer totalPresentCount; // 실제 총 출석수 (출석,지각,조퇴,연차,휴가의합 에서 (지각+조퇴)/3 뺀값)
   private Integer totalAbsentCount;// 실제 총 결석수(결석+(지각+조퇴)/3)

@@ -66,6 +66,8 @@ public class AttendanceController {
       - left_early: 조퇴
       - annual: 연차
       - leave: 공가
+      - outing: 외출
+      - sick_leave: 병가
       """,
       responses = {@io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200",
           description = "출결 등록 성공")})
@@ -143,9 +145,9 @@ public class AttendanceController {
     return ApiResponse.success(attendance);
   }
 
-  @Operation(summary = "월차 잔여/누적 사용량 조회", description = "현재까지 사용한 월차, 받았던월차, 남은월차를 조회합니다. ",
+  @Operation(summary = "월차/ 병가 사용량 조회", description = "현재까지 사용한 월차/병가, 받았던월차/병가, 남은월차/병가를 조회합니다. ",
       responses = {@io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200",
-          description = "월차 잔여 조회 성공",
+          description = "월차/병가 잔여 조회 성공",
           content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
               schema = @Schema(implementation = LeaveBalanceResponseDTO.class)))})
   @GetMapping("/balance/{userId}")
